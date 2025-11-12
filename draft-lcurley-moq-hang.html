@@ -11,22 +11,21 @@
 A room consists of multiple participants who publish media tracks.
 All updates are live, such as a change in participants or media tracks. 
     " name="description">
-<meta content="xml2rfc 3.30.0" name="generator">
+<meta content="xml2rfc 3.31.0" name="generator">
 <meta content="draft-lcurley-moq-hang-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.30.0
-    Python 3.12.11
+  xml2rfc 3.31.0
+    Python 3.12.12
     ConfigArgParse 1.7
     google-i18n-address 3.1.1
     intervaltree 3.1.0
     Jinja2 3.1.6
     lxml 5.3.1
-    platformdirs 4.3.8
+    platformdirs 4.5.0
     pycountry 24.6.1
     PyYAML 6.0.2
-    requests 2.32.4
-    setuptools 80.9.0
-    wcwidth 0.2.13
+    requests 2.32.5
+    wcwidth 0.2.14
 -->
 <link href="draft-lcurley-moq-hang.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -1045,11 +1044,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">hang</td>
-<td class="right">August 2025</td>
+<td class="right">November 2025</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Curley</td>
-<td class="center">Expires 4 February 2026</td>
+<td class="center">Expires 16 May 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1062,12 +1061,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-lcurley-moq-hang-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-08-03" class="published">3 August 2025</time>
+<time datetime="2025-11-12" class="published">12 November 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-02-04">4 February 2026</time></dd>
+<dd class="expires"><time datetime="2026-05-16">16 May 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1113,7 +1112,7 @@ All updates are live, such as a change in participants or media tracks.<a href="
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 4 February 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 16 May 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1166,7 +1165,7 @@ All updates are live, such as a change in participants or media tracks.<a href="
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
-            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-media" class="internal xref">Media</a></p>
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-container" class="internal xref">Container</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
             <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
@@ -1244,13 +1243,13 @@ A quick recap:<a href="#section-2-1" class="pilcrow">¶</a></p>
 <p id="section-3-1">The first requirement for a real-time conferencing application is to discover other participants in the same room.
 Hang does this using moq-lite's ANNOUNCE capabilities.<a href="#section-3-1" class="pilcrow">¶</a></p>
 <p id="section-3-2">A room consists of a path.
-Any participants within the room <span class="bcp14">MUST</span> publish a broadcast with the room path as a prefix and it <span class="bcp14">SHOULD</span> end with the <code>.hang</code> suffix.<a href="#section-3-2" class="pilcrow">¶</a></p>
+Any participants within the room <span class="bcp14">MUST</span> publish a broadcast with the room path as a prefix which <span class="bcp14">SHOULD</span> end with the <code>.hang</code> suffix.<a href="#section-3-2" class="pilcrow">¶</a></p>
 <p id="section-3-3">For example:<a href="#section-3-3" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-3-4">
 <pre>
-/room/alice.hang
-/room/bob.hang
-/other/zoe.hang
+/room123/alice.hang
+/room123/bob.hang
+/room456/zoe.hang
 </pre><a href="#section-3-4" class="pilcrow">¶</a>
 </div>
 <p id="section-3-5">A participant issues an ANNOUNCE_PLEASE message to discover any other participants in the same room.
@@ -1282,8 +1281,8 @@ It's a JSON document that extends the the W3C WebCodecs specification.<a href="#
 <p id="section-4-2">The catalog is published as a <code>catalog.json</code> track within the broadcast so it can be updated live as the participant's media tracks change.
 A participant <span class="bcp14">MAY</span> forgo publishing a catalog if it does not wish to publish any media tracks now and in the future.<a href="#section-4-2" class="pilcrow">¶</a></p>
 <p id="section-4-3">The catalog track consists of multiple groups, one for each update.
-Each group contains a single frame with UTF-8 JSON.
-A publisher <span class="bcp14">MUST NOT</span> write multiple frames to a group until a future specification includes a delta-encoding mechanism.<a href="#section-4-3" class="pilcrow">¶</a></p>
+Each group contains a single frame with UTF-8 JSON.<a href="#section-4-3" class="pilcrow">¶</a></p>
+<p id="section-4-4">A publisher <span class="bcp14">MUST NOT</span> write multiple frames to a group until a future specification includes a delta-encoding mechanism (via JSON Patch most likely).<a href="#section-4-4" class="pilcrow">¶</a></p>
 <div id="root">
 <section id="section-4.1">
         <h3 id="name-root">
@@ -1293,19 +1292,17 @@ A publisher <span class="bcp14">MUST NOT</span> write multiple frames to a group
 <div class="alignLeft art-text artwork" id="section-4.1-2">
 <pre>
 type Catalog = {
-        "audio": AudioTrack[],
-        "video": VideoTrack[],
+        "audio": AudioSchema | undefined,
+        "video": VideoSchema | undefined,
+        // ... any custom fields ...
 }
 </pre><a href="#section-4.1-2" class="pilcrow">¶</a>
 </div>
-<p id="section-4.1-3">When there are multiple audio or video tracks, they <span class="bcp14">SHOULD</span> describe the same content.
-For example, different resolutions, codecs, bitrates, etc.
-If a participant wants to publish unrelated content, for example sharing the screen in addition to a webcam, it <span class="bcp14">SHOULD</span> publish a separate broadcast (and catalog).<a href="#section-4.1-3" class="pilcrow">¶</a></p>
-<p id="section-4.1-4">Additional fields <span class="bcp14">MAY</span> be added based on the application.
-The catalog <span class="bcp14">SHOULD</span> be mostly static, delegating any dynamic content to other tracks.
-Additionally, a catalog <span class="bcp14">SHOULD</span> describe optional content, allowing the client to decide if it wants to subscribe.<a href="#section-4.1-4" class="pilcrow">¶</a></p>
-<p id="section-4.1-5">For example, a <code>"chat"</code> field should include the name of a chat track, not individual chat messages.
-This way catalog updates are rare and a client <span class="bcp14">MAY</span> choose to not subscribe.<a href="#section-4.1-5" class="pilcrow">¶</a></p>
+<p id="section-4.1-3">Additional fields <span class="bcp14">MAY</span> be added based on the application.
+The catalog <span class="bcp14">SHOULD</span> be mostly static, delegating any dynamic content to other tracks.<a href="#section-4.1-3" class="pilcrow">¶</a></p>
+<p id="section-4.1-4">For example, a <code>"chat"</code> section should include the name of a chat track, not individual chat messages.
+This way catalog updates are rare and a client <span class="bcp14">MAY</span> choose to not subscribe.<a href="#section-4.1-4" class="pilcrow">¶</a></p>
+<p id="section-4.1-5">This specification currently only defines audio and video tracks.<a href="#section-4.1-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="video">
@@ -1314,37 +1311,52 @@ This way catalog updates are rare and a client <span class="bcp14">MAY</span> ch
 <a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-video" class="section-name selfRef">Video</a>
         </h3>
 <p id="section-4.2-1">A video track contains the necessary information to decode a video stream.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
-<p id="section-4.2-2">Hang uses the <a href="https://www.w3.org/TR/webcodecs/#video-decoder-config">VideoDecoderConfig</a>.
-Any Uint8Array fields are hex-encoded into a string.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
-<p id="section-4.2-3">The <code>track</code> field includes the name and priority of the track within the broadcast.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.2-4">
+<div class="alignLeft art-text artwork" id="section-4.2-2">
 <pre>
-type VideoTrack = {
-        "track": {
-                "name": string,
-                "priority": number,
-        },
-        "config": VideoDecoderConfig,
+type VideoSchema = {
+        "renditions": Map&lt;TrackName, VideoDecoderConfig&gt;,
+        "priority": u8,
+        "display": {
+                "width": number,
+                "height": number,
+        } | undefined,
+        "rotation": number | undefined,
+        "flip": boolean | undefined,
 }
-</pre><a href="#section-4.2-4" class="pilcrow">¶</a>
+</pre><a href="#section-4.2-2" class="pilcrow">¶</a>
 </div>
-<p id="section-4.2-5">For example:<a href="#section-4.2-5" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.2-6">
+<p id="section-4.2-3">The <code>renditions</code> field contains a map of track names to video decoder configurations.
+See the <a href="https://www.w3.org/TR/webcodecs/#video-decoder-config">WebCodecs specification</a> for specifics and registered codecs.
+Any Uint8Array fields are hex-encoded as a string.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.2-4">For example:<a href="#section-4.2-4" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.2-5">
 <pre>
 {
-        "track": {
-                "name": "video",
-                "priority": 2
+        "renditions": {
+                "720p": {
+                        "codec": "avc1.64001f",
+                        "codedWidth": 1280,
+                        "codedHeight": 720,
+                        "bitrate": 6000000,
+                        "framerate": 30.0
+                },
+                "480p": {
+                        "codec": "avc1.64001e",
+                        "codedWidth": 848,
+                        "codedHeight": 480,
+                        "bitrate": 2000000,
+                        "framerate": 30.0
+                }
         },
-        "config": {
-                "codec": "avc1.64001f",
-                "codedWidth": 1280,
-                "codedHeight": 720,
-                "bitrate": 6000000,
-                "framerate": 30.0
-        }
+        "priority": 2,
+        "display": {
+                "width": 1280,
+                "height": 720
+        },
+        "rotation": 0,
+        "flip": false,
 }
-</pre><a href="#section-4.2-6" class="pilcrow">¶</a>
+</pre><a href="#section-4.2-5" class="pilcrow">¶</a>
 </div>
 </section>
 </div>
@@ -1354,54 +1366,55 @@ type VideoTrack = {
 <a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-audio" class="section-name selfRef">Audio</a>
         </h3>
 <p id="section-4.3-1">An audio track contains the necessary information to decode an audio stream.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
-<p id="section-4.3-2">The <code>track</code> field includes the name and priority of the track within the broadcast.<a href="#section-4.3-2" class="pilcrow">¶</a></p>
-<p id="section-4.3-3">The <code>config</code> field contains an <a href="https://www.w3.org/TR/webcodecs/#audio-decoder-config">AudioDecoderConfig</a>.
-Any Uint8Array fields are hex-encoded into a string.<a href="#section-4.3-3" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.3-4">
+<div class="alignLeft art-text artwork" id="section-4.3-2">
 <pre>
-type AudioTrack = {
-        "track": {
-                "name": string,
-                "priority": number,
-        },
-        "config": AudioDecoderConfig,
+type AudioSchema = {
+        "renditions": Map&lt;TrackName, AudioDecoderConfig&gt;,
+        "priority": u8,
 }
-</pre><a href="#section-4.3-4" class="pilcrow">¶</a>
+</pre><a href="#section-4.3-2" class="pilcrow">¶</a>
 </div>
-<p id="section-4.3-5">For example:<a href="#section-4.3-5" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.3-6">
+<p id="section-4.3-3">The <code>renditions</code> field contains a map of track names to audio decoder configurations.
+See the <a href="https://www.w3.org/TR/webcodecs/#audio-decoder-config">WebCodecs specification</a> for specifics and registered codecs.
+Any Uint8Array fields are hex-encoded as a string.<a href="#section-4.3-3" class="pilcrow">¶</a></p>
+<p id="section-4.3-4">For example:<a href="#section-4.3-4" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.3-5">
 <pre>
 {
-        "track": {
-                "name": "audio",
-                "priority": 1
+        "renditions": {
+                "stereo": {
+                        "codec": "opus",
+                        "sampleRate": 48000,
+                        "numberOfChannels": 2,
+                        "bitrate": 128000
+                },
+                "mono": {
+                        "codec": "opus",
+                        "sampleRate": 48000,
+                        "numberOfChannels": 1,
+                        "bitrate": 64000
+                }
         },
-        "config": {
-                "codec": "opus",
-                "sampleRate": 48000,
-                "numberOfChannels": 2,
-                "bitrate": 128000
-        }
+        "priority": 1,
 }
-</pre><a href="#section-4.3-6" class="pilcrow">¶</a>
+</pre><a href="#section-4.3-5" class="pilcrow">¶</a>
 </div>
 </section>
 </div>
 </section>
 </div>
-<div id="media">
+<div id="container">
 <section id="section-5">
-      <h2 id="name-media">
-<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-media" class="section-name selfRef">Media</a>
+      <h2 id="name-container">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-container" class="section-name selfRef">Container</a>
       </h2>
-<p id="section-5-1">Media tracks are split into groups and further into frames.<a href="#section-5-1" class="pilcrow">¶</a></p>
-<p id="section-5-2">A group consists of one or more frames in decode order.
-Each group <span class="bcp14">MUST</span> start with a keyframe.
-If a codec supports delta frames (video), then all subsequent frames <span class="bcp14">MUST</span> be delta frames.
-Otherwise, a group <span class="bcp14">MAY</span> consist of multiple keyframes (audio).<a href="#section-5-2" class="pilcrow">¶</a></p>
-<p id="section-5-3">Each "frame" consists of a tiny "container" containing the timestamp and codec specific payload.
-The timestamp is the presentation timestamp in microseconds encoded as a QUIC variable-length integer (62-bit max).
-The remainder of the frame payload is codec specific.<a href="#section-5-3" class="pilcrow">¶</a></p>
+<p id="section-5-1">Audio and video tracks use a lightweight container to encapsulate the media payload.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-5-2">Each moq-lite group <span class="bcp14">MUST</span> start with a keyframe.
+If codec does not support delta frames (ex. audio), then a group <span class="bcp14">MAY</span> consist of multiple keyframes.
+Otherwise, a group <span class="bcp14">MUST</span> consist of a single keyframe followed by zero or more delta frames.<a href="#section-5-2" class="pilcrow">¶</a></p>
+<p id="section-5-3">Each frame starts with a timestamp, a QUIC variable-length integer (62-bit max) encoded in microseconds.
+The remainder of the payload is codec specific; see the WebCodecs specification for specifics.<a href="#section-5-3" class="pilcrow">¶</a></p>
+<p id="section-5-4">For example, h.264 with no <code>description</code> field would be annex.b encoded, while h.264 with a <code>description</code> field would be AVCC encoded.<a href="#section-5-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="security-considerations">
@@ -1432,7 +1445,7 @@ The remainder of the frame payload is codec specific.<a href="#section-5-3" clas
 <dd class="break"></dd>
 <dt id="moqt">[moqt]</dt>
       <dd>
-<span class="refAuthor">Nandakumar, S.</span>, <span class="refAuthor">Vasiliev, V.</span>, <span class="refAuthor">Swett, I.</span>, and <span class="refAuthor">A. Frindell</span>, <span class="refTitle">"Media over QUIC Transport"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-moq-transport-13</span>, <time datetime="2025-07-07" class="refDate">7 July 2025</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-13">https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-13</a>&gt;</span>. </dd>
+<span class="refAuthor">Nandakumar, S.</span>, <span class="refAuthor">Vasiliev, V.</span>, <span class="refAuthor">Swett, I.</span>, and <span class="refAuthor">A. Frindell</span>, <span class="refTitle">"Media over QUIC Transport"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-moq-transport-15</span>, <time datetime="2025-10-20" class="refDate">20 October 2025</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-15">https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-15</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC2119">[RFC2119]</dt>
       <dd>
