@@ -23,9 +23,9 @@ informative:
 
 --- abstract
 
-moq-lite is designed to fanout live content from publishers to any number of subscribers across the internet.
-Liveliness is achieved by using QUIC to prioritize the most important content, potentially starving or dropping other content, to avoid head-of-line blocking while respecting encoding dependencies.
-While designed for media, it is an agnostic transport, allowing relays and CDNs to forward content without knowledge of codecs, containers, or encryption keys.
+moq-lite is designed to fanout live content 1->N across the internet.
+It leverages QUIC to prioritize important content, avoiding head-of-line blocking while respecting encoding dependencies.
+While primarily designed for media, the transport is payload agnostic and can be proxied by relays/CDNs without knowledge of codecs, containers, or encryption keys.
 
 --- middle
 
@@ -35,27 +35,27 @@ While designed for media, it is an agnostic transport, allowing relays and CDNs 
 
 # Rationale
 This draft is based on MoqTransport [moqt].
-The concepts, motivations, and terminology are very similar and when in doubt, refer to the upstream draft.
-However, a few things have been renamed because I think they make the concepts clearer (and I couldn't help myself).
+The concepts, motivations, and terminology are very similar and when in doubt, refer to existing MoqTransport literature.
+A few things have been renamed (ex. object -> frame) to better align with media terminology.
 
 I absolutely believe in the motivation and potential of Media over QUIC.
 The layering is phenomenal and addresses many of the problems with current live media protocols.
 I fully support the goals of the working group and the IETF process.
-But it's been difficult to design such an experimental protocol via committee.
 
+But it's been difficult to design such an experimental protocol via committee.
 MoqTransport has become too complicated.
+
 There are too many messages, optional modes, and half-baked features.
 Too many hypotheses, too many potential use-cases, too many diametrically opposed opinions.
 This is expected (and even desired) as compromise gives birth to a standard.
 
-But the specification has become a distraction and I think it impedes progress.
-I believe that MoQ is an experiment that needs to be proven before it can be cemented.
+But I believe the standardization process is hindering practical experimentation.
+The ideas behind MoQ can be proven now before being cemented as an RFC.
 We should spend more time building an *actual* application and less time arguing about a hypothetical one.
-I can't waste any more time on FETCH and other fringe functionality.
 
-moq-lite is the bare minimum needed for a real-time conferencing application *only*.
+moq-lite is the bare minimum needed for a real-time application aiming to replace WebRTC.
 Every feature from MoqTransport that is not necessary (or has not been implemented yet) has been removed for simplicity.
-This includes many great ideas (ex. group order) that are just not worth implementing at the moment.
+This includes many great ideas (ex. group order) that may be added as they are needed.
 This draft is the current state, not the end state.
 
 
@@ -72,37 +72,36 @@ The application determines how to split data into broadcast, tracks, groups, and
 The moq-lite layer provides fanout, prioritization, and caching even for latency sensitive applications.
 
 ## Session
-A Session consists of a connection between a QUIC client and server.
+A Session consists of a connection between a client and a server.
+There is currently no P2P support within QUIC so it's out of scope for moq-lite.
 
-A session is established after the necessary QUIC, WebTransport, and moq-lite handshakes.
-The moq-lite handshake consists of version and extension negotiation.
+A session is established after the necessary QUIC, WebTransport, and moq-lite handshakes have completed.
+The moq-lite handshake is simple and consists of version and extension negotiation.
 
-The intent is that sessions are transparently chained together via relays.
-A broadcaster could establish a session with an CDN ingest edge while the viewers establish separate sessions to CDN distribution edges.
-A moq-lite session is hop-by-hop, but the application should be designed end-to-end.
+While moq-lite is a point-to-point protocol, it's intended to work end-to-end via relays.
+Each client establishes a session with a CDN edge server, ideally the closest one.
+Any broadcasts and subscriptions are transparently proxied by the CDN behind the scenes.
 
 ## Broadcast
 A Broadcast is a collection of Tracks from a single publisher.
-This corresponds to a MoqTransport "track namespace".
+This corresponds to a MoqTransport's "track namespace".
 
-A publisher may produce multiple broadcasts.
-The available broadcasts are advertised via an ANNOUNCE message and a subscriber can discover available broadcasts via an ANNOUNCE_PLEASE message.
+A publisher may produce multiple broadcasts, each of which is advertised via an ANNOUNCE message.
+The subscriber uses the ANNOUNCE_PLEASE message to discover available broadcasts.
 These announcements are live and can change over time, allowing for dynamic origin discovery.
 
 A broadcast consists of any number of Tracks.
-These tracks are related by name only and there's no requirement that they have the same content.
-Tracks are not advertised as part of a broadcast; they must be discovered via an out-of-band mechanism.
-For example, a "catalog" file or track that describes the broadcast.
+The contents and relationship between these tracks is determined by the application or via an out-of-band mechanism.
 
 ## Track
 A Track is a series of Groups identified by a unique name within a Broadcast.
 
-A track consists of a single active Group at any moment.
-When a new Group is started, the previous Group is closed and any unconsumed content may be dropped.
+A track consists of a single active Group at any moment, called the "latest group".
+When a new Group is started, the previous Group is closed and may be dropped for any reason.
+The duration before an incomplete group is dropped is determined by the application and the publisher/subscriber's latency target.
 
-Each subscription is scoped to a single Track.
+Every subscription is scoped to a single Track.
 A subscription will always start at the latest Group and continues until either the publisher or subscriber cancels the subscription.
-The publisher closes a Group when a new Group is started.
 
 A subscriber chooses the priority of each subscription, hinting to the publisher which Track should arrive first during congestion.
 This enables the most important content to arrive during network degradation while still respecting encoding dependencies.
@@ -110,19 +109,20 @@ This enables the most important content to arrive during network degradation whi
 ## Group
 A Group is an ordered stream of Frames within a Track.
 
-Each group consists of a sequence number and an appendable set of Frames.
-The sequence number is an increasing integer for each new group in the same Track.
-Different tracks may use the same group sequence number for alignment purposes; it's up to the application to handle this.
-
+Each group consists of an append-only list of Frames.
 A Group is served by a dedicated QUIC stream which is closed on completion, reset by the publisher, or cancelled by the subscriber.
-The Frames within a Group will arrive reliably and in order thanks to the QUIC stream.
-In contrast, Groups may temporarily arrive out of order due to network congestion and the application should be prepared to handle this.
+This ensures that all Frames within a Group arrive reliably and in order.
+
+In contrast, Groups may arrive out of order due to network congestion and prioritization.
+The application should be prepared to handle this with a jitter buffer at the group level.
 
 ## Frame
 A Frame is a payload of bytes within a Group.
 
 A frame is used to represent a chunk of data with a known size.
 A frame should represent a single moment in time and avoid any buffering that would increase latency.
+
+There's no timestamp or metadata associated with a Frame, this is the responsibility of the application.
 
 
 # Flow
@@ -132,16 +132,14 @@ See the section for Messages section for the specific encoding.
 ## Connection
 moq-lite runs on top of WebTransport.
 WebTransport is a layer on top of QUIC and HTTP/3, required for web support.
-The API is nearly identical to QUIC, however notably lacks stream IDs and has fewer available error codes.
+The API is nearly identical to QUIC with the exception of stream IDs.
 
-How the WebTransport connection is established is out-of-scope for this draft.
-For example, a service MAY use the WebTransport handshake to perform authentication via the URL.
-
+How the WebTransport connection is authenticated is out-of-scope for this draft.
 
 ## Termination
 QUIC bidirectional streams have an independent send and receive direction.
 Rather than deal with half-open states, moq-lite combines both sides.
-If an endpoint closes the send direction of a stream, the peer MUST also close the send direction.
+If an endpoint closes the send direction of a stream, the peer MUST also close their send direction.
 
 moq-lite contains many long-lived transactions, such as subscriptions and announcements.
 These are terminated when the underlying QUIC stream is terminated.
@@ -169,36 +167,46 @@ If the stream is closed, potentially with an error, the transaction is terminate
 Bidirectional streams are used for control streams.
 There's a 1-byte STREAM_TYPE at the beginning of each stream.
 
-|------|------------|------------|
-|     ID | Stream       | Creator      |
-|-------:|:-------------|--------------|
-|    0x0 | Session      | Client       |
-| ------ | ------------ | ------------ |
-|    0x1 | Announce     | Subscriber   |
-| ------ | ------------ | ------------ |
-|    0x2 | Subscribe    | Subscriber   |
-| ------ | ------------ | ------------ |
+|---------|--------------|-------------|
+|     ID  | Stream       | Creator     |
+|--------:|:-------------|:------------|
+|    0x0  | Session      | Client      |
+| ------- | ------------ | ----------- |
+|    0x1  | Announce     | Subscriber  |
+| ------- | ------------- | ---------- |
+|    0x2  | Subscribe    | Subscriber  |
+| ------- | ------------- | ---------- |
+|    0x20 | SessionCompat | Client     |
+| ------- | ------------- | ----------- |
 
 ### Session
-There is a single Session Stream per WebTransport session.
+The Session stream is used to establish the moq-lite session, negotiating the version and any extensions.
+This stream remains open for the duration of the session and its closure indicates the session is closed.
 
-The client MUST open a single Session Stream immediately
-After establishing the QUIC/WebTransport session, the client opens a Session Stream.
-There MUST be only one Session Stream per WebTransport session and its closure by either endpoint indicates the moq-lite session is closed.
-
-The client sends a SESSION_CLIENT message indicating the supported versions and extensions.
+The client MUST open the Session Stream, write the Session Stream ID (0x0), and write a SESSION_CLIENT message.
 If the server does not support any of the client's versions, it MUST close the stream with an error code and MAY close the connection.
 Otherwise, the server replies with a SESSION_SERVER message to complete the handshake.
 
-Afterwards, both endpoints SHOULD send SESSION_UPDATE messages, such as after a significant change in the session bitrate.
+Afterwards, both endpoints MAY send SESSION_UPDATE messages.
+This is currently used to notify the other endpoint of a significant change in the session bitrate.
 
 This draft's version is combined with the constant `0xff0dad00`.
 For example, moq-lite-draft-04 is identified as `0xff0dad04`.
 
+### SessionCompat
+The SessionCompat stream exists to support moq-transport draft 11-14.
+This will be removed in a future version as moq-transport draft 15 uses ALPN instead.
+
+The client writes a CLIENT_SETUP message on the SessionCompat stream and receives a SERVER_SETUP message in response.
+
+Consult the MoqTransport ([moqt]) draft for more information about the encoding.
+Notably, each message contains a u16 length prefix instead of a VarInt (moq-lite).
+
+If a moq-lite version is negotiated, this stream becomes a normal Session stream.
+If a moq-transport version is negotiated, this stream becomes the MoqTransport control stream.
 
 ### Announce
 A subscriber can open a Announce Stream to discover broadcasts matching a prefix.
-This is OPTIONAL and the application can determine track paths out-of-band.
 
 The subscriber creates the stream with a ANNOUNCE_PLEASE message.
 The publisher replies with an ANNOUNCE_INIT message containing all currently active broadcasts that currently match the prefix, followed by ANNOUNCE messages for any changes.
@@ -219,8 +227,8 @@ When the stream is closed, the subscriber MUST assume that all broadcasts are no
 Path prefix matching and equality is done on a byte-by-byte basis.
 There MAY be multiple Announce Streams, potentially containing overlapping prefixes, that get their own ANNOUNCE_INIT and ANNOUNCE messages.
 
-## Subscribe
-A subscriber can open a Subscribe Stream to request a Track.
+### Subscribe
+A subscriber opens Subscribe Streams to request a Track.
 
 The subscriber MUST start a Subscribe Stream with a SUBSCRIBE message followed by any number of SUBSCRIBE_UPDATE messages.
 The publisher MUST reply with an SUBSCRIBE_OK message.
@@ -247,6 +255,8 @@ A Group MAY contain zero FRAME messages, potentially indicating a gap in the tra
 A frame MAY contain an empty payload, potentially indicating a gap in the group.
 
 Both the publisher and subscriber MAY reset the stream at any time.
+This is not a fatal error and the session remains active.
+The subscriber MAY cache the error and potentially retry later.
 
 
 # Encoding
@@ -475,39 +485,65 @@ A generic library or relay MUST NOT inspect or modify the contents unless otherw
 
 # Appendix A: Changelog
 
+## moq-lite-02
+- Added SessionCompat stream.
+- Editorial stuff.
+
 ## moq-lite-01
 - Added ANNOUNCE_INIT.
 - Added Message Length (i) to all messages.
 
 # Appendix B: Upstream Differences
-A quick comparison of moq-lite and moq-transport-10:
+A quick comparison of moq-lite and moq-transport-14:
+
+- Streams instead of request IDs.
+- Pull only: No unsolicited publishing.
+- Uses HTTP for VOD instead of FETCH.
+- Extensions instead of parameters.
+- Names use utf-8 strings instead of byte arrays.
+- Track Namespace is a string, not an array of any array of bytes.
+- Subscriptions start at the latest group, not the latest object.
+- No subgroups
+- No group/object ID gaps
+- No object properties
+- No datagrams
+- No paused subscriptions (forward=0)
 
 ## Deleted Messages
 - GOAWAY
 - MAX_SUBSCRIBE_ID
-- SUBSCRIBES_BLOCKED
+- REQUESTS_BLOCKED
 - SUBSCRIBE_ERROR
 - UNSUBSCRIBE
-- SUBSCRIBE_DONE
+- PUBLISH_DONE
+- PUBLISH
+- PUBLISH_OK
+- PUBLISH_ERROR
 - FETCH
 - FETCH_OK
 - FETCH_ERROR
 - FETCH_CANCEL
-- TRACK_STATUS_REQUEST
-- TRACK_STATUS
-- ANNOUNCE_OK
-- ANNOUNCE_ERROR
-- ANNOUNCE_CANCEL
-- SUBSCRIBE_ANNOUNCES_OK
-- SUBSCRIBE_ANNOUNCES_ERROR
-- UNSUBSCRIBE_ANNOUNCES
 - FETCH_HEADER
+- TRACK_STATUS
+- TRACK_STATUS_OK
+- TRACK_STATUS_ERROR
+- PUBLISH_NAMESPACE
+- PUBLISH_NAMESPACE_OK
+- PUBLISH_NAMESPACE_ERROR
+- PUBLISH_NAMESPACE_CANCEL
+- SUBSCRIBE_NAMESPACE_OK
+- SUBSCRIBE_NAMESPACE_ERROR
+- UNSUBSCRIBE_NAMESPACE
 - OBJECT_DATAGRAM
-- OBJECT_DATAGRAM_STATUS
+
+## Renamed Messages
+- SUBSCRIBE_NAMESPACE -> ANNOUNCE_PLEASE
+- SUBGROUP_HEADER -> GROUP
 
 ## Deleted Fields
 Some of these fields occur in multiple messages.
 
+- Request ID
 - Track Alias
 - Group Order
 - Filter Type
@@ -518,17 +554,11 @@ Some of these fields occur in multiple messages.
 - ContentExists
 - Largest Group ID
 - Largest Object ID
-- Subscribe Parameters
-- Announce Parameters
+- Parameters
 - Subgroup ID
 - Object ID
 - Object Status
 - Extension Headers
-
-## Misc Changes
-- Messages include a varint length prefix.
-- Track Namespace (renamed to Broadcast Path) is a string, not an array of bytes.
-- Track Name is a string, not bytes.
 
 
 # Security Considerations
