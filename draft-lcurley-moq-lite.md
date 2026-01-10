@@ -91,7 +91,7 @@ The subscriber uses the ANNOUNCE_PLEASE message to discover available broadcasts
 These announcements are live and can change over time, allowing for dynamic origin discovery.
 
 A broadcast consists of any number of Tracks.
-The contents and relationship between these tracks is determined by the application or via an out-of-band mechanism.
+The contents, relationships, and encoding of tracks are determined by the application.
 
 ## Track
 A Track is a series of Groups identified by a unique name within a Broadcast.
@@ -103,8 +103,12 @@ The duration before an incomplete group is dropped is determined by the applicat
 Every subscription is scoped to a single Track.
 A subscription will always start at the latest Group and continues until either the publisher or subscriber cancels the subscription.
 
-A subscriber chooses the priority of each subscription, hinting to the publisher which Track should arrive first during congestion.
-This enables the most important content to arrive during network degradation while still respecting encoding dependencies.
+The subscriber and publisher both indicate their delivery preference:
+- `Priority` indicates if Track A should be transmitted instead of Track B.
+- `Ordered` indicates if the Groups within a Track should be transmitted in order.
+- `Max Latency` indicates the maximum duration (based on instants) before a Group is abandoned.
+
+The combination of these preferences enables the most important content to arrive during network degradation while still respecting encoding dependencies.
 
 ## Group
 A Group is an ordered stream of Frames within a Track.
@@ -114,16 +118,14 @@ A Group is served by a dedicated QUIC stream which is closed on completion, rese
 This ensures that all Frames within a Group arrive reliably and in order.
 
 In contrast, Groups may arrive out of order due to network congestion and prioritization.
-The application should be prepared to handle this with a jitter buffer at the group level.
+The application MUST process or buffer groups out of order to avoid blocking on flow control
 
 ## Frame
 A Frame is a payload of bytes within a Group.
 
-A frame is used to represent a chunk of data with a known size.
-A frame should represent a single moment in time and avoid any buffering that would increase latency.
-
-There's no timestamp or metadata associated with a Frame, this is the responsibility of the application.
-
+A frame is used to represent a chunk of data with an upfront size and [instant](#instant).
+The instant is relative to all other frames within the same Track, used for [expiration](#expiration) and metrics.
+The application MAY use the instant as a replacement for a presentation timestamp, used for track playback and synchronization.
 
 # Flow
 This section outlines the flow of messages within a moq-lite session.
@@ -157,7 +159,6 @@ The session is active until either endpoint closes or resets the Session Stream.
 
 This session handshake is used to negotiate the moq-lite version and any extensions.
 See the Extension section for more information.
-
 
 # Streams
 moq-lite uses a bidirectional stream for each transaction.
@@ -231,17 +232,136 @@ There MAY be multiple Announce Streams, potentially containing overlapping prefi
 A subscriber opens Subscribe Streams to request a Track.
 
 The subscriber MUST start a Subscribe Stream with a SUBSCRIBE message followed by any number of SUBSCRIBE_UPDATE messages.
-The publisher MUST reply with an SUBSCRIBE_OK message.
+The publisher replies with any number of SUBSCRIBE_OK messages, or closes the stream.
 
 The publisher SHOULD close the stream after the track has ended.
 Either endpoint MAY reset/cancel the stream at any time.
 
+# Delivery
+The most important concept in moq-lite is how to deliver a subscription.
+QUIC can only improve the user experience if data is delivered out-of-order during congestion.
+This is the sole reason why data is divided into Broadcasts, Tracks, Groups, and Frames.
 
+moq-lite consists of multiple groups being transmitted in parallel across seperate streams.
+How these streams get transmitted over the network is very important, and yet has been distilled down into a few simple properties:
+
+## Prioritization
+The Publisher and Subscriber both exhchange `Priority` and `Ordered` values:
+- `Priority` determines which Track should be transmitted next.
+- `Ordered` determines when Group within the Track should be transmitted next.
+
+A publisher SHOULD attempt to transmit streams based on these fields.
+This depends on the QUIC library and it may not be possible to get fine-grained control.
+
+### Priority
+The `Subscriber Priority` is scoped to the connection.
+The `Publisher Priority` SHOULD be used to resolve conflicts or ties.
+
+A conflict can occur when a relay tries to serve multiple downstream subscriptions from a single upstream subscription.
+Any upstream subscription SHOULD use the publisher priority, not some combination of different subscriber priorities.
+
+Rather than try to explain everything, here's an example:
+
+**Example:**
+There are two people in a conference call, Ali and Bob.
+
+We subscribe to both of their audio tracks with priority 2 and video tracks with priority 1.
+This will cause equal priority for `Ali` and `Bob` while prioritizing audio.
+```
+ali/audio + bob/audio: subscriber_priority=2 publisher_priority=2
+ali/video + bob/video: subscriber_priority=1 publisher_priority=1
+```
+
+If Bob starts actively speaking, they can bump their publisher priority via a SUBSCRIBE_OK message.
+This would cause tracks be delivered in this order:
+```
+bob/audio: subscriber_priority=2 publisher_priority=3
+ali/audio: subscriber_priority=2 publisher_priority=2
+bob/video: subscriber_priority=1 publisher_priority=2
+ali/video: subscriber_priority=1 publisher_priority=1
+```
+
+The subscriber priority takes presidence, so we could override it if we decided to full screen Ali's window:
+```
+ali/audio subscriber_priority=4 publisher_priority=2
+ali/video subscriber_priority=3 publisher_priority=1
+bob/audio subscriber_priority=2 publisher_priority=3
+bob/audio subscriber_priority=1 publisher_priority=2
+```
+
+### Ordered
+The `Subscriber Ordered` boolean signals if older (true) or newer (false) groups should be transmitted first within a Track.
+The `Publisher Ordered` boolean MAY likewise be used to resolve conflicts.
+
+An application SHOULD use `ordered` when it wants to provide a VOD-like experience, preferring to buffer old groups rather than skip them.
+An application SHOULD NOT `ordered` when it wants to provide a live experience, preferring to skip old groups rather than buffer them.
+
+Note that (expiration)[#expiration] is not affected by `ordered`.
+An old group may still be cancelled/skipped if it's older than `max_latency` set by either peer.
+An application MUST support gaps and out-of-order delivery even when `ordered` is true.
+
+
+## Instant
+Every Frame consists of an Instant (in milliseconds) scoped to the track.
+
+This is used for [Expiration](#expiration) at the moq-lite layer.
+The instant MAY be used for track synchronization at the application layer, however many containers/formats already contain their own timestamps.
+A publisher SHOULD try to preserve the instant when the frame was first created/captured, proxying it.
+
+Each frame within a group MUST have a monotonically increasing instant.
+If the presentation timestamp goes backwards (ex. b-frames), a frame's Instant SHOULD be the maximum presentation timestamp of the group up until that point.
+Duplicates are allowed, encoded as delta 0.
+
+Unless specified by the application, a subscriber:
+- SHOULD NOT assume that an instant is a wall clock time.
+- SHOULD NOT assume that an instant starts at zero.
+
+Clock synchronization is out of scope for this draft.
+
+## Expiration
+The Publisher and Subscriber both transmit a `Max Latency` value, indicating the maximum duration before a group is expired.
+
+It is not crucial to aggressively expire groups thanks to [prioritization](#prioritization).
+However, a lower priority group will still consume RAM, bandwidth, and potentially flow control.
+It is RECOMMENDED that an application set conservative limits and only resort to expiration when data is absolutely no longer needed.
+
+A subscriber SHOULD expire groups based on the `Subscriber Max Latency` in SUBSCRIBE/SUBSCRIBE_UPDATE.
+A publisher SHOULD expire groups based on the `Publisher Max Latency` in SUBSCRIBE_OK.
+An implementation MAY use the minimum of both when determining when to expire a group.
+
+Each group consists of a maximum Frame Instant, the meaning of "processed" depending on the endpoint:
+- A publisher uses a frame was queued, regardless of it it has been flushed to the QUIC layer.
+- A subscriber uses when a frame was received, regardless of it it has been flushed to the application.
+
+The entire track consists of a maximum Frame Instant using the same logic as above.
+For each group, if the maximum Frame Instant is more than `Max Latency` behind the track's maximum Frame Instant, then the group is considered expired.
+An expired group SHOULD BE reset at the QUIC level to avoid consuming flow control.
+
+
+**Example:**
+- Group 1: 1000 1500 (2000)
+- Group 2: 2500 3000
+
+Frame 2000 in this example has not been received yet by the subscriber.
+If the `max_latency` was 1250, then the Subscriber SHOULD expire Group 1 but the Publisher SHOULD NOT yet.
+The opposite would be true if Frame 3000 was still in transit:
+
+**Example:**
+- Group 1: 1000 1500 2000
+- Group 2: 2500 (3000)
+
+**NOTE**: Individual frames within a group cannot be cancelled.
+Even if `max_latency` was 0, Group 2 would not be expired until a (higher) frame in Group 3 is queued/received.
+
+
+An implementation MAY use the broadcast's maximum Frame Instant instead of the track's maximum Frame Instant.
+This is useful to account for encoding delays, ex. when video takes 300ms longer to encode than audio.
+However, it SHOULD NOT expire the highest sequence number group within each track, otherwise a track may become perpetually expired.
 
 ## Unidirectional Streams
 Unidirectional streams are used for data transmission.
 
-|------|--------|-----------|
+|--------|----------|-------------|
 |     ID | Stream   | Creator     |
 |-------:|:---------|-------------|
 |    0x0 | Group    | Publisher   |
@@ -257,6 +377,7 @@ A frame MAY contain an empty payload, potentially indicating a gap in the group.
 Both the publisher and subscriber MAY reset the stream at any time.
 This is not a fatal error and the session remains active.
 The subscriber MAY cache the error and potentially retry later.
+
 
 
 # Encoding
@@ -410,7 +531,9 @@ SUBSCRIBE Message {
   Subscribe ID (i)
   Broadcast Path (s)
   Track Name (s)
-  Subscriber Priority (i)
+  Subscriber Priority (8)
+  Subscriber Ordered (1)
+  Subscriber Max Latency (i)
 }
 ~~~
 
@@ -419,34 +542,51 @@ A unique identifier chosen by the subscriber.
 A Subscribe ID MUST NOT be reused within the same session, even if the prior subscription has been closed.
 
 **Subscriber Priority**:
-The transmission priority of the subscription relative to all other active subscriptions within the session.
+The priority of the subscription within the session, represented as a u8.
 The publisher SHOULD transmit *higher* values first during congestion.
+See the [Prioritization](#prioritization) section for more information.
+
+**Subscriber Ordered**:
+A boolean representing whether groups are transmitted in ascending (true) or descending (false) order.
+The publisher SHOULD transmit *older* groups first during congestion if true.
+See the [Prioritization](#prioritization) section for more information.
+
+**Subscriber Max Latency**:
+This value is encoded in milliseconds and represents the maximum age of a group.
+The publisher SHOULD reset old group streams when the last processed frame is at least this much older than the newest frame.
+See the [Expiration](#expiration) section for more information.
 
 
 ## SUBSCRIBE_UPDATE
 A subscriber can modify a subscription with a SUBSCRIBE_UPDATE message.
+A subscriber MAY send multiple SUBSCRIBE_UPDATE messages to update the subscription.
 
 ~~~
 SUBSCRIBE_UPDATE Message {
   Message Length (i)
   Subscriber Priority (i)
+  Subscriber Ordered (1)
+  Subscriber Max Latency (i)
 }
 ~~~
 
-**Subscriber Priority**:
-The new subscriber priority; see SUBSCRIBE.
+See [SUBSCRIBE](#subscribe) for information about each field.
 
 
 ## SUBSCRIBE_OK
-The SUBSCRIBE_OK is sent in response to a SUBSCRIBE.
+A SUBSCRIBE_OK message is sent in response to a SUBSCRIBE.
+The publisher MAY send multiple SUBSCRIBE_OK messages to update the subscription.
 
 ~~~
 SUBSCRIBE_OK Message {
-  Message Length = 0
+  Message Length (i)
+  Publisher Priority (8)
+  Publisher Ordered (1)
+  Publisher Max Latency (i)
 }
 ~~~
 
-That's right, it's an empty message at the moment.
+See [SUBSCRIBE](#subscribe) for information about each field.
 
 ## GROUP
 The GROUP message contains information about a Group, as well as a reference to the subscription being served.
@@ -466,6 +606,7 @@ This ID is used to distinguish between multiple subscriptions for the same track
 **Group Sequence**:
 The sequence number of the group.
 This SHOULD increase by 1 for each new group.
+A subscriber MUST handle gaps, potentially caused by congestion.
 
 
 ## FRAME
@@ -474,9 +615,16 @@ The FRAME message is a payload at a specific point of time.
 ~~~
 FRAME Message {
   Message Length (i)
+  Instant Delta (i)
   Payload (b)
 }
 ~~~
+
+**Instant Delta**:
+The instant when the frame was created, in milliseconds, scoped to the track.
+This is encoded as a delta from the previous frame in the same group.
+An application SHOULD use the capture/presentation time to account for any encoding delays.
+See the [Instant](#instant) section for more information.
 
 **Payload**:
 An application specific payload.
@@ -484,6 +632,12 @@ A generic library or relay MUST NOT inspect or modify the contents unless otherw
 
 
 # Appendix A: Changelog
+
+## moq-lite-03
+- Added `Subscriber Max Latency` and `Subscriber Ordered` to SUBSCRIBE and SUBSCRIBE_UPDATE.
+- Added `Publisher Priority`, `Publisher Max Latency`, and `Publisher Ordered` to SUBSCRIBE_OK.
+- Added `Instant Delta` to FRAME.
+- SUBSCRIBE_OK may be sent multiple times.
 
 ## moq-lite-02
 - Added SessionCompat stream.
