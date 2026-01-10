@@ -118,7 +118,7 @@ A Group is served by a dedicated QUIC stream which is closed on completion, rese
 This ensures that all Frames within a Group arrive reliably and in order.
 
 In contrast, Groups may arrive out of order due to network congestion and prioritization.
-The application MUST process or buffer groups out of order to avoid blocking on flow control
+The application MUST process or buffer groups out of order to avoid blocking on flow control.
 
 ## Frame
 A Frame is a payload of bytes within a Group.
@@ -242,16 +242,16 @@ The most important concept in moq-lite is how to deliver a subscription.
 QUIC can only improve the user experience if data is delivered out-of-order during congestion.
 This is the sole reason why data is divided into Broadcasts, Tracks, Groups, and Frames.
 
-moq-lite consists of multiple groups being transmitted in parallel across seperate streams.
+moq-lite consists of multiple groups being transmitted in parallel across separate streams.
 How these streams get transmitted over the network is very important, and yet has been distilled down into a few simple properties:
 
 ## Prioritization
-The Publisher and Subscriber both exhchange `Priority` and `Ordered` values:
+The Publisher and Subscriber both exchange `Priority` and `Ordered` values:
 - `Priority` determines which Track should be transmitted next.
-- `Ordered` determines when Group within the Track should be transmitted next.
+- `Ordered` determines which Group within the Track should be transmitted next.
 
 A publisher SHOULD attempt to transmit streams based on these fields.
-This depends on the QUIC library and it may not be possible to get fine-grained control.
+This depends on the QUIC implementation and it may not be possible to get fine-grained control.
 
 ### Priority
 The `Subscriber Priority` is scoped to the connection.
@@ -281,12 +281,12 @@ bob/video: subscriber_priority=1 publisher_priority=2
 ali/video: subscriber_priority=1 publisher_priority=1
 ```
 
-The subscriber priority takes presidence, so we could override it if we decided to full screen Ali's window:
+The subscriber priority takes precedence, so we could override it if we decided to full screen Ali's window:
 ```
 ali/audio subscriber_priority=4 publisher_priority=2
 ali/video subscriber_priority=3 publisher_priority=1
 bob/audio subscriber_priority=2 publisher_priority=3
-bob/audio subscriber_priority=1 publisher_priority=2
+bob/video subscriber_priority=1 publisher_priority=2
 ```
 
 ### Ordered
@@ -294,9 +294,9 @@ The `Subscriber Ordered` boolean signals if older (true) or newer (false) groups
 The `Publisher Ordered` boolean MAY likewise be used to resolve conflicts.
 
 An application SHOULD use `ordered` when it wants to provide a VOD-like experience, preferring to buffer old groups rather than skip them.
-An application SHOULD NOT `ordered` when it wants to provide a live experience, preferring to skip old groups rather than buffer them.
+An application SHOULD NOT use `ordered` when it wants to provide a live experience, preferring to skip old groups rather than buffer them.
 
-Note that (expiration)[#expiration] is not affected by `ordered`.
+Note that [expiration](#expiration) is not affected by `ordered`.
 An old group may still be cancelled/skipped if it's older than `max_latency` set by either peer.
 An application MUST support gaps and out-of-order delivery even when `ordered` is true.
 
@@ -330,8 +330,8 @@ A publisher SHOULD expire groups based on the `Publisher Max Latency` in SUBSCRI
 An implementation MAY use the minimum of both when determining when to expire a group.
 
 Each group consists of a maximum Frame Instant, the meaning of "processed" depending on the endpoint:
-- A publisher uses a frame was queued, regardless of it it has been flushed to the QUIC layer.
-- A subscriber uses when a frame was received, regardless of it it has been flushed to the application.
+- A publisher uses when a frame was queued, regardless of if it has been flushed to the QUIC layer.
+- A subscriber uses when a frame was received, regardless of if it has been flushed to the application.
 
 The entire track consists of a maximum Frame Instant using the same logic as above.
 For each group, if the maximum Frame Instant is more than `Max Latency` behind the track's maximum Frame Instant, then the group is considered expired.
@@ -342,9 +342,12 @@ An expired group SHOULD BE reset at the QUIC level to avoid consuming flow contr
 - Group 1: 1000 1500 (2000)
 - Group 2: 2500 3000
 
-Frame 2000 in this example has not been received yet by the subscriber.
-If the `max_latency` was 1250, then the Subscriber SHOULD expire Group 1 but the Publisher SHOULD NOT yet.
-The opposite would be true if Frame 3000 was still in transit:
+In this example, frame 2000 has been queued by the publisher but not yet received by the subscriber (shown in parentheses).
+If `max_latency` is 1250:
+- **Subscriber**: Track max is 3000, Group 1 max received is 1500. Delta = 1500ms > 1250ms → SHOULD expire Group 1
+- **Publisher**: Track max is 3000, Group 1 max queued is 2000. Delta = 1000ms < 1250ms → SHOULD NOT expire Group 1
+
+The opposite would be true if frame 3000 was still in transit:
 
 **Example:**
 - Group 1: 1000 1500 2000
@@ -564,7 +567,7 @@ A subscriber MAY send multiple SUBSCRIBE_UPDATE messages to update the subscript
 ~~~
 SUBSCRIBE_UPDATE Message {
   Message Length (i)
-  Subscriber Priority (i)
+  Subscriber Priority (8)
   Subscriber Ordered (1)
   Subscriber Max Latency (i)
 }
