@@ -669,7 +669,7 @@ Table of Contents
      Publisher Ordered (8)
      Publisher Max Latency (i)
      Start Group (i)
-     Group Count (i)
+     End Group (i)
    }
 
    *Type*: Set to 0x0 to indicate a SUBSCRIBE_OK message.
@@ -679,8 +679,9 @@ Table of Contents
    a subsequent SUBSCRIBE_OK with a resolved value.  A non-zero value is
    the absolute group sequence + 1.
 
-   *Group Count*: The number of consecutive groups in the subscription,
-   starting from Start Group.  A value of 0 means unbounded.
+   *End Group*: The resolved absolute end group sequence (inclusive).  A
+   value of 0 means unbounded.  A non-zero value is the absolute group
+   sequence + 1.
 
    See Section 5.1.2 for information about the other fields.
 

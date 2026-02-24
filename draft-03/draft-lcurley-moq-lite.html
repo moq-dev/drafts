@@ -1919,7 +1919,7 @@ SUBSCRIBE_OK Message {
   Publisher Ordered (8)
   Publisher Max Latency (i)
   Start Group (i)
-  Group Count (i)
+  End Group (i)
 }
 </pre><a href="#section-7.7-2" class="pilcrow">¶</a>
 </div>
@@ -1929,9 +1929,10 @@ Set to 0x0 to indicate a SUBSCRIBE_OK message.<a href="#section-7.7-3" class="pi
 The resolved absolute start group sequence.
 A value of 0 means the start group is not yet known; the publisher <span class="bcp14">MUST</span> send a subsequent SUBSCRIBE_OK with a resolved value.
 A non-zero value is the absolute group sequence + 1.<a href="#section-7.7-4" class="pilcrow">¶</a></p>
-<p id="section-7.7-5"><strong>Group Count</strong>:
-The number of consecutive groups in the subscription, starting from Start Group.
-A value of 0 means unbounded.<a href="#section-7.7-5" class="pilcrow">¶</a></p>
+<p id="section-7.7-5"><strong>End Group</strong>:
+The resolved absolute end group sequence (inclusive).
+A value of 0 means unbounded.
+A non-zero value is the absolute group sequence + 1.<a href="#section-7.7-5" class="pilcrow">¶</a></p>
 <p id="section-7.7-6">See <a href="#subscribe" class="auto internal xref">Section 5.1.2</a> for information about the other fields.<a href="#section-7.7-6" class="pilcrow">¶</a></p>
 </section>
 </div>
