@@ -507,17 +507,17 @@ SUBSCRIBE_OK Message {
   Publisher Priority (8)
   Publisher Ordered (1)
   Publisher Max Latency (i)
-  Start Group (i)
-  End Group (i)
+  Group Sequence (i)
+  Group Count (i)
 }
 ~~~
 
-**Start Group**:
-The resolved absolute start group sequence + 1.
-This MUST NOT be 0.
+**Group Sequence**:
+The resolved absolute start group sequence.
 
-**End Group**:
-The resolved absolute end group sequence + 1, or 0 if unbounded.
+**Group Count**:
+The number of consecutive groups in the subscription, starting from Group Sequence.
+A value of 0 means unbounded.
 
 See [SUBSCRIBE](#subscribe) for information about the other fields.
 
@@ -527,17 +527,18 @@ A GROUP_DROP message is sent by the publisher on the Subscribe Stream when group
 ~~~
 GROUP_DROP Message {
   Message Length (i)
-  Start Group (i)
-  End Group (i)
+  Group Sequence (i)
+  Group Count (i)
   Error Code (i)
 }
 ~~~
 
-**Start Group**:
-The first group sequence in the dropped range (inclusive, absolute).
+**Group Sequence**:
+The first group sequence in the dropped range.
 
-**End Group**:
-The last group sequence in the dropped range (inclusive, absolute).
+**Group Count**:
+The number of consecutive groups being dropped, starting from Group Sequence.
+A value of 0 means all remaining groups in the subscription.
 
 **Error Code**:
 An application-specific error code.
