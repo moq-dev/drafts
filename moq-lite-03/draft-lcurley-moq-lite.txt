@@ -97,7 +97,7 @@ Table of Contents
      7.5.  SUBSCRIBE
      7.6.  SUBSCRIBE_UPDATE
      7.7.  SUBSCRIBE_OK
-     7.8.  GROUP_DROP
+     7.8.  SUBSCRIBE_DROP
      7.9.  FETCH
      7.10. PROBE
      7.11. GROUP
@@ -185,12 +185,12 @@ Table of Contents
 
    The moq-lite version is negotiated via ALPN during the QUIC
    handshake.  The ALPN format is moq-lite-xx where xx is the two-digit
-   draft version.  The latest ALPN is moq-lite-03.
+   draft version.
 
    The session is active immediately after the QUIC/WebTransport
-   connection is established.  No additional handshake is required.
-   Extensions are negotiated via stream probing: an endpoint opens a
-   stream with an unknown type and the peer resets it if unsupported.
+   connection is established.  Extensions are negotiated via stream
+   probing: an endpoint opens a stream with an unknown type and the peer
+   resets it if unsupported.
 
    While moq-lite is a point-to-point protocol, it's intended to work
    end-to-end via relays.  Each client establishes a session with a CDN
@@ -248,7 +248,7 @@ Table of Contents
    that all Frames within a Group arrive reliably and in order.
 
    In contrast, Groups may arrive out of order due to network congestion
-   and prioritization.  The application MUST process or buffer groups
+   and prioritization.  The application SHOULD process or buffer groups
    out of order to avoid blocking on flow control.
 
 3.5.  Frame
@@ -295,8 +295,8 @@ Table of Contents
 
    The moq-lite version is negotiated via ALPN during the QUIC
    handshake.  The ALPN format is moq-lite-xx where xx is the two-digit
-   draft version (latest: moq-lite-03).  The session is active
-   immediately after the connection is established.
+   draft version.  The session is active immediately after the
+   connection is established.
 
 5.  Streams
 
@@ -354,13 +354,15 @@ Table of Contents
    The subscriber MUST start a Subscribe Stream with a SUBSCRIBE message
    followed by any number of SUBSCRIBE_UPDATE messages.  The publisher
    replies with a SUBSCRIBE_OK message followed by any number of
-   GROUP_DROP and additional SUBSCRIBE_OK messages.
+   SUBSCRIBE_DROP and additional SUBSCRIBE_OK messages.  The first
+   message on the response stream MUST be a SUBSCRIBE_OK; it is not
+   valid to send a SUBSCRIBE_DROP before SUBSCRIBE_OK.
 
    The publisher closes the stream (FIN) when every group from start to
    end has been accounted for, either via a completed GROUP stream or a
-   GROUP_DROP message.  Unbounded subscriptions (no end group) stay open
-   until the track ends or either endpoint cancels.  Either endpoint MAY
-   reset/cancel the stream at any time.
+   SUBSCRIBE_DROP message.  Unbounded subscriptions (no end group) stay
+   open until the track ends or either endpoint cancels.  Either
+   endpoint MAY reset/cancel the stream at any time.
 
 5.1.3.  Fetch
 
@@ -656,9 +658,11 @@ Table of Contents
 
    A SUBSCRIBE_OK message is sent in response to a SUBSCRIBE.  The
    publisher MAY send multiple SUBSCRIBE_OK messages to update the
-   subscription.
+   subscription.  The first message on the response stream MUST be a
+   SUBSCRIBE_OK; a SUBSCRIBE_DROP MUST NOT precede it.
 
    SUBSCRIBE_OK Message {
+     Type (i) = 0x0
      Message Length (i)
      Publisher Priority (8)
      Publisher Ordered (1)
@@ -667,6 +671,8 @@ Table of Contents
      Group Count (i)
    }
 
+   *Type*: Set to 0x0 to indicate a SUBSCRIBE_OK message.
+
    *Group Sequence*: The resolved absolute start group sequence.
 
    *Group Count*: The number of consecutive groups in the subscription,
@@ -674,17 +680,20 @@ Table of Contents
 
    See Section 5.1.2 for information about the other fields.
 
-7.8.  GROUP_DROP
+7.8.  SUBSCRIBE_DROP
 
-   A GROUP_DROP message is sent by the publisher on the Subscribe Stream
-   when groups cannot be served.
+   A SUBSCRIBE_DROP message is sent by the publisher on the Subscribe
+   Stream when groups cannot be served.
 
-   GROUP_DROP Message {
+   SUBSCRIBE_DROP Message {
+     Type (i) = 0x1
      Message Length (i)
      Group Sequence (i)
      Group Count (i)
      Error Code (i)
    }
+
+   *Type*: Set to 0x1 to indicate a SUBSCRIBE_DROP message.
 
    *Group Sequence*: The first group sequence in the dropped range.
 
@@ -769,8 +778,8 @@ Table of Contents
 
 8.1.  moq-lite-03
 
-   *  Version negotiated via ALPN (moq-lite-xx, latest moq-lite-03)
-      instead of SETUP messages.
+   *  Version negotiated via ALPN (moq-lite-xx) instead of SETUP
+      messages.
 
    *  Removed Session, SessionCompat streams and
       SESSION_CLIENT/SESSION_SERVER/SESSION_UPDATE messages.
@@ -780,10 +789,10 @@ Table of Contents
 
    *  Added FETCH stream for single group download.
 
-   *  Added Start Group and End Group (+1 encoded) to SUBSCRIBE,
-      SUBSCRIBE_UPDATE, and SUBSCRIBE_OK.
+   *  Added Start Group and End Group to SUBSCRIBE, SUBSCRIBE_UPDATE,
+      and SUBSCRIBE_OK.
 
-   *  Added GROUP_DROP on Subscribe stream.
+   *  Added SUBSCRIBE_DROP on Subscribe stream.
 
    *  Subscribe stream closed (FIN) when all groups accounted for.
 
