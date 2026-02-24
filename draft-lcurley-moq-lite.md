@@ -307,12 +307,11 @@ A subscriber SHOULD expire groups based on the `Subscriber Max Latency` in SUBSC
 A publisher SHOULD expire groups based on the `Publisher Max Latency` in SUBSCRIBE_OK.
 An implementation MAY use the minimum of both when determining when to expire a group.
 
-Expiration is based on arrival timestamps.
-Each group has an arrival timestamp, defined as the time the first byte was received (subscriber) or queued (publisher).
-If the time elapsed since a group's arrival exceeds `Max Latency`, and a newer group has since arrived, the older group is considered expired.
+Group age is computed relative to the latest group by sequence number.
+A group is never expired until at least the next group (by sequence number) has been received or queued.
+Once a newer group exists, a group is considered expired if the time between its arrival and the latest group's arrival exceeds `Max Latency`.
+The arrival time is when the first byte of a group is received (subscriber) or queued (publisher).
 An expired group SHOULD BE reset at the QUIC level to avoid consuming flow control.
-
-An implementation SHOULD NOT expire the highest sequence number group within each track, otherwise a track may become perpetually expired.
 
 ## Unidirectional Streams
 Unidirectional streams are used for data transmission.
@@ -464,8 +463,8 @@ The publisher SHOULD transmit *older* groups first during congestion if true.
 See the [Prioritization](#prioritization) section for more information.
 
 **Subscriber Max Latency**:
-This value is encoded in milliseconds and represents the maximum age of a group based on arrival time.
-The publisher SHOULD reset old group streams when they have been pending for longer than this duration.
+This value is encoded in milliseconds and represents the maximum age of a group relative to the latest group.
+The publisher SHOULD reset old group streams when the difference in arrival time between the group and the latest group exceeds this duration.
 See the [Expiration](#expiration) section for more information.
 
 **Start Group**:
@@ -634,7 +633,6 @@ A generic library or relay MUST NOT inspect or modify the contents unless otherw
 - Added GROUP_DROP on Subscribe stream.
 - Subscribe stream closed (FIN) when all groups accounted for.
 - Added PROBE stream replacing SESSION_UPDATE bitrate.
-- Removed `Instant Delta` from FRAME; expiration is now based on arrival timestamps.
 - Added `Subscriber Max Latency` and `Subscriber Ordered` to SUBSCRIBE and SUBSCRIBE_UPDATE.
 - Added `Publisher Priority`, `Publisher Max Latency`, and `Publisher Ordered` to SUBSCRIBE_OK.
 - SUBSCRIBE_OK may be sent multiple times.
