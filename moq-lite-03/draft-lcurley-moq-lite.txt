@@ -93,16 +93,15 @@ Table of Contents
      7.1.  Message Length
      7.2.  STREAM_TYPE
      7.3.  ANNOUNCE_PLEASE
-     7.4.  ANNOUNCE_INIT
-     7.5.  ANNOUNCE
-     7.6.  SUBSCRIBE
-     7.7.  SUBSCRIBE_UPDATE
-     7.8.  SUBSCRIBE_OK
-     7.9.  GROUP_DROP
-     7.10. FETCH
-     7.11. PROBE
-     7.12. GROUP
-     7.13. FRAME
+     7.4.  ANNOUNCE
+     7.5.  SUBSCRIBE
+     7.6.  SUBSCRIBE_UPDATE
+     7.7.  SUBSCRIBE_OK
+     7.8.  GROUP_DROP
+     7.9.  FETCH
+     7.10. PROBE
+     7.11. GROUP
+     7.12. FRAME
    8.  Appendix A: Changelog
      8.1.  moq-lite-03
      8.2.  moq-lite-02
@@ -330,32 +329,23 @@ Table of Contents
    matching a prefix.
 
    The subscriber creates the stream with a ANNOUNCE_PLEASE message.
-   The publisher replies with an ANNOUNCE_INIT message containing all
-   currently active broadcasts that currently match the prefix, followed
-   by ANNOUNCE messages for any changes.
-
-   The ANNOUNCE_INIT message contains an array of all currently active
-   broadcast paths encoded as a suffix.  Each path in ANNOUNCE_INIT can
-   be treated as if it were an ANNOUNCE message with status active.
-
-   After ANNOUNCE_INIT, the publisher sends ANNOUNCE messages for any
-   changes also encoded as a suffix.  Each ANNOUNCE message contains one
-   of the following statuses:
+   The publisher replies with ANNOUNCE messages for any matching
+   broadcasts and any future changes.  Each ANNOUNCE message contains
+   one of the following statuses:
 
    *  active: a matching broadcast is available.
 
    *  ended: a previously active broadcast is no longer available.
 
-   Each broadcast starts as ended (unless included in ANNOUNCE_INIT) and
-   MUST alternate between active and ended.  The subscriber MUST reset
-   the stream if it receives a duplicate status, such as two active
-   statuses in a row or an ended without active.  When the stream is
-   closed, the subscriber MUST assume that all broadcasts are now ended.
+   Each broadcast starts as ended and MUST alternate between active and
+   ended.  The subscriber MUST reset the stream if it receives a
+   duplicate status, such as two active statuses in a row or an ended
+   without active.  When the stream is closed, the subscriber MUST
+   assume that all broadcasts are now ended.
 
    Path prefix matching and equality is done on a byte-by-byte basis.
    There MAY be multiple Announce Streams, potentially containing
-   overlapping prefixes, that get their own ANNOUNCE_INIT and ANNOUNCE
-   messages.
+   overlapping prefixes, that get their own ANNOUNCE messages.
 
 5.1.2.  Subscribe
 
@@ -565,57 +555,26 @@ Table of Contents
    *Broadcast Path Prefix*: Indicate interest for any broadcasts with a
    path that starts with this prefix.
 
-   The publisher MUST respond with an ANNOUNCE_INIT message containing
-   any matching and active broadcasts, followed by ANNOUNCE messages for
-   any updates.  Implementations SHOULD consider reasonable limits on
-   the number of matching broadcasts to prevent resource exhaustion.
+   The publisher MUST respond with ANNOUNCE messages for any matching
+   and active broadcasts, followed by ANNOUNCE messages for any future
+   updates.  Implementations SHOULD consider reasonable limits on the
+   number of matching broadcasts to prevent resource exhaustion.
 
-7.4.  ANNOUNCE_INIT
-
-   A publisher sends an ANNOUNCE_INIT message immediately after
-   receiving an ANNOUNCE_PLEASE to communicate all currently active
-   broadcasts that match the requested prefix.  Only the suffixes are
-   encoded on the wire, as the full path can be constructed by
-   prepending the requested prefix.
-
-   This message is useful to avoid race conditions, as ANNOUNCE_INIT
-   does not trickle in like ANNOUNCE messages.  For example, an API
-   server that wants to list the current participants could issue an
-   ANNOUNCE_PLEASE and immediately return the ANNOUNCE_INIT response.
-   Without ANNOUNCE_INIT, the API server would have use a timer to wait
-   until ANNOUNCE to guess when all ANNOUNCE messages have been
-   received.
-
-   ANNOUNCE_INIT Message {
-     Message Length (i)
-     Suffix Count (i),
-     [
-       Broadcast Path Suffix (s),
-     ]...
-   }
-
-   *Suffix Count*: The number of active broadcast path suffixes that
-   follow.  This can be 0.  A publisher MUST NOT include duplicate
-   suffixes in a single ANNOUNCE_INIT message.
-
-   *Broadcast Path Suffix*: Each suffix is combined with the broadcast
-   path prefix from ANNOUNCE_PLEASE to form the full broadcast path.
-   This includes all currently active broadcasts matching the prefix.
-
-7.5.  ANNOUNCE
+7.4.  ANNOUNCE
 
    A publisher sends an ANNOUNCE message to advertise a change in
    broadcast availability.  Only the suffix is encoded on the wire, as
    the full path can be constructed by prepending the requested prefix.
 
-   The status is relative to the ANNOUNCE_INIT and all prior ANNOUNCE
-   messages combined.  A client MUST ONLY alternate between status
-   values (from active to ended or vice versa).
+   The status is relative to all prior ANNOUNCE messages on the same
+   stream.  A client MUST ONLY alternate between status values (from
+   active to ended or vice versa).
 
    ANNOUNCE Message {
      Message Length (i)
      Announce Status (i),
      Broadcast Path Suffix (s),
+     Hops (i),
    }
 
    *Announce Status*: A flag indicating the announce status.
@@ -627,7 +586,11 @@ Table of Contents
    *Broadcast Path Suffix*: This is combined with the broadcast path
    prefix to form the full broadcast path.
 
-7.6.  SUBSCRIBE
+   *Hops*: The number of hops from the origin publisher.  This is used
+   as a tiebreaker when there are multiple paths to the same broadcast.
+   A relay SHOULD increment this value when forwarding an announcement.
+
+7.5.  SUBSCRIBE
 
    SUBSCRIBE is sent by a subscriber to start a subscription.
 
@@ -671,7 +634,7 @@ Table of Contents
    means unbounded (default).  A non-zero value is the absolute group
    sequence + 1.
 
-7.7.  SUBSCRIBE_UPDATE
+7.6.  SUBSCRIBE_UPDATE
 
    A subscriber can modify a subscription with a SUBSCRIBE_UPDATE
    message.  A subscriber MAY send multiple SUBSCRIBE_UPDATE messages to
@@ -689,7 +652,7 @@ Table of Contents
 
    See Section 5.1.2 for information about each field.
 
-7.8.  SUBSCRIBE_OK
+7.7.  SUBSCRIBE_OK
 
    A SUBSCRIBE_OK message is sent in response to a SUBSCRIBE.  The
    publisher MAY send multiple SUBSCRIBE_OK messages to update the
@@ -711,7 +674,7 @@ Table of Contents
 
    See Section 5.1.2 for information about the other fields.
 
-7.9.  GROUP_DROP
+7.8.  GROUP_DROP
 
    A GROUP_DROP message is sent by the publisher on the Subscribe Stream
    when groups cannot be served.
@@ -732,7 +695,7 @@ Table of Contents
    *Error Code*: An application-specific error code.  A value of 0
    indicates no error; the groups are simply unavailable.
 
-7.10.  FETCH
+7.9.  FETCH
 
    FETCH is sent by a subscriber to request a single group from a track.
 
@@ -757,7 +720,7 @@ Table of Contents
    The publisher responds with FRAME messages on the same stream.  The
    publisher FINs the stream after the last frame, or resets on error.
 
-7.11.  PROBE
+7.10.  PROBE
 
    PROBE is used to measure the available bitrate of the connection.
 
@@ -771,7 +734,7 @@ Table of Contents
    sent by the publisher (responder): the current measured bitrate in
    bits per second.
 
-7.12.  GROUP
+7.11.  GROUP
 
    The GROUP message contains information about a Group, as well as a
    reference to the subscription being served.
@@ -789,7 +752,7 @@ Table of Contents
    increase by 1 for each new group.  A subscriber MUST handle gaps,
    potentially caused by congestion.
 
-7.13.  FRAME
+7.12.  FRAME
 
    The FRAME message is a payload within a group.
 
@@ -826,6 +789,10 @@ Table of Contents
 
    *  Added PROBE stream replacing SESSION_UPDATE bitrate.
 
+   *  Removed ANNOUNCE_INIT message.
+
+   *  Added Hops to ANNOUNCE.
+
    *  Added Subscriber Max Latency and Subscriber Ordered to SUBSCRIBE
       and SUBSCRIBE_UPDATE.
 
@@ -841,8 +808,6 @@ Table of Contents
    *  Editorial stuff.
 
 8.3.  moq-lite-01
-
-   *  Added ANNOUNCE_INIT.
 
    *  Added Message Length (i) to all messages.
 
