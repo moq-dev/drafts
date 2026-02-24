@@ -77,10 +77,8 @@ There is currently no P2P support within QUIC so it's out of scope for moq-lite.
 
 The moq-lite version is negotiated via ALPN during the QUIC handshake.
 The ALPN format is `moq-lite-xx` where `xx` is the two-digit draft version.
-The latest ALPN is `moq-lite-03`.
 
 The session is active immediately after the QUIC/WebTransport connection is established.
-No additional handshake is required.
 Extensions are negotiated via stream probing: an endpoint opens a stream with an unknown type and the peer resets it if unsupported.
 
 While moq-lite is a point-to-point protocol, it's intended to work end-to-end via relays.
@@ -123,7 +121,7 @@ A Group is served by a dedicated QUIC stream which is closed on completion, rese
 This ensures that all Frames within a Group arrive reliably and in order.
 
 In contrast, Groups may arrive out of order due to network congestion and prioritization.
-The application MUST process or buffer groups out of order to avoid blocking on flow control.
+The application SHOULD process or buffer groups out of order to avoid blocking on flow control.
 
 ## Frame
 A Frame is a payload of bytes within a Group.
@@ -159,7 +157,7 @@ However, it is ultimately the other peer's responsibility to close their send di
 
 ## Handshake
 The moq-lite version is negotiated via ALPN during the QUIC handshake.
-The ALPN format is `moq-lite-xx` where `xx` is the two-digit draft version (latest: `moq-lite-03`).
+The ALPN format is `moq-lite-xx` where `xx` is the two-digit draft version.
 The session is active immediately after the connection is established.
 
 # Streams
@@ -203,9 +201,10 @@ There MAY be multiple Announce Streams, potentially containing overlapping prefi
 A subscriber opens Subscribe Streams to request a Track.
 
 The subscriber MUST start a Subscribe Stream with a SUBSCRIBE message followed by any number of SUBSCRIBE_UPDATE messages.
-The publisher replies with a SUBSCRIBE_OK message followed by any number of GROUP_DROP and additional SUBSCRIBE_OK messages.
+The publisher replies with a SUBSCRIBE_OK message followed by any number of SUBSCRIBE_DROP and additional SUBSCRIBE_OK messages.
+The first message on the response stream MUST be a SUBSCRIBE_OK; it is not valid to send a SUBSCRIBE_DROP before SUBSCRIBE_OK.
 
-The publisher closes the stream (FIN) when every group from start to end has been accounted for, either via a completed GROUP stream or a GROUP_DROP message.
+The publisher closes the stream (FIN) when every group from start to end has been accounted for, either via a completed GROUP stream or a SUBSCRIBE_DROP message.
 Unbounded subscriptions (no end group) stay open until the track ends or either endpoint cancels.
 Either endpoint MAY reset/cancel the stream at any time.
 
@@ -472,9 +471,11 @@ See [SUBSCRIBE](#subscribe) for information about each field.
 ## SUBSCRIBE_OK
 A SUBSCRIBE_OK message is sent in response to a SUBSCRIBE.
 The publisher MAY send multiple SUBSCRIBE_OK messages to update the subscription.
+The first message on the response stream MUST be a SUBSCRIBE_OK; a SUBSCRIBE_DROP MUST NOT precede it.
 
 ~~~
 SUBSCRIBE_OK Message {
+  Type (i) = 0x0
   Message Length (i)
   Publisher Priority (8)
   Publisher Ordered (1)
@@ -483,6 +484,9 @@ SUBSCRIBE_OK Message {
   Group Count (i)
 }
 ~~~
+
+**Type**:
+Set to 0x0 to indicate a SUBSCRIBE_OK message.
 
 **Group Sequence**:
 The resolved absolute start group sequence.
@@ -493,17 +497,21 @@ A value of 0 means unbounded.
 
 See [SUBSCRIBE](#subscribe) for information about the other fields.
 
-## GROUP_DROP
-A GROUP_DROP message is sent by the publisher on the Subscribe Stream when groups cannot be served.
+## SUBSCRIBE_DROP
+A SUBSCRIBE_DROP message is sent by the publisher on the Subscribe Stream when groups cannot be served.
 
 ~~~
-GROUP_DROP Message {
+SUBSCRIBE_DROP Message {
+  Type (i) = 0x1
   Message Length (i)
   Group Sequence (i)
   Group Count (i)
   Error Code (i)
 }
 ~~~
+
+**Type**:
+Set to 0x1 to indicate a SUBSCRIBE_DROP message.
 
 **Group Sequence**:
 The first group sequence in the dropped range.
@@ -598,12 +606,12 @@ A generic library or relay MUST NOT inspect or modify the contents unless otherw
 # Appendix A: Changelog
 
 ## moq-lite-03
-- Version negotiated via ALPN (`moq-lite-xx`, latest `moq-lite-03`) instead of SETUP messages.
+- Version negotiated via ALPN (`moq-lite-xx`) instead of SETUP messages.
 - Removed Session, SessionCompat streams and SESSION_CLIENT/SESSION_SERVER/SESSION_UPDATE messages.
 - Unknown stream types reset instead of fatal; enables extension negotiation via stream probing.
 - Added FETCH stream for single group download.
-- Added Start Group and End Group (+1 encoded) to SUBSCRIBE, SUBSCRIBE_UPDATE, and SUBSCRIBE_OK.
-- Added GROUP_DROP on Subscribe stream.
+- Added Start Group and End Group to SUBSCRIBE, SUBSCRIBE_UPDATE, and SUBSCRIBE_OK.
+- Added SUBSCRIBE_DROP on Subscribe stream.
 - Subscribe stream closed (FIN) when all groups accounted for.
 - Added PROBE stream replacing SESSION_UPDATE bitrate.
 - Removed ANNOUNCE_INIT message.
