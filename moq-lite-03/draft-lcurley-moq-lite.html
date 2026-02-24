@@ -1218,16 +1218,13 @@ While primarily designed for media, the transport is payload agnostic and can be
                 </ul>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
-                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-instant" class="internal xref">Instant</a></p>
+                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-expiration" class="internal xref">Expiration</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.3">
-                <p id="section-toc.1-1.6.2.3.1"><a href="#section-6.3" class="auto internal xref">6.3</a>.  <a href="#name-expiration" class="internal xref">Expiration</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.4">
-                <p id="section-toc.1-1.6.2.4.1"><a href="#section-6.4" class="auto internal xref">6.4</a>.  <a href="#name-unidirectional-streams" class="internal xref">Unidirectional Streams</a></p>
+                <p id="section-toc.1-1.6.2.3.1"><a href="#section-6.3" class="auto internal xref">6.3</a>.  <a href="#name-unidirectional-streams" class="internal xref">Unidirectional Streams</a></p>
 <ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.4.2.1">
-                    <p id="section-toc.1-1.6.2.4.2.1.1"><a href="#section-6.4.1" class="auto internal xref">6.4.1</a>.  <a href="#name-group-2" class="internal xref">Group</a></p>
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.3.2.1">
+                    <p id="section-toc.1-1.6.2.3.2.1.1"><a href="#section-6.3.1" class="auto internal xref">6.3.1</a>.  <a href="#name-group-2" class="internal xref">Group</a></p>
 </li>
                 </ul>
 </li>
@@ -1380,7 +1377,7 @@ This draft is the current state, not the end state.<a href="#section-2-6" class=
           <p id="section-3-2.4.1"><strong>Group</strong>: An series of Frames, each of which must be delivered and decoded <em>in-order</em>.<a href="#section-3-2.4.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-3-2.5">
-          <p id="section-3-2.5.1"><strong>Frame</strong>: A sized payload of bytes representing a single moment in time.<a href="#section-3-2.5.1" class="pilcrow">¶</a></p>
+          <p id="section-3-2.5.1"><strong>Frame</strong>: A sized payload of bytes within a Group.<a href="#section-3-2.5.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 <p id="section-3-3">The application determines how to split data into broadcast, tracks, groups, and frames.
@@ -1431,7 +1428,7 @@ A subscription starts at a configurable Group (defaulting to the latest) and con
 <p id="section-3.3-4">The subscriber and publisher both indicate their delivery preference:
 - <code>Priority</code> indicates if Track A should be transmitted instead of Track B.
 - <code>Ordered</code> indicates if the Groups within a Track should be transmitted in order.
-- <code>Max Latency</code> indicates the maximum duration (based on instants) before a Group is abandoned.<a href="#section-3.3-4" class="pilcrow">¶</a></p>
+- <code>Max Latency</code> indicates the maximum duration before a Group is abandoned.<a href="#section-3.3-4" class="pilcrow">¶</a></p>
 <p id="section-3.3-5">The combination of these preferences enables the most important content to arrive during network degradation while still respecting encoding dependencies.<a href="#section-3.3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1454,9 +1451,8 @@ The application <span class="bcp14">MUST</span> process or buffer groups out of 
 <a href="#section-3.5" class="section-number selfRef">3.5. </a><a href="#name-frame" class="section-name selfRef">Frame</a>
         </h3>
 <p id="section-3.5-1">A Frame is a payload of bytes within a Group.<a href="#section-3.5-1" class="pilcrow">¶</a></p>
-<p id="section-3.5-2">A frame is used to represent a chunk of data with an upfront size and <a href="#instant" class="auto internal xref">Section 6.2</a>.
-The instant is relative to all other frames within the same Track, used for <a href="#expiration" class="auto internal xref">Section 6.3</a> and metrics.
-The application <span class="bcp14">MAY</span> use the instant as a replacement for a presentation timestamp, used for track playback and synchronization.<a href="#section-3.5-2" class="pilcrow">¶</a></p>
+<p id="section-3.5-2">A frame is used to represent a chunk of data with an upfront size.
+The contents are opaque to the moq-lite layer.<a href="#section-3.5-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1686,73 +1682,38 @@ bob/video subscriber_priority=1 publisher_priority=2
 The <code>Publisher Ordered</code> boolean <span class="bcp14">MAY</span> likewise be used to resolve conflicts.<a href="#section-6.1.2-1" class="pilcrow">¶</a></p>
 <p id="section-6.1.2-2">An application <span class="bcp14">SHOULD</span> use <code>ordered</code> when it wants to provide a VOD-like experience, preferring to buffer old groups rather than skip them.
 An application <span class="bcp14">SHOULD NOT</span> use <code>ordered</code> when it wants to provide a live experience, preferring to skip old groups rather than buffer them.<a href="#section-6.1.2-2" class="pilcrow">¶</a></p>
-<p id="section-6.1.2-3">Note that <a href="#expiration" class="auto internal xref">Section 6.3</a> is not affected by <code>ordered</code>.
-An old group may still be cancelled/skipped if it's older than <code>max_latency</code> set by either peer.
+<p id="section-6.1.2-3">Note that <a href="#expiration" class="auto internal xref">Section 6.2</a> is not affected by <code>ordered</code>.
+An old group may still be cancelled/skipped if it exceeds <code>max_latency</code> set by either peer.
 An application <span class="bcp14">MUST</span> support gaps and out-of-order delivery even when <code>ordered</code> is true.<a href="#section-6.1.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
 </div>
-<div id="instant">
-<section id="section-6.2">
-        <h3 id="name-instant">
-<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-instant" class="section-name selfRef">Instant</a>
-        </h3>
-<p id="section-6.2-1">Every Frame consists of an Instant (in milliseconds) scoped to the track.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
-<p id="section-6.2-2">This is used for <a href="#expiration" class="auto internal xref">Section 6.3</a> at the moq-lite layer.
-The instant <span class="bcp14">MAY</span> be used for track synchronization at the application layer, however many containers/formats already contain their own timestamps.
-A publisher <span class="bcp14">SHOULD</span> try to preserve the instant when the frame was first created/captured, proxying it.<a href="#section-6.2-2" class="pilcrow">¶</a></p>
-<p id="section-6.2-3">Each frame within a group <span class="bcp14">MUST</span> have a monotonically increasing instant.
-If the presentation timestamp goes backwards (ex. b-frames), a frame's Instant <span class="bcp14">SHOULD</span> be the maximum presentation timestamp of the group up until that point.
-Duplicates are allowed, encoded as delta 0.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
-<p id="section-6.2-4">Unless specified by the application, a subscriber:
-- <span class="bcp14">SHOULD NOT</span> assume that an instant is a wall clock time.
-- <span class="bcp14">SHOULD NOT</span> assume that an instant starts at zero.<a href="#section-6.2-4" class="pilcrow">¶</a></p>
-<p id="section-6.2-5">Clock synchronization is out of scope for this draft.<a href="#section-6.2-5" class="pilcrow">¶</a></p>
-</section>
-</div>
 <div id="expiration">
-<section id="section-6.3">
+<section id="section-6.2">
         <h3 id="name-expiration">
-<a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-expiration" class="section-name selfRef">Expiration</a>
+<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-expiration" class="section-name selfRef">Expiration</a>
         </h3>
-<p id="section-6.3-1">The Publisher and Subscriber both transmit a <code>Max Latency</code> value, indicating the maximum duration before a group is expired.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
-<p id="section-6.3-2">It is not crucial to aggressively expire groups thanks to <a href="#prioritization" class="auto internal xref">Section 6.1</a>.
+<p id="section-6.2-1">The Publisher and Subscriber both transmit a <code>Max Latency</code> value, indicating the maximum duration before a group is expired.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+<p id="section-6.2-2">It is not crucial to aggressively expire groups thanks to <a href="#prioritization" class="auto internal xref">Section 6.1</a>.
 However, a lower priority group will still consume RAM, bandwidth, and potentially flow control.
-It is <span class="bcp14">RECOMMENDED</span> that an application set conservative limits and only resort to expiration when data is absolutely no longer needed.<a href="#section-6.3-2" class="pilcrow">¶</a></p>
-<p id="section-6.3-3">A subscriber <span class="bcp14">SHOULD</span> expire groups based on the <code>Subscriber Max Latency</code> in SUBSCRIBE/SUBSCRIBE_UPDATE.
+It is <span class="bcp14">RECOMMENDED</span> that an application set conservative limits and only resort to expiration when data is absolutely no longer needed.<a href="#section-6.2-2" class="pilcrow">¶</a></p>
+<p id="section-6.2-3">A subscriber <span class="bcp14">SHOULD</span> expire groups based on the <code>Subscriber Max Latency</code> in SUBSCRIBE/SUBSCRIBE_UPDATE.
 A publisher <span class="bcp14">SHOULD</span> expire groups based on the <code>Publisher Max Latency</code> in SUBSCRIBE_OK.
-An implementation <span class="bcp14">MAY</span> use the minimum of both when determining when to expire a group.<a href="#section-6.3-3" class="pilcrow">¶</a></p>
-<p id="section-6.3-4">Each group consists of a maximum Frame Instant, the meaning of "processed" depending on the endpoint:
-- A publisher uses when a frame was queued, regardless of if it has been flushed to the QUIC layer.
-- A subscriber uses when a frame was received, regardless of if it has been flushed to the application.<a href="#section-6.3-4" class="pilcrow">¶</a></p>
-<p id="section-6.3-5">The entire track consists of a maximum Frame Instant using the same logic as above.
-For each group, if the maximum Frame Instant is more than <code>Max Latency</code> behind the track's maximum Frame Instant, then the group is considered expired.
-An expired group <span class="bcp14">SHOULD</span> BE reset at the QUIC level to avoid consuming flow control.<a href="#section-6.3-5" class="pilcrow">¶</a></p>
-<p id="section-6.3-6"><strong>Example:</strong>
-- Group 1: 1000 1500 (2000)
-- Group 2: 2500 3000<a href="#section-6.3-6" class="pilcrow">¶</a></p>
-<p id="section-6.3-7">In this example, frame 2000 has been queued by the publisher but not yet received by the subscriber (shown in parentheses).
-If <code>max_latency</code> is 1250:
-- <strong>Subscriber</strong>: Track max is 3000, Group 1 max received is 1500. Delta = 1500ms &gt; 1250ms → <span class="bcp14">SHOULD</span> expire Group 1
-- <strong>Publisher</strong>: Track max is 3000, Group 1 max queued is 2000. Delta = 1000ms &lt; 1250ms → <span class="bcp14">SHOULD NOT</span> expire Group 1<a href="#section-6.3-7" class="pilcrow">¶</a></p>
-<p id="section-6.3-8">The opposite would be true if frame 3000 was still in transit:<a href="#section-6.3-8" class="pilcrow">¶</a></p>
-<p id="section-6.3-9"><strong>Example:</strong>
-- Group 1: 1000 1500 2000
-- Group 2: 2500 (3000)<a href="#section-6.3-9" class="pilcrow">¶</a></p>
-<p id="section-6.3-10"><strong>NOTE</strong>: Individual frames within a group cannot be cancelled.
-Even if <code>max_latency</code> was 0, Group 2 would not be expired until a (higher) frame in Group 3 is queued/received.<a href="#section-6.3-10" class="pilcrow">¶</a></p>
-<p id="section-6.3-11">An implementation <span class="bcp14">MAY</span> use the broadcast's maximum Frame Instant instead of the track's maximum Frame Instant.
-This is useful to account for encoding delays, ex. when video takes 300ms longer to encode than audio.
-However, it <span class="bcp14">SHOULD NOT</span> expire the highest sequence number group within each track, otherwise a track may become perpetually expired.<a href="#section-6.3-11" class="pilcrow">¶</a></p>
+An implementation <span class="bcp14">MAY</span> use the minimum of both when determining when to expire a group.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
+<p id="section-6.2-4">Expiration is based on arrival timestamps.
+Each group has an arrival timestamp, defined as the time the first byte was received (subscriber) or queued (publisher).
+If the time elapsed since a group's arrival exceeds <code>Max Latency</code>, and a newer group has since arrived, the older group is considered expired.
+An expired group <span class="bcp14">SHOULD</span> BE reset at the QUIC level to avoid consuming flow control.<a href="#section-6.2-4" class="pilcrow">¶</a></p>
+<p id="section-6.2-5">An implementation <span class="bcp14">SHOULD NOT</span> expire the highest sequence number group within each track, otherwise a track may become perpetually expired.<a href="#section-6.2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="unidirectional-streams">
-<section id="section-6.4">
+<section id="section-6.3">
         <h3 id="name-unidirectional-streams">
-<a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-unidirectional-streams" class="section-name selfRef">Unidirectional Streams</a>
+<a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-unidirectional-streams" class="section-name selfRef">Unidirectional Streams</a>
         </h3>
-<p id="section-6.4-1">Unidirectional streams are used for data transmission.<a href="#section-6.4-1" class="pilcrow">¶</a></p>
+<p id="section-6.3-1">Unidirectional streams are used for data transmission.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
 <table class="center" id="table-2">
           <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
 <thead>
@@ -1771,17 +1732,17 @@ However, it <span class="bcp14">SHOULD NOT</span> expire the highest sequence nu
           </tbody>
         </table>
 <div id="group-1">
-<section id="section-6.4.1">
+<section id="section-6.3.1">
           <h4 id="name-group-2">
-<a href="#section-6.4.1" class="section-number selfRef">6.4.1. </a><a href="#name-group-2" class="section-name selfRef">Group</a>
+<a href="#section-6.3.1" class="section-number selfRef">6.3.1. </a><a href="#name-group-2" class="section-name selfRef">Group</a>
           </h4>
-<p id="section-6.4.1-1">A publisher creates Group Streams in response to a Subscribe Stream.<a href="#section-6.4.1-1" class="pilcrow">¶</a></p>
-<p id="section-6.4.1-2">A Group Stream <span class="bcp14">MUST</span> start with a GROUP message and <span class="bcp14">MAY</span> be followed by any number of FRAME messages.
+<p id="section-6.3.1-1">A publisher creates Group Streams in response to a Subscribe Stream.<a href="#section-6.3.1-1" class="pilcrow">¶</a></p>
+<p id="section-6.3.1-2">A Group Stream <span class="bcp14">MUST</span> start with a GROUP message and <span class="bcp14">MAY</span> be followed by any number of FRAME messages.
 A Group <span class="bcp14">MAY</span> contain zero FRAME messages, potentially indicating a gap in the track.
-A frame <span class="bcp14">MAY</span> contain an empty payload, potentially indicating a gap in the group.<a href="#section-6.4.1-2" class="pilcrow">¶</a></p>
-<p id="section-6.4.1-3">Both the publisher and subscriber <span class="bcp14">MAY</span> reset the stream at any time.
+A frame <span class="bcp14">MAY</span> contain an empty payload, potentially indicating a gap in the group.<a href="#section-6.3.1-2" class="pilcrow">¶</a></p>
+<p id="section-6.3.1-3">Both the publisher and subscriber <span class="bcp14">MAY</span> reset the stream at any time.
 This is not a fatal error and the session remains active.
-The subscriber <span class="bcp14">MAY</span> cache the error and potentially retry later.<a href="#section-6.4.1-3" class="pilcrow">¶</a></p>
+The subscriber <span class="bcp14">MAY</span> cache the error and potentially retry later.<a href="#section-6.3.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1938,9 +1899,9 @@ A boolean representing whether groups are transmitted in ascending (true) or des
 The publisher <span class="bcp14">SHOULD</span> transmit <em>older</em> groups first during congestion if true.
 See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> section for more information.<a href="#section-7.6-5" class="pilcrow">¶</a></p>
 <p id="section-7.6-6"><strong>Subscriber Max Latency</strong>:
-This value is encoded in milliseconds and represents the maximum age of a group.
-The publisher <span class="bcp14">SHOULD</span> reset old group streams when the last processed frame is at least this much older than the newest frame.
-See the <a href="#expiration" class="auto internal xref">Section 6.3</a> section for more information.<a href="#section-7.6-6" class="pilcrow">¶</a></p>
+This value is encoded in milliseconds and represents the maximum age of a group based on arrival time.
+The publisher <span class="bcp14">SHOULD</span> reset old group streams when they have been pending for longer than this duration.
+See the <a href="#expiration" class="auto internal xref">Section 6.2</a> section for more information.<a href="#section-7.6-6" class="pilcrow">¶</a></p>
 <p id="section-7.6-7"><strong>Start Group</strong>:
 The first group to deliver.
 A value of 0 means the latest group (default).
@@ -2104,24 +2065,18 @@ A subscriber <span class="bcp14">MUST</span> handle gaps, potentially caused by 
         <h3 id="name-frame-2">
 <a href="#section-7.13" class="section-number selfRef">7.13. </a><a href="#name-frame-2" class="section-name selfRef">FRAME</a>
         </h3>
-<p id="section-7.13-1">The FRAME message is a payload at a specific point of time.<a href="#section-7.13-1" class="pilcrow">¶</a></p>
+<p id="section-7.13-1">The FRAME message is a payload within a group.<a href="#section-7.13-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-7.13-2">
 <pre>
 FRAME Message {
   Message Length (i)
-  Instant Delta (i)
   Payload (b)
 }
 </pre><a href="#section-7.13-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.13-3"><strong>Instant Delta</strong>:
-The instant when the frame was created, in milliseconds, scoped to the track.
-This is encoded as a delta from the previous frame in the same group.
-An application <span class="bcp14">SHOULD</span> use the capture/presentation time to account for any encoding delays.
-See the <a href="#instant" class="auto internal xref">Section 6.2</a> section for more information.<a href="#section-7.13-3" class="pilcrow">¶</a></p>
-<p id="section-7.13-4"><strong>Payload</strong>:
+<p id="section-7.13-3"><strong>Payload</strong>:
 An application specific payload.
-A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify the contents unless otherwise negotiated.<a href="#section-7.13-4" class="pilcrow">¶</a></p>
+A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify the contents unless otherwise negotiated.<a href="#section-7.13-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2162,13 +2117,13 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
             <p id="section-8.1-1.8.1">Added PROBE stream replacing SESSION_UPDATE bitrate.<a href="#section-8.1-1.8.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.9">
-            <p id="section-8.1-1.9.1">Added <code>Subscriber Max Latency</code> and <code>Subscriber Ordered</code> to SUBSCRIBE and SUBSCRIBE_UPDATE.<a href="#section-8.1-1.9.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.9.1">Removed <code>Instant Delta</code> from FRAME; expiration is now based on arrival timestamps.<a href="#section-8.1-1.9.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.10">
-            <p id="section-8.1-1.10.1">Added <code>Publisher Priority</code>, <code>Publisher Max Latency</code>, and <code>Publisher Ordered</code> to SUBSCRIBE_OK.<a href="#section-8.1-1.10.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.10.1">Added <code>Subscriber Max Latency</code> and <code>Subscriber Ordered</code> to SUBSCRIBE and SUBSCRIBE_UPDATE.<a href="#section-8.1-1.10.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.11">
-            <p id="section-8.1-1.11.1">Added <code>Instant Delta</code> to FRAME.<a href="#section-8.1-1.11.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.11.1">Added <code>Publisher Priority</code>, <code>Publisher Max Latency</code>, and <code>Publisher Ordered</code> to SUBSCRIBE_OK.<a href="#section-8.1-1.11.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.12">
             <p id="section-8.1-1.12.1">SUBSCRIBE_OK may be sent multiple times.<a href="#section-8.1-1.12.1" class="pilcrow">¶</a></p>
