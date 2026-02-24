@@ -66,7 +66,7 @@ moq-lite consists of:
 - **Broadcast**: A collection of Tracks from a single publisher.
 - **Track**: An series of Groups, each of which can be delivered and decoded *out-of-order*.
 - **Group**: An series of Frames, each of which must be delivered and decoded *in-order*.
-- **Frame**: A sized payload of bytes representing a single moment in time.
+- **Frame**: A sized payload of bytes within a Group.
 
 The application determines how to split data into broadcast, tracks, groups, and frames.
 The moq-lite layer provides fanout, prioritization, and caching even for latency sensitive applications.
@@ -111,7 +111,7 @@ A subscription starts at a configurable Group (defaulting to the latest) and con
 The subscriber and publisher both indicate their delivery preference:
 - `Priority` indicates if Track A should be transmitted instead of Track B.
 - `Ordered` indicates if the Groups within a Track should be transmitted in order.
-- `Max Latency` indicates the maximum duration (based on instants) before a Group is abandoned.
+- `Max Latency` indicates the maximum duration before a Group is abandoned.
 
 The combination of these preferences enables the most important content to arrive during network degradation while still respecting encoding dependencies.
 
@@ -128,9 +128,8 @@ The application MUST process or buffer groups out of order to avoid blocking on 
 ## Frame
 A Frame is a payload of bytes within a Group.
 
-A frame is used to represent a chunk of data with an upfront size and [instant](#instant).
-The instant is relative to all other frames within the same Track, used for [expiration](#expiration) and metrics.
-The application MAY use the instant as a replacement for a presentation timestamp, used for track playback and synchronization.
+A frame is used to represent a chunk of data with an upfront size.
+The contents are opaque to the moq-lite layer.
 
 # Flow
 This section outlines the flow of messages within a moq-lite session.
@@ -293,26 +292,9 @@ An application SHOULD use `ordered` when it wants to provide a VOD-like experien
 An application SHOULD NOT use `ordered` when it wants to provide a live experience, preferring to skip old groups rather than buffer them.
 
 Note that [expiration](#expiration) is not affected by `ordered`.
-An old group may still be cancelled/skipped if it's older than `max_latency` set by either peer.
+An old group may still be cancelled/skipped if it exceeds `max_latency` set by either peer.
 An application MUST support gaps and out-of-order delivery even when `ordered` is true.
 
-
-## Instant
-Every Frame consists of an Instant (in milliseconds) scoped to the track.
-
-This is used for [Expiration](#expiration) at the moq-lite layer.
-The instant MAY be used for track synchronization at the application layer, however many containers/formats already contain their own timestamps.
-A publisher SHOULD try to preserve the instant when the frame was first created/captured, proxying it.
-
-Each frame within a group MUST have a monotonically increasing instant.
-If the presentation timestamp goes backwards (ex. b-frames), a frame's Instant SHOULD be the maximum presentation timestamp of the group up until that point.
-Duplicates are allowed, encoded as delta 0.
-
-Unless specified by the application, a subscriber:
-- SHOULD NOT assume that an instant is a wall clock time.
-- SHOULD NOT assume that an instant starts at zero.
-
-Clock synchronization is out of scope for this draft.
 
 ## Expiration
 The Publisher and Subscriber both transmit a `Max Latency` value, indicating the maximum duration before a group is expired.
@@ -325,37 +307,12 @@ A subscriber SHOULD expire groups based on the `Subscriber Max Latency` in SUBSC
 A publisher SHOULD expire groups based on the `Publisher Max Latency` in SUBSCRIBE_OK.
 An implementation MAY use the minimum of both when determining when to expire a group.
 
-Each group consists of a maximum Frame Instant, the meaning of "processed" depending on the endpoint:
-- A publisher uses when a frame was queued, regardless of if it has been flushed to the QUIC layer.
-- A subscriber uses when a frame was received, regardless of if it has been flushed to the application.
-
-The entire track consists of a maximum Frame Instant using the same logic as above.
-For each group, if the maximum Frame Instant is more than `Max Latency` behind the track's maximum Frame Instant, then the group is considered expired.
+Expiration is based on arrival timestamps.
+Each group has an arrival timestamp, defined as the time the first byte was received (subscriber) or queued (publisher).
+If the time elapsed since a group's arrival exceeds `Max Latency`, and a newer group has since arrived, the older group is considered expired.
 An expired group SHOULD BE reset at the QUIC level to avoid consuming flow control.
 
-
-**Example:**
-- Group 1: 1000 1500 (2000)
-- Group 2: 2500 3000
-
-In this example, frame 2000 has been queued by the publisher but not yet received by the subscriber (shown in parentheses).
-If `max_latency` is 1250:
-- **Subscriber**: Track max is 3000, Group 1 max received is 1500. Delta = 1500ms > 1250ms → SHOULD expire Group 1
-- **Publisher**: Track max is 3000, Group 1 max queued is 2000. Delta = 1000ms < 1250ms → SHOULD NOT expire Group 1
-
-The opposite would be true if frame 3000 was still in transit:
-
-**Example:**
-- Group 1: 1000 1500 2000
-- Group 2: 2500 (3000)
-
-**NOTE**: Individual frames within a group cannot be cancelled.
-Even if `max_latency` was 0, Group 2 would not be expired until a (higher) frame in Group 3 is queued/received.
-
-
-An implementation MAY use the broadcast's maximum Frame Instant instead of the track's maximum Frame Instant.
-This is useful to account for encoding delays, ex. when video takes 300ms longer to encode than audio.
-However, it SHOULD NOT expire the highest sequence number group within each track, otherwise a track may become perpetually expired.
+An implementation SHOULD NOT expire the highest sequence number group within each track, otherwise a track may become perpetually expired.
 
 ## Unidirectional Streams
 Unidirectional streams are used for data transmission.
@@ -507,8 +464,8 @@ The publisher SHOULD transmit *older* groups first during congestion if true.
 See the [Prioritization](#prioritization) section for more information.
 
 **Subscriber Max Latency**:
-This value is encoded in milliseconds and represents the maximum age of a group.
-The publisher SHOULD reset old group streams when the last processed frame is at least this much older than the newest frame.
+This value is encoded in milliseconds and represents the maximum age of a group based on arrival time.
+The publisher SHOULD reset old group streams when they have been pending for longer than this duration.
 See the [Expiration](#expiration) section for more information.
 
 **Start Group**:
@@ -652,21 +609,14 @@ A subscriber MUST handle gaps, potentially caused by congestion.
 
 
 ## FRAME
-The FRAME message is a payload at a specific point of time.
+The FRAME message is a payload within a group.
 
 ~~~
 FRAME Message {
   Message Length (i)
-  Instant Delta (i)
   Payload (b)
 }
 ~~~
-
-**Instant Delta**:
-The instant when the frame was created, in milliseconds, scoped to the track.
-This is encoded as a delta from the previous frame in the same group.
-An application SHOULD use the capture/presentation time to account for any encoding delays.
-See the [Instant](#instant) section for more information.
 
 **Payload**:
 An application specific payload.
@@ -684,9 +634,9 @@ A generic library or relay MUST NOT inspect or modify the contents unless otherw
 - Added GROUP_DROP on Subscribe stream.
 - Subscribe stream closed (FIN) when all groups accounted for.
 - Added PROBE stream replacing SESSION_UPDATE bitrate.
+- Removed `Instant Delta` from FRAME; expiration is now based on arrival timestamps.
 - Added `Subscriber Max Latency` and `Subscriber Ordered` to SUBSCRIBE and SUBSCRIBE_UPDATE.
 - Added `Publisher Priority`, `Publisher Max Latency`, and `Publisher Ordered` to SUBSCRIBE_OK.
-- Added `Instant Delta` to FRAME.
 - SUBSCRIBE_OK may be sent multiple times.
 
 ## moq-lite-02
