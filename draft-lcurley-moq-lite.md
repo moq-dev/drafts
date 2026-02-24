@@ -186,23 +186,18 @@ There's a 1-byte STREAM_TYPE at the beginning of each stream.
 A subscriber can open a Announce Stream to discover broadcasts matching a prefix.
 
 The subscriber creates the stream with a ANNOUNCE_PLEASE message.
-The publisher replies with an ANNOUNCE_INIT message containing all currently active broadcasts that currently match the prefix, followed by ANNOUNCE messages for any changes.
-
-The ANNOUNCE_INIT message contains an array of all currently active broadcast paths encoded as a suffix.
-Each path in ANNOUNCE_INIT can be treated as if it were an ANNOUNCE message with status `active`.
-
-After ANNOUNCE_INIT, the publisher sends ANNOUNCE messages for any changes also encoded as a suffix.
+The publisher replies with ANNOUNCE messages for any matching broadcasts and any future changes.
 Each ANNOUNCE message contains one of the following statuses:
 
 - `active`: a matching broadcast is available.
 - `ended`: a previously `active` broadcast is no longer available.
 
-Each broadcast starts as `ended` (unless included in ANNOUNCE_INIT) and MUST alternate between `active` and `ended`.
+Each broadcast starts as `ended` and MUST alternate between `active` and `ended`.
 The subscriber MUST reset the stream if it receives a duplicate status, such as two `active` statuses in a row or an `ended` without `active`.
 When the stream is closed, the subscriber MUST assume that all broadcasts are now `ended`.
 
 Path prefix matching and equality is done on a byte-by-byte basis.
-There MAY be multiple Announce Streams, potentially containing overlapping prefixes, that get their own ANNOUNCE_INIT and ANNOUNCE messages.
+There MAY be multiple Announce Streams, potentially containing overlapping prefixes, that get their own ANNOUNCE messages.
 
 ### Subscribe
 A subscriber opens Subscribe Streams to request a Track.
@@ -372,37 +367,8 @@ ANNOUNCE_PLEASE Message {
 **Broadcast Path Prefix**:
 Indicate interest for any broadcasts with a path that starts with this prefix.
 
-The publisher MUST respond with an ANNOUNCE_INIT message containing any matching and active broadcasts, followed by ANNOUNCE messages for any updates.
+The publisher MUST respond with ANNOUNCE messages for any matching and active broadcasts, followed by ANNOUNCE messages for any future updates.
 Implementations SHOULD consider reasonable limits on the number of matching broadcasts to prevent resource exhaustion.
-
-
-
-## ANNOUNCE_INIT
-A publisher sends an ANNOUNCE_INIT message immediately after receiving an ANNOUNCE_PLEASE to communicate all currently active broadcasts that match the requested prefix.
-Only the suffixes are encoded on the wire, as the full path can be constructed by prepending the requested prefix.
-
-This message is useful to avoid race conditions, as ANNOUNCE_INIT does not trickle in like ANNOUNCE messages.
-For example, an API server that wants to list the current participants could issue an ANNOUNCE_PLEASE and immediately return the ANNOUNCE_INIT response.
-Without ANNOUNCE_INIT, the API server would have use a timer to wait until ANNOUNCE to guess when all ANNOUNCE messages have been received.
-
-~~~
-ANNOUNCE_INIT Message {
-  Message Length (i)
-  Suffix Count (i),
-  [
-    Broadcast Path Suffix (s),
-  ]...
-}
-~~~
-
-**Suffix Count**:
-The number of active broadcast path suffixes that follow.
-This can be 0.
-A publisher MUST NOT include duplicate suffixes in a single ANNOUNCE_INIT message.
-
-**Broadcast Path Suffix**:
-Each suffix is combined with the broadcast path prefix from ANNOUNCE_PLEASE to form the full broadcast path.
-This includes all currently active broadcasts matching the prefix.
 
 
 
@@ -410,7 +376,7 @@ This includes all currently active broadcasts matching the prefix.
 A publisher sends an ANNOUNCE message to advertise a change in broadcast availability.
 Only the suffix is encoded on the wire, as the full path can be constructed by prepending the requested prefix.
 
-The status is relative to the ANNOUNCE_INIT and all prior ANNOUNCE messages combined.
+The status is relative to all prior ANNOUNCE messages on the same stream.
 A client MUST ONLY alternate between status values (from active to ended or vice versa).
 
 ~~~
@@ -418,6 +384,7 @@ ANNOUNCE Message {
   Message Length (i)
   Announce Status (i),
   Broadcast Path Suffix (s),
+  Hops (i),
 }
 ~~~
 
@@ -429,6 +396,11 @@ A flag indicating the announce status.
 
 **Broadcast Path Suffix**:
 This is combined with the broadcast path prefix to form the full broadcast path.
+
+**Hops**:
+The number of hops from the origin publisher.
+This is used as a tiebreaker when there are multiple paths to the same broadcast.
+A relay SHOULD increment this value when forwarding an announcement.
 
 
 ## SUBSCRIBE
@@ -634,6 +606,8 @@ A generic library or relay MUST NOT inspect or modify the contents unless otherw
 - Added GROUP_DROP on Subscribe stream.
 - Subscribe stream closed (FIN) when all groups accounted for.
 - Added PROBE stream replacing SESSION_UPDATE bitrate.
+- Removed ANNOUNCE_INIT message.
+- Added `Hops` to ANNOUNCE.
 - Added `Subscriber Max Latency` and `Subscriber Ordered` to SUBSCRIBE and SUBSCRIBE_UPDATE.
 - Added `Publisher Priority`, `Publisher Max Latency`, and `Publisher Ordered` to SUBSCRIBE_OK.
 - SUBSCRIBE_OK may be sent multiple times.
@@ -643,7 +617,6 @@ A generic library or relay MUST NOT inspect or modify the contents unless otherw
 - Editorial stuff.
 
 ## moq-lite-01
-- Added ANNOUNCE_INIT.
 - Added Message Length (i) to all messages.
 
 # Appendix B: Upstream Differences
