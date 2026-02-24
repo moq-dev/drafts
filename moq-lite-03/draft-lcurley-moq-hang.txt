@@ -3,9 +3,9 @@
 
 
 moq                                                            L. Curley
-Internet-Draft                                           10 January 2026
+Internet-Draft                                          24 February 2026
 Intended status: Informational                                          
-Expires: 14 July 2026
+Expires: 28 August 2026
 
 
                          Media over QUIC - Hang
@@ -44,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 14 July 2026.
+   This Internet-Draft will expire on 28 August 2026.
 
 Copyright Notice
 
@@ -306,9 +306,9 @@ Table of Contents
 
    [moqt]     Nandakumar, S., Vasiliev, V., Swett, I., and A. Frindell,
               "Media over QUIC Transport", Work in Progress, Internet-
-              Draft, draft-ietf-moq-transport-15, 20 October 2025,
+              Draft, draft-ietf-moq-transport-16, 13 January 2026,
               <https://datatracker.ietf.org/doc/html/draft-ietf-moq-
-              transport-15>.
+              transport-16>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,

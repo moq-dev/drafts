@@ -25,7 +25,7 @@ While primarily designed for media, the transport is payload agnostic and can be
     pycountry 24.6.1
     PyYAML 6.0.3
     requests 2.32.5
-    wcwidth 0.2.14
+    wcwidth 0.3.0
 -->
 <link href="draft-lcurley-moq-lite.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -1044,11 +1044,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">moql</td>
-<td class="right">January 2026</td>
+<td class="right">February 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Curley</td>
-<td class="center">Expires 14 July 2026</td>
+<td class="center">Expires 28 August 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1061,12 +1061,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-lcurley-moq-lite-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-01-10" class="published">10 January 2026</time>
+<time datetime="2026-02-24" class="published">24 February 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-07-14">14 July 2026</time></dd>
+<dd class="expires"><time datetime="2026-08-28">28 August 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1112,7 +1112,7 @@ While primarily designed for media, the transport is payload agnostic and can be
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 14 July 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 28 August 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1188,16 +1188,16 @@ While primarily designed for media, the transport is payload agnostic and can be
                 <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-bidirectional-streams" class="internal xref">Bidirectional Streams</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1.2.1">
-                    <p id="section-toc.1-1.5.2.1.2.1.1"><a href="#section-5.1.1" class="auto internal xref">5.1.1</a>.  <a href="#name-session-2" class="internal xref">Session</a></p>
+                    <p id="section-toc.1-1.5.2.1.2.1.1"><a href="#section-5.1.1" class="auto internal xref">5.1.1</a>.  <a href="#name-announce" class="internal xref">Announce</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1.2.2">
-                    <p id="section-toc.1-1.5.2.1.2.2.1"><a href="#section-5.1.2" class="auto internal xref">5.1.2</a>.  <a href="#name-sessioncompat" class="internal xref">SessionCompat</a></p>
+                    <p id="section-toc.1-1.5.2.1.2.2.1"><a href="#section-5.1.2" class="auto internal xref">5.1.2</a>.  <a href="#name-subscribe" class="internal xref">Subscribe</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1.2.3">
-                    <p id="section-toc.1-1.5.2.1.2.3.1"><a href="#section-5.1.3" class="auto internal xref">5.1.3</a>.  <a href="#name-announce" class="internal xref">Announce</a></p>
+                    <p id="section-toc.1-1.5.2.1.2.3.1"><a href="#section-5.1.3" class="auto internal xref">5.1.3</a>.  <a href="#name-fetch" class="internal xref">Fetch</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1.2.4">
-                    <p id="section-toc.1-1.5.2.1.2.4.1"><a href="#section-5.1.4" class="auto internal xref">5.1.4</a>.  <a href="#name-subscribe" class="internal xref">Subscribe</a></p>
+                    <p id="section-toc.1-1.5.2.1.2.4.1"><a href="#section-5.1.4" class="auto internal xref">5.1.4</a>.  <a href="#name-probe" class="internal xref">Probe</a></p>
 </li>
                 </ul>
 </li>
@@ -1243,31 +1243,31 @@ While primarily designed for media, the transport is payload agnostic and can be
                 <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-stream_type" class="internal xref">STREAM_TYPE</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3">
-                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-session_client" class="internal xref">SESSION_CLIENT</a></p>
+                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-announce_please" class="internal xref">ANNOUNCE_PLEASE</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.4">
-                <p id="section-toc.1-1.7.2.4.1"><a href="#section-7.4" class="auto internal xref">7.4</a>.  <a href="#name-session_server" class="internal xref">SESSION_SERVER</a></p>
+                <p id="section-toc.1-1.7.2.4.1"><a href="#section-7.4" class="auto internal xref">7.4</a>.  <a href="#name-announce_init" class="internal xref">ANNOUNCE_INIT</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.5">
-                <p id="section-toc.1-1.7.2.5.1"><a href="#section-7.5" class="auto internal xref">7.5</a>.  <a href="#name-session_update" class="internal xref">SESSION_UPDATE</a></p>
+                <p id="section-toc.1-1.7.2.5.1"><a href="#section-7.5" class="auto internal xref">7.5</a>.  <a href="#name-announce-2" class="internal xref">ANNOUNCE</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.6">
-                <p id="section-toc.1-1.7.2.6.1"><a href="#section-7.6" class="auto internal xref">7.6</a>.  <a href="#name-announce_please" class="internal xref">ANNOUNCE_PLEASE</a></p>
+                <p id="section-toc.1-1.7.2.6.1"><a href="#section-7.6" class="auto internal xref">7.6</a>.  <a href="#name-subscribe-2" class="internal xref">SUBSCRIBE</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.7">
-                <p id="section-toc.1-1.7.2.7.1"><a href="#section-7.7" class="auto internal xref">7.7</a>.  <a href="#name-announce_init" class="internal xref">ANNOUNCE_INIT</a></p>
+                <p id="section-toc.1-1.7.2.7.1"><a href="#section-7.7" class="auto internal xref">7.7</a>.  <a href="#name-subscribe_update" class="internal xref">SUBSCRIBE_UPDATE</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.8">
-                <p id="section-toc.1-1.7.2.8.1"><a href="#section-7.8" class="auto internal xref">7.8</a>.  <a href="#name-announce-2" class="internal xref">ANNOUNCE</a></p>
+                <p id="section-toc.1-1.7.2.8.1"><a href="#section-7.8" class="auto internal xref">7.8</a>.  <a href="#name-subscribe_ok" class="internal xref">SUBSCRIBE_OK</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.9">
-                <p id="section-toc.1-1.7.2.9.1"><a href="#section-7.9" class="auto internal xref">7.9</a>.  <a href="#name-subscribe-2" class="internal xref">SUBSCRIBE</a></p>
+                <p id="section-toc.1-1.7.2.9.1"><a href="#section-7.9" class="auto internal xref">7.9</a>.  <a href="#name-group_drop" class="internal xref">GROUP_DROP</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.10">
-                <p id="section-toc.1-1.7.2.10.1"><a href="#section-7.10" class="auto internal xref">7.10</a>. <a href="#name-subscribe_update" class="internal xref">SUBSCRIBE_UPDATE</a></p>
+                <p id="section-toc.1-1.7.2.10.1"><a href="#section-7.10" class="auto internal xref">7.10</a>. <a href="#name-fetch-2" class="internal xref">FETCH</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.11">
-                <p id="section-toc.1-1.7.2.11.1"><a href="#section-7.11" class="auto internal xref">7.11</a>. <a href="#name-subscribe_ok" class="internal xref">SUBSCRIBE_OK</a></p>
+                <p id="section-toc.1-1.7.2.11.1"><a href="#section-7.11" class="auto internal xref">7.11</a>. <a href="#name-probe-2" class="internal xref">PROBE</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.12">
                 <p id="section-toc.1-1.7.2.12.1"><a href="#section-7.12" class="auto internal xref">7.12</a>. <a href="#name-group-3" class="internal xref">GROUP</a></p>
@@ -1392,11 +1392,15 @@ The moq-lite layer provides fanout, prioritization, and caching even for latency
         </h3>
 <p id="section-3.1-1">A Session consists of a connection between a client and a server.
 There is currently no P2P support within QUIC so it's out of scope for moq-lite.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
-<p id="section-3.1-2">A session is established after the necessary QUIC, WebTransport, and moq-lite handshakes have completed.
-The moq-lite handshake is simple and consists of version and extension negotiation.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
-<p id="section-3.1-3">While moq-lite is a point-to-point protocol, it's intended to work end-to-end via relays.
+<p id="section-3.1-2">The moq-lite version is negotiated via ALPN during the QUIC handshake.
+The ALPN format is <code>moq-lite-xx</code> where <code>xx</code> is the two-digit draft version.
+The latest ALPN is <code>moq-lite-03</code>.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
+<p id="section-3.1-3">The session is active immediately after the QUIC/WebTransport connection is established.
+No additional handshake is required.
+Extensions are negotiated via stream probing: an endpoint opens a stream with an unknown type and the peer resets it if unsupported.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
+<p id="section-3.1-4">While moq-lite is a point-to-point protocol, it's intended to work end-to-end via relays.
 Each client establishes a session with a CDN edge server, ideally the closest one.
-Any broadcasts and subscriptions are transparently proxied by the CDN behind the scenes.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
+Any broadcasts and subscriptions are transparently proxied by the CDN behind the scenes.<a href="#section-3.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="broadcast">
@@ -1423,7 +1427,7 @@ The contents, relationships, and encoding of tracks are determined by the applic
 When a new Group is started, the previous Group is closed and may be dropped for any reason.
 The duration before an incomplete group is dropped is determined by the application and the publisher/subscriber's latency target.<a href="#section-3.3-2" class="pilcrow">¶</a></p>
 <p id="section-3.3-3">Every subscription is scoped to a single Track.
-A subscription will always start at the latest Group and continues until either the publisher or subscriber cancels the subscription.<a href="#section-3.3-3" class="pilcrow">¶</a></p>
+A subscription starts at a configurable Group (defaulting to the latest) and continues until a configurable end Group or until either the publisher or subscriber cancels the subscription.<a href="#section-3.3-3" class="pilcrow">¶</a></p>
 <p id="section-3.3-4">The subscriber and publisher both indicate their delivery preference:
 - <code>Priority</code> indicates if Track A should be transmitted instead of Track B.
 - <code>Ordered</code> indicates if the Groups within a Track should be transmitted in order.
@@ -1497,10 +1501,9 @@ However, it is ultimately the other peer's responsibility to close their send di
         <h3 id="name-handshake">
 <a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-handshake" class="section-name selfRef">Handshake</a>
         </h3>
-<p id="section-4.3-1">After a connection is established, the client opens a Session Stream and sends a SESSION_CLIENT message, to which the server replies with a SESSION_SERVER message.
-The session is active until either endpoint closes or resets the Session Stream.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
-<p id="section-4.3-2">This session handshake is used to negotiate the moq-lite version and any extensions.
-See the Extension section for more information.<a href="#section-4.3-2" class="pilcrow">¶</a></p>
+<p id="section-4.3-1">The moq-lite version is negotiated via ALPN during the QUIC handshake.
+The ALPN format is <code>moq-lite-xx</code> where <code>xx</code> is the two-digit draft version (latest: <code>moq-lite-03</code>).
+The session is active immediately after the connection is established.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1530,11 +1533,6 @@ There's a 1-byte STREAM_TYPE at the beginning of each stream.<a href="#section-5
           </thead>
           <tbody>
             <tr>
-              <td class="text-right" rowspan="1" colspan="1">0x0</td>
-              <td class="text-left" rowspan="1" colspan="1">Session</td>
-              <td class="text-left" rowspan="1" colspan="1">Client</td>
-            </tr>
-            <tr>
               <td class="text-right" rowspan="1" colspan="1">0x1</td>
               <td class="text-left" rowspan="1" colspan="1">Announce</td>
               <td class="text-left" rowspan="1" colspan="1">Subscriber</td>
@@ -1545,79 +1543,79 @@ There's a 1-byte STREAM_TYPE at the beginning of each stream.<a href="#section-5
               <td class="text-left" rowspan="1" colspan="1">Subscriber</td>
             </tr>
             <tr>
-              <td class="text-right" rowspan="1" colspan="1">0x20</td>
-              <td class="text-left" rowspan="1" colspan="1">SessionCompat</td>
-              <td class="text-left" rowspan="1" colspan="1">Client</td>
+              <td class="text-right" rowspan="1" colspan="1">0x3</td>
+              <td class="text-left" rowspan="1" colspan="1">Fetch</td>
+              <td class="text-left" rowspan="1" colspan="1">Subscriber</td>
+            </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0x4</td>
+              <td class="text-left" rowspan="1" colspan="1">Probe</td>
+              <td class="text-left" rowspan="1" colspan="1">Subscriber</td>
             </tr>
           </tbody>
         </table>
-<div id="session-1">
-<section id="section-5.1.1">
-          <h4 id="name-session-2">
-<a href="#section-5.1.1" class="section-number selfRef">5.1.1. </a><a href="#name-session-2" class="section-name selfRef">Session</a>
-          </h4>
-<p id="section-5.1.1-1">The Session stream is used to establish the moq-lite session, negotiating the version and any extensions.
-This stream remains open for the duration of the session and its closure indicates the session is closed.<a href="#section-5.1.1-1" class="pilcrow">¶</a></p>
-<p id="section-5.1.1-2">The client <span class="bcp14">MUST</span> open the Session Stream, write the Session Stream ID (0x0), and write a SESSION_CLIENT message.
-If the server does not support any of the client's versions, it <span class="bcp14">MUST</span> close the stream with an error code and <span class="bcp14">MAY</span> close the connection.
-Otherwise, the server replies with a SESSION_SERVER message to complete the handshake.<a href="#section-5.1.1-2" class="pilcrow">¶</a></p>
-<p id="section-5.1.1-3">Afterwards, both endpoints <span class="bcp14">MAY</span> send SESSION_UPDATE messages.
-This is currently used to notify the other endpoint of a significant change in the session bitrate.<a href="#section-5.1.1-3" class="pilcrow">¶</a></p>
-<p id="section-5.1.1-4">This draft's version is combined with the constant <code>0xff0dad00</code>.
-For example, moq-lite-draft-04 is identified as <code>0xff0dad04</code>.<a href="#section-5.1.1-4" class="pilcrow">¶</a></p>
-</section>
-</div>
-<div id="sessioncompat">
-<section id="section-5.1.2">
-          <h4 id="name-sessioncompat">
-<a href="#section-5.1.2" class="section-number selfRef">5.1.2. </a><a href="#name-sessioncompat" class="section-name selfRef">SessionCompat</a>
-          </h4>
-<p id="section-5.1.2-1">The SessionCompat stream exists to support moq-transport draft 11-14.
-This will be removed in a future version as moq-transport draft 15 uses ALPN instead.<a href="#section-5.1.2-1" class="pilcrow">¶</a></p>
-<p id="section-5.1.2-2">The client writes a CLIENT_SETUP message on the SessionCompat stream and receives a SERVER_SETUP message in response.<a href="#section-5.1.2-2" class="pilcrow">¶</a></p>
-<p id="section-5.1.2-3">Consult the MoqTransport (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span>) draft for more information about the encoding.
-Notably, each message contains a u16 length prefix instead of a VarInt (moq-lite).<a href="#section-5.1.2-3" class="pilcrow">¶</a></p>
-<p id="section-5.1.2-4">If a moq-lite version is negotiated, this stream becomes a normal Session stream.
-If a moq-transport version is negotiated, this stream becomes the MoqTransport control stream.<a href="#section-5.1.2-4" class="pilcrow">¶</a></p>
-</section>
-</div>
 <div id="announce">
-<section id="section-5.1.3">
+<section id="section-5.1.1">
           <h4 id="name-announce">
-<a href="#section-5.1.3" class="section-number selfRef">5.1.3. </a><a href="#name-announce" class="section-name selfRef">Announce</a>
+<a href="#section-5.1.1" class="section-number selfRef">5.1.1. </a><a href="#name-announce" class="section-name selfRef">Announce</a>
           </h4>
-<p id="section-5.1.3-1">A subscriber can open a Announce Stream to discover broadcasts matching a prefix.<a href="#section-5.1.3-1" class="pilcrow">¶</a></p>
-<p id="section-5.1.3-2">The subscriber creates the stream with a ANNOUNCE_PLEASE message.
-The publisher replies with an ANNOUNCE_INIT message containing all currently active broadcasts that currently match the prefix, followed by ANNOUNCE messages for any changes.<a href="#section-5.1.3-2" class="pilcrow">¶</a></p>
-<p id="section-5.1.3-3">The ANNOUNCE_INIT message contains an array of all currently active broadcast paths encoded as a suffix.
-Each path in ANNOUNCE_INIT can be treated as if it were an ANNOUNCE message with status <code>active</code>.<a href="#section-5.1.3-3" class="pilcrow">¶</a></p>
-<p id="section-5.1.3-4">After ANNOUNCE_INIT, the publisher sends ANNOUNCE messages for any changes also encoded as a suffix.
-Each ANNOUNCE message contains one of the following statuses:<a href="#section-5.1.3-4" class="pilcrow">¶</a></p>
+<p id="section-5.1.1-1">A subscriber can open a Announce Stream to discover broadcasts matching a prefix.<a href="#section-5.1.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.1.1-2">The subscriber creates the stream with a ANNOUNCE_PLEASE message.
+The publisher replies with an ANNOUNCE_INIT message containing all currently active broadcasts that currently match the prefix, followed by ANNOUNCE messages for any changes.<a href="#section-5.1.1-2" class="pilcrow">¶</a></p>
+<p id="section-5.1.1-3">The ANNOUNCE_INIT message contains an array of all currently active broadcast paths encoded as a suffix.
+Each path in ANNOUNCE_INIT can be treated as if it were an ANNOUNCE message with status <code>active</code>.<a href="#section-5.1.1-3" class="pilcrow">¶</a></p>
+<p id="section-5.1.1-4">After ANNOUNCE_INIT, the publisher sends ANNOUNCE messages for any changes also encoded as a suffix.
+Each ANNOUNCE message contains one of the following statuses:<a href="#section-5.1.1-4" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-5.1.3-5.1">
-              <p id="section-5.1.3-5.1.1"><code>active</code>: a matching broadcast is available.<a href="#section-5.1.3-5.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-5.1.1-5.1">
+              <p id="section-5.1.1-5.1.1"><code>active</code>: a matching broadcast is available.<a href="#section-5.1.1-5.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-5.1.3-5.2">
-              <p id="section-5.1.3-5.2.1"><code>ended</code>: a previously <code>active</code> broadcast is no longer available.<a href="#section-5.1.3-5.2.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-5.1.1-5.2">
+              <p id="section-5.1.1-5.2.1"><code>ended</code>: a previously <code>active</code> broadcast is no longer available.<a href="#section-5.1.1-5.2.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-5.1.3-6">Each broadcast starts as <code>ended</code> (unless included in ANNOUNCE_INIT) and <span class="bcp14">MUST</span> alternate between <code>active</code> and <code>ended</code>.
+<p id="section-5.1.1-6">Each broadcast starts as <code>ended</code> (unless included in ANNOUNCE_INIT) and <span class="bcp14">MUST</span> alternate between <code>active</code> and <code>ended</code>.
 The subscriber <span class="bcp14">MUST</span> reset the stream if it receives a duplicate status, such as two <code>active</code> statuses in a row or an <code>ended</code> without <code>active</code>.
-When the stream is closed, the subscriber <span class="bcp14">MUST</span> assume that all broadcasts are now <code>ended</code>.<a href="#section-5.1.3-6" class="pilcrow">¶</a></p>
-<p id="section-5.1.3-7">Path prefix matching and equality is done on a byte-by-byte basis.
-There <span class="bcp14">MAY</span> be multiple Announce Streams, potentially containing overlapping prefixes, that get their own ANNOUNCE_INIT and ANNOUNCE messages.<a href="#section-5.1.3-7" class="pilcrow">¶</a></p>
+When the stream is closed, the subscriber <span class="bcp14">MUST</span> assume that all broadcasts are now <code>ended</code>.<a href="#section-5.1.1-6" class="pilcrow">¶</a></p>
+<p id="section-5.1.1-7">Path prefix matching and equality is done on a byte-by-byte basis.
+There <span class="bcp14">MAY</span> be multiple Announce Streams, potentially containing overlapping prefixes, that get their own ANNOUNCE_INIT and ANNOUNCE messages.<a href="#section-5.1.1-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="subscribe">
-<section id="section-5.1.4">
+<section id="section-5.1.2">
           <h4 id="name-subscribe">
-<a href="#section-5.1.4" class="section-number selfRef">5.1.4. </a><a href="#name-subscribe" class="section-name selfRef">Subscribe</a>
+<a href="#section-5.1.2" class="section-number selfRef">5.1.2. </a><a href="#name-subscribe" class="section-name selfRef">Subscribe</a>
           </h4>
-<p id="section-5.1.4-1">A subscriber opens Subscribe Streams to request a Track.<a href="#section-5.1.4-1" class="pilcrow">¶</a></p>
-<p id="section-5.1.4-2">The subscriber <span class="bcp14">MUST</span> start a Subscribe Stream with a SUBSCRIBE message followed by any number of SUBSCRIBE_UPDATE messages.
-The publisher replies with any number of SUBSCRIBE_OK messages, or closes the stream.<a href="#section-5.1.4-2" class="pilcrow">¶</a></p>
-<p id="section-5.1.4-3">The publisher <span class="bcp14">SHOULD</span> close the stream after the track has ended.
-Either endpoint <span class="bcp14">MAY</span> reset/cancel the stream at any time.<a href="#section-5.1.4-3" class="pilcrow">¶</a></p>
+<p id="section-5.1.2-1">A subscriber opens Subscribe Streams to request a Track.<a href="#section-5.1.2-1" class="pilcrow">¶</a></p>
+<p id="section-5.1.2-2">The subscriber <span class="bcp14">MUST</span> start a Subscribe Stream with a SUBSCRIBE message followed by any number of SUBSCRIBE_UPDATE messages.
+The publisher replies with a SUBSCRIBE_OK message followed by any number of GROUP_DROP and additional SUBSCRIBE_OK messages.<a href="#section-5.1.2-2" class="pilcrow">¶</a></p>
+<p id="section-5.1.2-3">The publisher closes the stream (FIN) when every group from start to end has been accounted for, either via a completed GROUP stream or a GROUP_DROP message.
+Unbounded subscriptions (no end group) stay open until the track ends or either endpoint cancels.
+Either endpoint <span class="bcp14">MAY</span> reset/cancel the stream at any time.<a href="#section-5.1.2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="fetch">
+<section id="section-5.1.3">
+          <h4 id="name-fetch">
+<a href="#section-5.1.3" class="section-number selfRef">5.1.3. </a><a href="#name-fetch" class="section-name selfRef">Fetch</a>
+          </h4>
+<p id="section-5.1.3-1">A subscriber opens a Fetch Stream (0x3) to request a single Group from a Track.<a href="#section-5.1.3-1" class="pilcrow">¶</a></p>
+<p id="section-5.1.3-2">The subscriber sends a FETCH message containing the broadcast path, track name, priority, and group sequence.
+The publisher responds with FRAME messages on the same bidirectional stream.
+The publisher FINs the stream after the last frame, or resets the stream on error.<a href="#section-5.1.3-2" class="pilcrow">¶</a></p>
+<p id="section-5.1.3-3">Fetch behaves like HTTP: a single request/response per stream.<a href="#section-5.1.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="probe">
+<section id="section-5.1.4">
+          <h4 id="name-probe">
+<a href="#section-5.1.4" class="section-number selfRef">5.1.4. </a><a href="#name-probe" class="section-name selfRef">Probe</a>
+          </h4>
+<p id="section-5.1.4-1">A subscriber opens a Probe Stream (0x4) to measure the available bitrate of the connection.<a href="#section-5.1.4-1" class="pilcrow">¶</a></p>
+<p id="section-5.1.4-2">The subscriber sends a PROBE message with a target bitrate.
+The publisher <span class="bcp14">SHOULD</span> pad the connection to achieve the target bitrate.
+The publisher periodically replies with PROBE messages containing the current measured bitrate.<a href="#section-5.1.4-2" class="pilcrow">¶</a></p>
+<p id="section-5.1.4-3">If the publisher does not support PROBE (e.g., congestion controller is not exposed), it resets the stream.<a href="#section-5.1.4-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1821,102 +1819,41 @@ STREAM_TYPE {
 </pre><a href="#section-7.2-2" class="pilcrow">¶</a>
 </div>
 <p id="section-7.2-3">The stream ID depends on if it's a bidirectional or unidirectional stream, as indicated in the Streams section.
-A receiver <span class="bcp14">MUST</span> close the session if it receives an unknown stream type.<a href="#section-7.2-3" class="pilcrow">¶</a></p>
-</section>
-</div>
-<div id="sessionclient">
-<section id="section-7.3">
-        <h3 id="name-session_client">
-<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-session_client" class="section-name selfRef">SESSION_CLIENT</a>
-        </h3>
-<p id="section-7.3-1">The client initiates the session by sending a SESSION_CLIENT message.<a href="#section-7.3-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.3-2">
-<pre>
-SESSION_CLIENT Message {
-  Message Length (i)
-  Supported Versions Count (i)
-  Supported Version (i)
-  Extension Count (i)
-  [
-    Extension ID (i)
-    Extension Payload (b)
-  ]...
-}
-</pre><a href="#section-7.3-2" class="pilcrow">¶</a>
-</div>
-</section>
-</div>
-<div id="sessionserver">
-<section id="section-7.4">
-        <h3 id="name-session_server">
-<a href="#section-7.4" class="section-number selfRef">7.4. </a><a href="#name-session_server" class="section-name selfRef">SESSION_SERVER</a>
-        </h3>
-<p id="section-7.4-1">The server responds with the selected version and any extensions.<a href="#section-7.4-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.4-2">
-<pre>
-SESSION_SERVER Message {
-  Message Length (i)
-  Selected Version (i)
-  Extension Count (i)
-  [
-    Extension ID (i)
-    Extension Payload (b)
-  ]...
-}
-</pre><a href="#section-7.4-2" class="pilcrow">¶</a>
-</div>
-</section>
-</div>
-<div id="sessionupdate">
-<section id="section-7.5">
-        <h3 id="name-session_update">
-<a href="#section-7.5" class="section-number selfRef">7.5. </a><a href="#name-session_update" class="section-name selfRef">SESSION_UPDATE</a>
-        </h3>
-<div class="alignLeft art-text artwork" id="section-7.5-1">
-<pre>
-SESSION_UPDATE Message {
-  Message Length (i)
-  Session Bitrate (i)
-}
-</pre><a href="#section-7.5-1" class="pilcrow">¶</a>
-</div>
-<p id="section-7.5-2"><strong>Session Bitrate</strong>:
-The estimated bitrate of the QUIC connection in bits per second.
-This <span class="bcp14">SHOULD</span> be sourced directly from the QUIC congestion controller.
-A value of 0 indicates that this information is not available.<a href="#section-7.5-2" class="pilcrow">¶</a></p>
+A receiver <span class="bcp14">MUST</span> reset the stream if it receives an unknown stream type.
+Unknown stream types <span class="bcp14">MUST NOT</span> be treated as fatal; this enables extension negotiation via stream probing.<a href="#section-7.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="announceplease">
-<section id="section-7.6">
+<section id="section-7.3">
         <h3 id="name-announce_please">
-<a href="#section-7.6" class="section-number selfRef">7.6. </a><a href="#name-announce_please" class="section-name selfRef">ANNOUNCE_PLEASE</a>
+<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-announce_please" class="section-name selfRef">ANNOUNCE_PLEASE</a>
         </h3>
-<p id="section-7.6-1">A subscriber sends an ANNOUNCE_PLEASE message to indicate it wants to receive an ANNOUNCE message for any broadcasts with a path that starts with the requested prefix.<a href="#section-7.6-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.6-2">
+<p id="section-7.3-1">A subscriber sends an ANNOUNCE_PLEASE message to indicate it wants to receive an ANNOUNCE message for any broadcasts with a path that starts with the requested prefix.<a href="#section-7.3-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.3-2">
 <pre>
 ANNOUNCE_PLEASE Message {
   Message Length (i)
   Broadcast Path Prefix (s),
 }
-</pre><a href="#section-7.6-2" class="pilcrow">¶</a>
+</pre><a href="#section-7.3-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.6-3"><strong>Broadcast Path Prefix</strong>:
-Indicate interest for any broadcasts with a path that starts with this prefix.<a href="#section-7.6-3" class="pilcrow">¶</a></p>
-<p id="section-7.6-4">The publisher <span class="bcp14">MUST</span> respond with an ANNOUNCE_INIT message containing any matching and active broadcasts, followed by ANNOUNCE messages for any updates.
-Implementations <span class="bcp14">SHOULD</span> consider reasonable limits on the number of matching broadcasts to prevent resource exhaustion.<a href="#section-7.6-4" class="pilcrow">¶</a></p>
+<p id="section-7.3-3"><strong>Broadcast Path Prefix</strong>:
+Indicate interest for any broadcasts with a path that starts with this prefix.<a href="#section-7.3-3" class="pilcrow">¶</a></p>
+<p id="section-7.3-4">The publisher <span class="bcp14">MUST</span> respond with an ANNOUNCE_INIT message containing any matching and active broadcasts, followed by ANNOUNCE messages for any updates.
+Implementations <span class="bcp14">SHOULD</span> consider reasonable limits on the number of matching broadcasts to prevent resource exhaustion.<a href="#section-7.3-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="announceinit">
-<section id="section-7.7">
+<section id="section-7.4">
         <h3 id="name-announce_init">
-<a href="#section-7.7" class="section-number selfRef">7.7. </a><a href="#name-announce_init" class="section-name selfRef">ANNOUNCE_INIT</a>
+<a href="#section-7.4" class="section-number selfRef">7.4. </a><a href="#name-announce_init" class="section-name selfRef">ANNOUNCE_INIT</a>
         </h3>
-<p id="section-7.7-1">A publisher sends an ANNOUNCE_INIT message immediately after receiving an ANNOUNCE_PLEASE to communicate all currently active broadcasts that match the requested prefix.
-Only the suffixes are encoded on the wire, as the full path can be constructed by prepending the requested prefix.<a href="#section-7.7-1" class="pilcrow">¶</a></p>
-<p id="section-7.7-2">This message is useful to avoid race conditions, as ANNOUNCE_INIT does not trickle in like ANNOUNCE messages.
+<p id="section-7.4-1">A publisher sends an ANNOUNCE_INIT message immediately after receiving an ANNOUNCE_PLEASE to communicate all currently active broadcasts that match the requested prefix.
+Only the suffixes are encoded on the wire, as the full path can be constructed by prepending the requested prefix.<a href="#section-7.4-1" class="pilcrow">¶</a></p>
+<p id="section-7.4-2">This message is useful to avoid race conditions, as ANNOUNCE_INIT does not trickle in like ANNOUNCE messages.
 For example, an API server that wants to list the current participants could issue an ANNOUNCE_PLEASE and immediately return the ANNOUNCE_INIT response.
-Without ANNOUNCE_INIT, the API server would have use a timer to wait until ANNOUNCE to guess when all ANNOUNCE messages have been received.<a href="#section-7.7-2" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.7-3">
+Without ANNOUNCE_INIT, the API server would have use a timer to wait until ANNOUNCE to guess when all ANNOUNCE messages have been received.<a href="#section-7.4-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.4-3">
 <pre>
 ANNOUNCE_INIT Message {
   Message Length (i)
@@ -1925,56 +1862,56 @@ ANNOUNCE_INIT Message {
     Broadcast Path Suffix (s),
   ]...
 }
-</pre><a href="#section-7.7-3" class="pilcrow">¶</a>
+</pre><a href="#section-7.4-3" class="pilcrow">¶</a>
 </div>
-<p id="section-7.7-4"><strong>Suffix Count</strong>:
+<p id="section-7.4-4"><strong>Suffix Count</strong>:
 The number of active broadcast path suffixes that follow.
 This can be 0.
-A publisher <span class="bcp14">MUST NOT</span> include duplicate suffixes in a single ANNOUNCE_INIT message.<a href="#section-7.7-4" class="pilcrow">¶</a></p>
-<p id="section-7.7-5"><strong>Broadcast Path Suffix</strong>:
+A publisher <span class="bcp14">MUST NOT</span> include duplicate suffixes in a single ANNOUNCE_INIT message.<a href="#section-7.4-4" class="pilcrow">¶</a></p>
+<p id="section-7.4-5"><strong>Broadcast Path Suffix</strong>:
 Each suffix is combined with the broadcast path prefix from ANNOUNCE_PLEASE to form the full broadcast path.
-This includes all currently active broadcasts matching the prefix.<a href="#section-7.7-5" class="pilcrow">¶</a></p>
+This includes all currently active broadcasts matching the prefix.<a href="#section-7.4-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="announce-1">
-<section id="section-7.8">
+<section id="section-7.5">
         <h3 id="name-announce-2">
-<a href="#section-7.8" class="section-number selfRef">7.8. </a><a href="#name-announce-2" class="section-name selfRef">ANNOUNCE</a>
+<a href="#section-7.5" class="section-number selfRef">7.5. </a><a href="#name-announce-2" class="section-name selfRef">ANNOUNCE</a>
         </h3>
-<p id="section-7.8-1">A publisher sends an ANNOUNCE message to advertise a change in broadcast availability.
-Only the suffix is encoded on the wire, as the full path can be constructed by prepending the requested prefix.<a href="#section-7.8-1" class="pilcrow">¶</a></p>
-<p id="section-7.8-2">The status is relative to the ANNOUNCE_INIT and all prior ANNOUNCE messages combined.
-A client <span class="bcp14">MUST</span> ONLY alternate between status values (from active to ended or vice versa).<a href="#section-7.8-2" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.8-3">
+<p id="section-7.5-1">A publisher sends an ANNOUNCE message to advertise a change in broadcast availability.
+Only the suffix is encoded on the wire, as the full path can be constructed by prepending the requested prefix.<a href="#section-7.5-1" class="pilcrow">¶</a></p>
+<p id="section-7.5-2">The status is relative to the ANNOUNCE_INIT and all prior ANNOUNCE messages combined.
+A client <span class="bcp14">MUST</span> ONLY alternate between status values (from active to ended or vice versa).<a href="#section-7.5-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.5-3">
 <pre>
 ANNOUNCE Message {
   Message Length (i)
   Announce Status (i),
   Broadcast Path Suffix (s),
 }
-</pre><a href="#section-7.8-3" class="pilcrow">¶</a>
+</pre><a href="#section-7.5-3" class="pilcrow">¶</a>
 </div>
-<p id="section-7.8-4"><strong>Announce Status</strong>:
-A flag indicating the announce status.<a href="#section-7.8-4" class="pilcrow">¶</a></p>
+<p id="section-7.5-4"><strong>Announce Status</strong>:
+A flag indicating the announce status.<a href="#section-7.5-4" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-7.8-5.1">
-            <p id="section-7.8-5.1.1"><code>ended</code> (0): A path is no longer available.<a href="#section-7.8-5.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-7.5-5.1">
+            <p id="section-7.5-5.1.1"><code>ended</code> (0): A path is no longer available.<a href="#section-7.5-5.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-7.8-5.2">
-            <p id="section-7.8-5.2.1"><code>active</code> (1): A path is now available.<a href="#section-7.8-5.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-7.5-5.2">
+            <p id="section-7.5-5.2.1"><code>active</code> (1): A path is now available.<a href="#section-7.5-5.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-7.8-6"><strong>Broadcast Path Suffix</strong>:
-This is combined with the broadcast path prefix to form the full broadcast path.<a href="#section-7.8-6" class="pilcrow">¶</a></p>
+<p id="section-7.5-6"><strong>Broadcast Path Suffix</strong>:
+This is combined with the broadcast path prefix to form the full broadcast path.<a href="#section-7.5-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="subscribe-1">
-<section id="section-7.9">
+<section id="section-7.6">
         <h3 id="name-subscribe-2">
-<a href="#section-7.9" class="section-number selfRef">7.9. </a><a href="#name-subscribe-2" class="section-name selfRef">SUBSCRIBE</a>
+<a href="#section-7.6" class="section-number selfRef">7.6. </a><a href="#name-subscribe-2" class="section-name selfRef">SUBSCRIBE</a>
         </h3>
-<p id="section-7.9-1">SUBSCRIBE is sent by a subscriber to start a subscription.<a href="#section-7.9-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.9-2">
+<p id="section-7.6-1">SUBSCRIBE is sent by a subscriber to start a subscription.<a href="#section-7.6-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.6-2">
 <pre>
 SUBSCRIBE Message {
   Message Length (i)
@@ -1984,64 +1921,158 @@ SUBSCRIBE Message {
   Subscriber Priority (8)
   Subscriber Ordered (1)
   Subscriber Max Latency (i)
+  Start Group (i)
+  End Group (i)
 }
-</pre><a href="#section-7.9-2" class="pilcrow">¶</a>
+</pre><a href="#section-7.6-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.9-3"><strong>Subscribe ID</strong>:
+<p id="section-7.6-3"><strong>Subscribe ID</strong>:
 A unique identifier chosen by the subscriber.
-A Subscribe ID <span class="bcp14">MUST NOT</span> be reused within the same session, even if the prior subscription has been closed.<a href="#section-7.9-3" class="pilcrow">¶</a></p>
-<p id="section-7.9-4"><strong>Subscriber Priority</strong>:
+A Subscribe ID <span class="bcp14">MUST NOT</span> be reused within the same session, even if the prior subscription has been closed.<a href="#section-7.6-3" class="pilcrow">¶</a></p>
+<p id="section-7.6-4"><strong>Subscriber Priority</strong>:
 The priority of the subscription within the session, represented as a u8.
 The publisher <span class="bcp14">SHOULD</span> transmit <em>higher</em> values first during congestion.
-See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> section for more information.<a href="#section-7.9-4" class="pilcrow">¶</a></p>
-<p id="section-7.9-5"><strong>Subscriber Ordered</strong>:
+See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> section for more information.<a href="#section-7.6-4" class="pilcrow">¶</a></p>
+<p id="section-7.6-5"><strong>Subscriber Ordered</strong>:
 A boolean representing whether groups are transmitted in ascending (true) or descending (false) order.
 The publisher <span class="bcp14">SHOULD</span> transmit <em>older</em> groups first during congestion if true.
-See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> section for more information.<a href="#section-7.9-5" class="pilcrow">¶</a></p>
-<p id="section-7.9-6"><strong>Subscriber Max Latency</strong>:
+See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> section for more information.<a href="#section-7.6-5" class="pilcrow">¶</a></p>
+<p id="section-7.6-6"><strong>Subscriber Max Latency</strong>:
 This value is encoded in milliseconds and represents the maximum age of a group.
 The publisher <span class="bcp14">SHOULD</span> reset old group streams when the last processed frame is at least this much older than the newest frame.
-See the <a href="#expiration" class="auto internal xref">Section 6.3</a> section for more information.<a href="#section-7.9-6" class="pilcrow">¶</a></p>
+See the <a href="#expiration" class="auto internal xref">Section 6.3</a> section for more information.<a href="#section-7.6-6" class="pilcrow">¶</a></p>
+<p id="section-7.6-7"><strong>Start Group</strong>:
+The first group to deliver.
+A value of 0 means the latest group (default).
+A non-zero value is the absolute group sequence + 1.<a href="#section-7.6-7" class="pilcrow">¶</a></p>
+<p id="section-7.6-8"><strong>End Group</strong>:
+The last group to deliver (inclusive).
+A value of 0 means unbounded (default).
+A non-zero value is the absolute group sequence + 1.<a href="#section-7.6-8" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="subscribeupdate">
-<section id="section-7.10">
+<section id="section-7.7">
         <h3 id="name-subscribe_update">
-<a href="#section-7.10" class="section-number selfRef">7.10. </a><a href="#name-subscribe_update" class="section-name selfRef">SUBSCRIBE_UPDATE</a>
+<a href="#section-7.7" class="section-number selfRef">7.7. </a><a href="#name-subscribe_update" class="section-name selfRef">SUBSCRIBE_UPDATE</a>
         </h3>
-<p id="section-7.10-1">A subscriber can modify a subscription with a SUBSCRIBE_UPDATE message.
-A subscriber <span class="bcp14">MAY</span> send multiple SUBSCRIBE_UPDATE messages to update the subscription.<a href="#section-7.10-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.10-2">
+<p id="section-7.7-1">A subscriber can modify a subscription with a SUBSCRIBE_UPDATE message.
+A subscriber <span class="bcp14">MAY</span> send multiple SUBSCRIBE_UPDATE messages to update the subscription.
+The start and end group can be changed in either direction (growing or shrinking).<a href="#section-7.7-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.7-2">
 <pre>
 SUBSCRIBE_UPDATE Message {
   Message Length (i)
   Subscriber Priority (8)
   Subscriber Ordered (1)
   Subscriber Max Latency (i)
+  Start Group (i)
+  End Group (i)
 }
-</pre><a href="#section-7.10-2" class="pilcrow">¶</a>
+</pre><a href="#section-7.7-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.10-3">See <a href="#subscribe" class="auto internal xref">Section 5.1.4</a> for information about each field.<a href="#section-7.10-3" class="pilcrow">¶</a></p>
+<p id="section-7.7-3">See <a href="#subscribe" class="auto internal xref">Section 5.1.2</a> for information about each field.<a href="#section-7.7-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="subscribeok">
-<section id="section-7.11">
+<section id="section-7.8">
         <h3 id="name-subscribe_ok">
-<a href="#section-7.11" class="section-number selfRef">7.11. </a><a href="#name-subscribe_ok" class="section-name selfRef">SUBSCRIBE_OK</a>
+<a href="#section-7.8" class="section-number selfRef">7.8. </a><a href="#name-subscribe_ok" class="section-name selfRef">SUBSCRIBE_OK</a>
         </h3>
-<p id="section-7.11-1">A SUBSCRIBE_OK message is sent in response to a SUBSCRIBE.
-The publisher <span class="bcp14">MAY</span> send multiple SUBSCRIBE_OK messages to update the subscription.<a href="#section-7.11-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.11-2">
+<p id="section-7.8-1">A SUBSCRIBE_OK message is sent in response to a SUBSCRIBE.
+The publisher <span class="bcp14">MAY</span> send multiple SUBSCRIBE_OK messages to update the subscription.<a href="#section-7.8-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.8-2">
 <pre>
 SUBSCRIBE_OK Message {
   Message Length (i)
   Publisher Priority (8)
   Publisher Ordered (1)
   Publisher Max Latency (i)
+  Start Group (i)
+  End Group (i)
+}
+</pre><a href="#section-7.8-2" class="pilcrow">¶</a>
+</div>
+<p id="section-7.8-3"><strong>Start Group</strong>:
+The resolved absolute start group sequence + 1.
+This <span class="bcp14">MUST NOT</span> be 0.<a href="#section-7.8-3" class="pilcrow">¶</a></p>
+<p id="section-7.8-4"><strong>End Group</strong>:
+The resolved absolute end group sequence + 1, or 0 if unbounded.<a href="#section-7.8-4" class="pilcrow">¶</a></p>
+<p id="section-7.8-5">See <a href="#subscribe" class="auto internal xref">Section 5.1.2</a> for information about the other fields.<a href="#section-7.8-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="groupdrop">
+<section id="section-7.9">
+        <h3 id="name-group_drop">
+<a href="#section-7.9" class="section-number selfRef">7.9. </a><a href="#name-group_drop" class="section-name selfRef">GROUP_DROP</a>
+        </h3>
+<p id="section-7.9-1">A GROUP_DROP message is sent by the publisher on the Subscribe Stream when groups cannot be served.<a href="#section-7.9-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.9-2">
+<pre>
+GROUP_DROP Message {
+  Message Length (i)
+  Start Group (i)
+  End Group (i)
+  Error Code (i)
+}
+</pre><a href="#section-7.9-2" class="pilcrow">¶</a>
+</div>
+<p id="section-7.9-3"><strong>Start Group</strong>:
+The first group sequence in the dropped range (inclusive, absolute).<a href="#section-7.9-3" class="pilcrow">¶</a></p>
+<p id="section-7.9-4"><strong>End Group</strong>:
+The last group sequence in the dropped range (inclusive, absolute).<a href="#section-7.9-4" class="pilcrow">¶</a></p>
+<p id="section-7.9-5"><strong>Error Code</strong>:
+An application-specific error code.
+A value of 0 indicates no error; the groups are simply unavailable.<a href="#section-7.9-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="fetch-1">
+<section id="section-7.10">
+        <h3 id="name-fetch-2">
+<a href="#section-7.10" class="section-number selfRef">7.10. </a><a href="#name-fetch-2" class="section-name selfRef">FETCH</a>
+        </h3>
+<p id="section-7.10-1">FETCH is sent by a subscriber to request a single group from a track.<a href="#section-7.10-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.10-2">
+<pre>
+FETCH Message {
+  Message Length (i)
+  Broadcast Path (s)
+  Track Name (s)
+  Subscriber Priority (8)
+  Group Sequence (i)
+}
+</pre><a href="#section-7.10-2" class="pilcrow">¶</a>
+</div>
+<p id="section-7.10-3"><strong>Broadcast Path</strong>:
+The broadcast path of the track to fetch from.<a href="#section-7.10-3" class="pilcrow">¶</a></p>
+<p id="section-7.10-4"><strong>Track Name</strong>:
+The name of the track to fetch from.<a href="#section-7.10-4" class="pilcrow">¶</a></p>
+<p id="section-7.10-5"><strong>Subscriber Priority</strong>:
+The priority of the fetch within the session, represented as a u8.
+See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> section for more information.<a href="#section-7.10-5" class="pilcrow">¶</a></p>
+<p id="section-7.10-6"><strong>Group Sequence</strong>:
+The sequence number of the group to fetch.<a href="#section-7.10-6" class="pilcrow">¶</a></p>
+<p id="section-7.10-7">The publisher responds with FRAME messages on the same stream.
+The publisher FINs the stream after the last frame, or resets on error.<a href="#section-7.10-7" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="probe-1">
+<section id="section-7.11">
+        <h3 id="name-probe-2">
+<a href="#section-7.11" class="section-number selfRef">7.11. </a><a href="#name-probe-2" class="section-name selfRef">PROBE</a>
+        </h3>
+<p id="section-7.11-1">PROBE is used to measure the available bitrate of the connection.<a href="#section-7.11-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.11-2">
+<pre>
+PROBE Message {
+  Message Length (i)
+  Bitrate (i)
 }
 </pre><a href="#section-7.11-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.11-3">See <a href="#subscribe" class="auto internal xref">Section 5.1.4</a> for information about each field.<a href="#section-7.11-3" class="pilcrow">¶</a></p>
+<p id="section-7.11-3"><strong>Bitrate</strong>:
+When sent by the subscriber (stream opener): the target bitrate in bits per second that the publisher should pad up to.
+When sent by the publisher (responder): the current measured bitrate in bits per second.<a href="#section-7.11-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="group-2">
@@ -2107,16 +2138,40 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
         </h3>
 <ul class="normal">
 <li class="normal" id="section-8.1-1.1">
-            <p id="section-8.1-1.1.1">Added <code>Subscriber Max Latency</code> and <code>Subscriber Ordered</code> to SUBSCRIBE and SUBSCRIBE_UPDATE.<a href="#section-8.1-1.1.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.1.1">Version negotiated via ALPN (<code>moq-lite-xx</code>, latest <code>moq-lite-03</code>) instead of SETUP messages.<a href="#section-8.1-1.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.2">
-            <p id="section-8.1-1.2.1">Added <code>Publisher Priority</code>, <code>Publisher Max Latency</code>, and <code>Publisher Ordered</code> to SUBSCRIBE_OK.<a href="#section-8.1-1.2.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.2.1">Removed Session, SessionCompat streams and SESSION_CLIENT/SESSION_SERVER/SESSION_UPDATE messages.<a href="#section-8.1-1.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.3">
-            <p id="section-8.1-1.3.1">Added <code>Instant Delta</code> to FRAME.<a href="#section-8.1-1.3.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.3.1">Unknown stream types reset instead of fatal; enables extension negotiation via stream probing.<a href="#section-8.1-1.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.4">
-            <p id="section-8.1-1.4.1">SUBSCRIBE_OK may be sent multiple times.<a href="#section-8.1-1.4.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.4.1">Added FETCH stream for single group download.<a href="#section-8.1-1.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-1.5">
+            <p id="section-8.1-1.5.1">Added Start Group and End Group (+1 encoded) to SUBSCRIBE, SUBSCRIBE_UPDATE, and SUBSCRIBE_OK.<a href="#section-8.1-1.5.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-1.6">
+            <p id="section-8.1-1.6.1">Added GROUP_DROP on Subscribe stream.<a href="#section-8.1-1.6.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-1.7">
+            <p id="section-8.1-1.7.1">Subscribe stream closed (FIN) when all groups accounted for.<a href="#section-8.1-1.7.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-1.8">
+            <p id="section-8.1-1.8.1">Added PROBE stream replacing SESSION_UPDATE bitrate.<a href="#section-8.1-1.8.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-1.9">
+            <p id="section-8.1-1.9.1">Added <code>Subscriber Max Latency</code> and <code>Subscriber Ordered</code> to SUBSCRIBE and SUBSCRIBE_UPDATE.<a href="#section-8.1-1.9.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-1.10">
+            <p id="section-8.1-1.10.1">Added <code>Publisher Priority</code>, <code>Publisher Max Latency</code>, and <code>Publisher Ordered</code> to SUBSCRIBE_OK.<a href="#section-8.1-1.10.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-1.11">
+            <p id="section-8.1-1.11.1">Added <code>Instant Delta</code> to FRAME.<a href="#section-8.1-1.11.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-1.12">
+            <p id="section-8.1-1.12.1">SUBSCRIBE_OK may be sent multiple times.<a href="#section-8.1-1.12.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -2167,34 +2222,37 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
           <p id="section-9-2.2.1">Pull only: No unsolicited publishing.<a href="#section-9-2.2.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-9-2.3">
-          <p id="section-9-2.3.1">Uses HTTP for VOD instead of FETCH.<a href="#section-9-2.3.1" class="pilcrow">¶</a></p>
+          <p id="section-9-2.3.1">FETCH is HTTP-like (single request/response) vs MoqTransport FETCH (multiple groups).<a href="#section-9-2.3.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-9-2.4">
-          <p id="section-9-2.4.1">Extensions instead of parameters.<a href="#section-9-2.4.1" class="pilcrow">¶</a></p>
+          <p id="section-9-2.4.1">Extensions negotiated via stream probing instead of parameters.<a href="#section-9-2.4.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-9-2.5">
-          <p id="section-9-2.5.1">Names use utf-8 strings instead of byte arrays.<a href="#section-9-2.5.1" class="pilcrow">¶</a></p>
+          <p id="section-9-2.5.1">Both moq-lite and MoqTransport use ALPN for version identification.<a href="#section-9-2.5.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-9-2.6">
-          <p id="section-9-2.6.1">Track Namespace is a string, not an array of any array of bytes.<a href="#section-9-2.6.1" class="pilcrow">¶</a></p>
+          <p id="section-9-2.6.1">Names use utf-8 strings instead of byte arrays.<a href="#section-9-2.6.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-9-2.7">
-          <p id="section-9-2.7.1">Subscriptions start at the latest group, not the latest object.<a href="#section-9-2.7.1" class="pilcrow">¶</a></p>
+          <p id="section-9-2.7.1">Track Namespace is a string, not an array of any array of bytes.<a href="#section-9-2.7.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-9-2.8">
-          <p id="section-9-2.8.1">No subgroups<a href="#section-9-2.8.1" class="pilcrow">¶</a></p>
+          <p id="section-9-2.8.1">Subscriptions default to the latest group, not the latest object.<a href="#section-9-2.8.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-9-2.9">
-          <p id="section-9-2.9.1">No group/object ID gaps<a href="#section-9-2.9.1" class="pilcrow">¶</a></p>
+          <p id="section-9-2.9.1">No subgroups<a href="#section-9-2.9.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-9-2.10">
-          <p id="section-9-2.10.1">No object properties<a href="#section-9-2.10.1" class="pilcrow">¶</a></p>
+          <p id="section-9-2.10.1">No group/object ID gaps<a href="#section-9-2.10.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-9-2.11">
-          <p id="section-9-2.11.1">No datagrams<a href="#section-9-2.11.1" class="pilcrow">¶</a></p>
+          <p id="section-9-2.11.1">No object properties<a href="#section-9-2.11.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-9-2.12">
-          <p id="section-9-2.12.1">No paused subscriptions (forward=0)<a href="#section-9-2.12.1" class="pilcrow">¶</a></p>
+          <p id="section-9-2.12.1">No datagrams<a href="#section-9-2.12.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-9-2.13">
+          <p id="section-9-2.13.1">No paused subscriptions (forward=0)<a href="#section-9-2.13.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 <div id="deleted-messages">
@@ -2231,52 +2289,49 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
             <p id="section-9.1-1.9.1">PUBLISH_ERROR<a href="#section-9.1-1.9.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.10">
-            <p id="section-9.1-1.10.1">FETCH<a href="#section-9.1-1.10.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.10.1">FETCH_OK<a href="#section-9.1-1.10.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.11">
-            <p id="section-9.1-1.11.1">FETCH_OK<a href="#section-9.1-1.11.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.11.1">FETCH_ERROR<a href="#section-9.1-1.11.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.12">
-            <p id="section-9.1-1.12.1">FETCH_ERROR<a href="#section-9.1-1.12.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.12.1">FETCH_CANCEL<a href="#section-9.1-1.12.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.13">
-            <p id="section-9.1-1.13.1">FETCH_CANCEL<a href="#section-9.1-1.13.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.13.1">FETCH_HEADER<a href="#section-9.1-1.13.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.14">
-            <p id="section-9.1-1.14.1">FETCH_HEADER<a href="#section-9.1-1.14.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.14.1">TRACK_STATUS<a href="#section-9.1-1.14.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.15">
-            <p id="section-9.1-1.15.1">TRACK_STATUS<a href="#section-9.1-1.15.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.15.1">TRACK_STATUS_OK<a href="#section-9.1-1.15.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.16">
-            <p id="section-9.1-1.16.1">TRACK_STATUS_OK<a href="#section-9.1-1.16.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.16.1">TRACK_STATUS_ERROR<a href="#section-9.1-1.16.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.17">
-            <p id="section-9.1-1.17.1">TRACK_STATUS_ERROR<a href="#section-9.1-1.17.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.17.1">PUBLISH_NAMESPACE<a href="#section-9.1-1.17.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.18">
-            <p id="section-9.1-1.18.1">PUBLISH_NAMESPACE<a href="#section-9.1-1.18.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.18.1">PUBLISH_NAMESPACE_OK<a href="#section-9.1-1.18.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.19">
-            <p id="section-9.1-1.19.1">PUBLISH_NAMESPACE_OK<a href="#section-9.1-1.19.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.19.1">PUBLISH_NAMESPACE_ERROR<a href="#section-9.1-1.19.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.20">
-            <p id="section-9.1-1.20.1">PUBLISH_NAMESPACE_ERROR<a href="#section-9.1-1.20.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.20.1">PUBLISH_NAMESPACE_CANCEL<a href="#section-9.1-1.20.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.21">
-            <p id="section-9.1-1.21.1">PUBLISH_NAMESPACE_CANCEL<a href="#section-9.1-1.21.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.21.1">SUBSCRIBE_NAMESPACE_OK<a href="#section-9.1-1.21.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.22">
-            <p id="section-9.1-1.22.1">SUBSCRIBE_NAMESPACE_OK<a href="#section-9.1-1.22.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.22.1">SUBSCRIBE_NAMESPACE_ERROR<a href="#section-9.1-1.22.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.23">
-            <p id="section-9.1-1.23.1">SUBSCRIBE_NAMESPACE_ERROR<a href="#section-9.1-1.23.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.23.1">UNSUBSCRIBE_NAMESPACE<a href="#section-9.1-1.23.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.24">
-            <p id="section-9.1-1.24.1">UNSUBSCRIBE_NAMESPACE<a href="#section-9.1-1.24.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-9.1-1.25">
-            <p id="section-9.1-1.25.1">OBJECT_DATAGRAM<a href="#section-9.1-1.25.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.24.1">OBJECT_DATAGRAM<a href="#section-9.1-1.24.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -2316,40 +2371,34 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
             <p id="section-9.3-2.4.1">Filter Type<a href="#section-9.3-2.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.3-2.5">
-            <p id="section-9.3-2.5.1">StartGroup<a href="#section-9.3-2.5.1" class="pilcrow">¶</a></p>
+            <p id="section-9.3-2.5.1">StartObject<a href="#section-9.3-2.5.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.3-2.6">
-            <p id="section-9.3-2.6.1">StartObject<a href="#section-9.3-2.6.1" class="pilcrow">¶</a></p>
+            <p id="section-9.3-2.6.1">Expires<a href="#section-9.3-2.6.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.3-2.7">
-            <p id="section-9.3-2.7.1">EndGroup<a href="#section-9.3-2.7.1" class="pilcrow">¶</a></p>
+            <p id="section-9.3-2.7.1">ContentExists<a href="#section-9.3-2.7.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.3-2.8">
-            <p id="section-9.3-2.8.1">Expires<a href="#section-9.3-2.8.1" class="pilcrow">¶</a></p>
+            <p id="section-9.3-2.8.1">Largest Group ID<a href="#section-9.3-2.8.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.3-2.9">
-            <p id="section-9.3-2.9.1">ContentExists<a href="#section-9.3-2.9.1" class="pilcrow">¶</a></p>
+            <p id="section-9.3-2.9.1">Largest Object ID<a href="#section-9.3-2.9.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.3-2.10">
-            <p id="section-9.3-2.10.1">Largest Group ID<a href="#section-9.3-2.10.1" class="pilcrow">¶</a></p>
+            <p id="section-9.3-2.10.1">Parameters<a href="#section-9.3-2.10.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.3-2.11">
-            <p id="section-9.3-2.11.1">Largest Object ID<a href="#section-9.3-2.11.1" class="pilcrow">¶</a></p>
+            <p id="section-9.3-2.11.1">Subgroup ID<a href="#section-9.3-2.11.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.3-2.12">
-            <p id="section-9.3-2.12.1">Parameters<a href="#section-9.3-2.12.1" class="pilcrow">¶</a></p>
+            <p id="section-9.3-2.12.1">Object ID<a href="#section-9.3-2.12.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.3-2.13">
-            <p id="section-9.3-2.13.1">Subgroup ID<a href="#section-9.3-2.13.1" class="pilcrow">¶</a></p>
+            <p id="section-9.3-2.13.1">Object Status<a href="#section-9.3-2.13.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.3-2.14">
-            <p id="section-9.3-2.14.1">Object ID<a href="#section-9.3-2.14.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-9.3-2.15">
-            <p id="section-9.3-2.15.1">Object Status<a href="#section-9.3-2.15.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-9.3-2.16">
-            <p id="section-9.3-2.16.1">Extension Headers<a href="#section-9.3-2.16.1" class="pilcrow">¶</a></p>
+            <p id="section-9.3-2.14.1">Extension Headers<a href="#section-9.3-2.14.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -2380,7 +2429,7 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
 <dl class="references">
 <dt id="moqt">[moqt]</dt>
       <dd>
-<span class="refAuthor">Nandakumar, S.</span>, <span class="refAuthor">Vasiliev, V.</span>, <span class="refAuthor">Swett, I.</span>, and <span class="refAuthor">A. Frindell</span>, <span class="refTitle">"Media over QUIC Transport"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-moq-transport-15</span>, <time datetime="2025-10-20" class="refDate">20 October 2025</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-15">https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-15</a>&gt;</span>. </dd>
+<span class="refAuthor">Nandakumar, S.</span>, <span class="refAuthor">Vasiliev, V.</span>, <span class="refAuthor">Swett, I.</span>, and <span class="refAuthor">A. Frindell</span>, <span class="refTitle">"Media over QUIC Transport"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-moq-transport-16</span>, <time datetime="2026-01-13" class="refDate">13 January 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-16">https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-16</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC2119">[RFC2119]</dt>
       <dd>
