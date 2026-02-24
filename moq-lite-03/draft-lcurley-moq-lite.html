@@ -1701,11 +1701,11 @@ It is <span class="bcp14">RECOMMENDED</span> that an application set conservativ
 <p id="section-6.2-3">A subscriber <span class="bcp14">SHOULD</span> expire groups based on the <code>Subscriber Max Latency</code> in SUBSCRIBE/SUBSCRIBE_UPDATE.
 A publisher <span class="bcp14">SHOULD</span> expire groups based on the <code>Publisher Max Latency</code> in SUBSCRIBE_OK.
 An implementation <span class="bcp14">MAY</span> use the minimum of both when determining when to expire a group.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
-<p id="section-6.2-4">Expiration is based on arrival timestamps.
-Each group has an arrival timestamp, defined as the time the first byte was received (subscriber) or queued (publisher).
-If the time elapsed since a group's arrival exceeds <code>Max Latency</code>, and a newer group has since arrived, the older group is considered expired.
+<p id="section-6.2-4">Group age is computed relative to the latest group by sequence number.
+A group is never expired until at least the next group (by sequence number) has been received or queued.
+Once a newer group exists, a group is considered expired if the time between its arrival and the latest group's arrival exceeds <code>Max Latency</code>.
+The arrival time is when the first byte of a group is received (subscriber) or queued (publisher).
 An expired group <span class="bcp14">SHOULD</span> BE reset at the QUIC level to avoid consuming flow control.<a href="#section-6.2-4" class="pilcrow">¶</a></p>
-<p id="section-6.2-5">An implementation <span class="bcp14">SHOULD NOT</span> expire the highest sequence number group within each track, otherwise a track may become perpetually expired.<a href="#section-6.2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="unidirectional-streams">
@@ -1899,8 +1899,8 @@ A boolean representing whether groups are transmitted in ascending (true) or des
 The publisher <span class="bcp14">SHOULD</span> transmit <em>older</em> groups first during congestion if true.
 See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> section for more information.<a href="#section-7.6-5" class="pilcrow">¶</a></p>
 <p id="section-7.6-6"><strong>Subscriber Max Latency</strong>:
-This value is encoded in milliseconds and represents the maximum age of a group based on arrival time.
-The publisher <span class="bcp14">SHOULD</span> reset old group streams when they have been pending for longer than this duration.
+This value is encoded in milliseconds and represents the maximum age of a group relative to the latest group.
+The publisher <span class="bcp14">SHOULD</span> reset old group streams when the difference in arrival time between the group and the latest group exceeds this duration.
 See the <a href="#expiration" class="auto internal xref">Section 6.2</a> section for more information.<a href="#section-7.6-6" class="pilcrow">¶</a></p>
 <p id="section-7.6-7"><strong>Start Group</strong>:
 The first group to deliver.
@@ -2117,16 +2117,13 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
             <p id="section-8.1-1.8.1">Added PROBE stream replacing SESSION_UPDATE bitrate.<a href="#section-8.1-1.8.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.9">
-            <p id="section-8.1-1.9.1">Removed <code>Instant Delta</code> from FRAME; expiration is now based on arrival timestamps.<a href="#section-8.1-1.9.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.9.1">Added <code>Subscriber Max Latency</code> and <code>Subscriber Ordered</code> to SUBSCRIBE and SUBSCRIBE_UPDATE.<a href="#section-8.1-1.9.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.10">
-            <p id="section-8.1-1.10.1">Added <code>Subscriber Max Latency</code> and <code>Subscriber Ordered</code> to SUBSCRIBE and SUBSCRIBE_UPDATE.<a href="#section-8.1-1.10.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.10.1">Added <code>Publisher Priority</code>, <code>Publisher Max Latency</code>, and <code>Publisher Ordered</code> to SUBSCRIBE_OK.<a href="#section-8.1-1.10.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.11">
-            <p id="section-8.1-1.11.1">Added <code>Publisher Priority</code>, <code>Publisher Max Latency</code>, and <code>Publisher Ordered</code> to SUBSCRIBE_OK.<a href="#section-8.1-1.11.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-8.1-1.12">
-            <p id="section-8.1-1.12.1">SUBSCRIBE_OK may be sent multiple times.<a href="#section-8.1-1.12.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.11.1">SUBSCRIBE_OK may be sent multiple times.<a href="#section-8.1-1.11.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
