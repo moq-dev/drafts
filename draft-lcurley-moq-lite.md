@@ -480,7 +480,7 @@ SUBSCRIBE_OK Message {
   Publisher Ordered (8)
   Publisher Max Latency (i)
   Start Group (i)
-  Group Count (i)
+  End Group (i)
 }
 ~~~
 
@@ -492,9 +492,10 @@ The resolved absolute start group sequence.
 A value of 0 means the start group is not yet known; the publisher MUST send a subsequent SUBSCRIBE_OK with a resolved value.
 A non-zero value is the absolute group sequence + 1.
 
-**Group Count**:
-The number of consecutive groups in the subscription, starting from Start Group.
+**End Group**:
+The resolved absolute end group sequence (inclusive).
 A value of 0 means unbounded.
+A non-zero value is the absolute group sequence + 1.
 
 See [SUBSCRIBE](#subscribe) for information about the other fields.
 
