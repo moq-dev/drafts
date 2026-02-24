@@ -75,8 +75,13 @@ The moq-lite layer provides fanout, prioritization, and caching even for latency
 A Session consists of a connection between a client and a server.
 There is currently no P2P support within QUIC so it's out of scope for moq-lite.
 
-A session is established after the necessary QUIC, WebTransport, and moq-lite handshakes have completed.
-The moq-lite handshake is simple and consists of version and extension negotiation.
+The moq-lite version is negotiated via ALPN during the QUIC handshake.
+The ALPN format is `moq-lite-xx` where `xx` is the two-digit draft version.
+The latest ALPN is `moq-lite-03`.
+
+The session is active immediately after the QUIC/WebTransport connection is established.
+No additional handshake is required.
+Extensions are negotiated via stream probing: an endpoint opens a stream with an unknown type and the peer resets it if unsupported.
 
 While moq-lite is a point-to-point protocol, it's intended to work end-to-end via relays.
 Each client establishes a session with a CDN edge server, ideally the closest one.
@@ -101,7 +106,7 @@ When a new Group is started, the previous Group is closed and may be dropped for
 The duration before an incomplete group is dropped is determined by the application and the publisher/subscriber's latency target.
 
 Every subscription is scoped to a single Track.
-A subscription will always start at the latest Group and continues until either the publisher or subscriber cancels the subscription.
+A subscription starts at a configurable Group (defaulting to the latest) and continues until a configurable end Group or until either the publisher or subscriber cancels the subscription.
 
 The subscriber and publisher both indicate their delivery preference:
 - `Priority` indicates if Track A should be transmitted instead of Track B.
@@ -154,11 +159,9 @@ After resetting the send direction, an endpoint MAY close the recv direction (ST
 However, it is ultimately the other peer's responsibility to close their send direction.
 
 ## Handshake
-After a connection is established, the client opens a Session Stream and sends a SESSION_CLIENT message, to which the server replies with a SESSION_SERVER message.
-The session is active until either endpoint closes or resets the Session Stream.
-
-This session handshake is used to negotiate the moq-lite version and any extensions.
-See the Extension section for more information.
+The moq-lite version is negotiated via ALPN during the QUIC handshake.
+The ALPN format is `moq-lite-xx` where `xx` is the two-digit draft version (latest: `moq-lite-03`).
+The session is active immediately after the connection is established.
 
 # Streams
 moq-lite uses a bidirectional stream for each transaction.
@@ -171,40 +174,14 @@ There's a 1-byte STREAM_TYPE at the beginning of each stream.
 |---------|--------------|-------------|
 |     ID  | Stream       | Creator     |
 |--------:|:-------------|:------------|
-|    0x0  | Session      | Client      |
-| ------- | ------------ | ----------- |
 |    0x1  | Announce     | Subscriber  |
-| ------- | ------------- | ---------- |
+| ------- | ------------ | ----------- |
 |    0x2  | Subscribe    | Subscriber  |
 | ------- | ------------- | ---------- |
-|    0x20 | SessionCompat | Client     |
+|    0x3  | Fetch        | Subscriber  |
+| ------- | ------------- | ---------- |
+|    0x4  | Probe        | Subscriber  |
 | ------- | ------------- | ----------- |
-
-### Session
-The Session stream is used to establish the moq-lite session, negotiating the version and any extensions.
-This stream remains open for the duration of the session and its closure indicates the session is closed.
-
-The client MUST open the Session Stream, write the Session Stream ID (0x0), and write a SESSION_CLIENT message.
-If the server does not support any of the client's versions, it MUST close the stream with an error code and MAY close the connection.
-Otherwise, the server replies with a SESSION_SERVER message to complete the handshake.
-
-Afterwards, both endpoints MAY send SESSION_UPDATE messages.
-This is currently used to notify the other endpoint of a significant change in the session bitrate.
-
-This draft's version is combined with the constant `0xff0dad00`.
-For example, moq-lite-draft-04 is identified as `0xff0dad04`.
-
-### SessionCompat
-The SessionCompat stream exists to support moq-transport draft 11-14.
-This will be removed in a future version as moq-transport draft 15 uses ALPN instead.
-
-The client writes a CLIENT_SETUP message on the SessionCompat stream and receives a SERVER_SETUP message in response.
-
-Consult the MoqTransport ([moqt]) draft for more information about the encoding.
-Notably, each message contains a u16 length prefix instead of a VarInt (moq-lite).
-
-If a moq-lite version is negotiated, this stream becomes a normal Session stream.
-If a moq-transport version is negotiated, this stream becomes the MoqTransport control stream.
 
 ### Announce
 A subscriber can open a Announce Stream to discover broadcasts matching a prefix.
@@ -232,10 +209,29 @@ There MAY be multiple Announce Streams, potentially containing overlapping prefi
 A subscriber opens Subscribe Streams to request a Track.
 
 The subscriber MUST start a Subscribe Stream with a SUBSCRIBE message followed by any number of SUBSCRIBE_UPDATE messages.
-The publisher replies with any number of SUBSCRIBE_OK messages, or closes the stream.
+The publisher replies with a SUBSCRIBE_OK message followed by any number of GROUP_DROP and additional SUBSCRIBE_OK messages.
 
-The publisher SHOULD close the stream after the track has ended.
+The publisher closes the stream (FIN) when every group from start to end has been accounted for, either via a completed GROUP stream or a GROUP_DROP message.
+Unbounded subscriptions (no end group) stay open until the track ends or either endpoint cancels.
 Either endpoint MAY reset/cancel the stream at any time.
+
+### Fetch
+A subscriber opens a Fetch Stream (0x3) to request a single Group from a Track.
+
+The subscriber sends a FETCH message containing the broadcast path, track name, priority, and group sequence.
+The publisher responds with FRAME messages on the same bidirectional stream.
+The publisher FINs the stream after the last frame, or resets the stream on error.
+
+Fetch behaves like HTTP: a single request/response per stream.
+
+### Probe
+A subscriber opens a Probe Stream (0x4) to measure the available bitrate of the connection.
+
+The subscriber sends a PROBE message with a target bitrate.
+The publisher SHOULD pad the connection to achieve the target bitrate.
+The publisher periodically replies with PROBE messages containing the current measured bitrate.
+
+If the publisher does not support PROBE (e.g., congestion controller is not exposed), it resets the stream.
 
 # Delivery
 The most important concept in moq-lite is how to deliver a subscription.
@@ -403,54 +399,8 @@ STREAM_TYPE {
 ~~~
 
 The stream ID depends on if it's a bidirectional or unidirectional stream, as indicated in the Streams section.
-A receiver MUST close the session if it receives an unknown stream type.
-
-
-## SESSION_CLIENT
-The client initiates the session by sending a SESSION_CLIENT message.
-
-~~~
-SESSION_CLIENT Message {
-  Message Length (i)
-  Supported Versions Count (i)
-  Supported Version (i)
-  Extension Count (i)
-  [
-    Extension ID (i)
-    Extension Payload (b)
-  ]...
-}
-~~~
-
-
-## SESSION_SERVER
-The server responds with the selected version and any extensions.
-
-~~~
-SESSION_SERVER Message {
-  Message Length (i)
-  Selected Version (i)
-  Extension Count (i)
-  [
-    Extension ID (i)
-    Extension Payload (b)
-  ]...
-}
-~~~
-
-## SESSION_UPDATE
-
-~~~
-SESSION_UPDATE Message {
-  Message Length (i)
-  Session Bitrate (i)
-}
-~~~
-
-**Session Bitrate**:
-The estimated bitrate of the QUIC connection in bits per second.
-This SHOULD be sourced directly from the QUIC congestion controller.
-A value of 0 indicates that this information is not available.
+A receiver MUST reset the stream if it receives an unknown stream type.
+Unknown stream types MUST NOT be treated as fatal; this enables extension negotiation via stream probing.
 
 
 ## ANNOUNCE_PLEASE
@@ -537,6 +487,8 @@ SUBSCRIBE Message {
   Subscriber Priority (8)
   Subscriber Ordered (1)
   Subscriber Max Latency (i)
+  Start Group (i)
+  End Group (i)
 }
 ~~~
 
@@ -559,10 +511,21 @@ This value is encoded in milliseconds and represents the maximum age of a group.
 The publisher SHOULD reset old group streams when the last processed frame is at least this much older than the newest frame.
 See the [Expiration](#expiration) section for more information.
 
+**Start Group**:
+The first group to deliver.
+A value of 0 means the latest group (default).
+A non-zero value is the absolute group sequence + 1.
+
+**End Group**:
+The last group to deliver (inclusive).
+A value of 0 means unbounded (default).
+A non-zero value is the absolute group sequence + 1.
+
 
 ## SUBSCRIBE_UPDATE
 A subscriber can modify a subscription with a SUBSCRIBE_UPDATE message.
 A subscriber MAY send multiple SUBSCRIBE_UPDATE messages to update the subscription.
+The start and end group can be changed in either direction (growing or shrinking).
 
 ~~~
 SUBSCRIBE_UPDATE Message {
@@ -570,6 +533,8 @@ SUBSCRIBE_UPDATE Message {
   Subscriber Priority (8)
   Subscriber Ordered (1)
   Subscriber Max Latency (i)
+  Start Group (i)
+  End Group (i)
 }
 ~~~
 
@@ -586,10 +551,84 @@ SUBSCRIBE_OK Message {
   Publisher Priority (8)
   Publisher Ordered (1)
   Publisher Max Latency (i)
+  Start Group (i)
+  End Group (i)
 }
 ~~~
 
-See [SUBSCRIBE](#subscribe) for information about each field.
+**Start Group**:
+The resolved absolute start group sequence + 1.
+This MUST NOT be 0.
+
+**End Group**:
+The resolved absolute end group sequence + 1, or 0 if unbounded.
+
+See [SUBSCRIBE](#subscribe) for information about the other fields.
+
+## GROUP_DROP
+A GROUP_DROP message is sent by the publisher on the Subscribe Stream when groups cannot be served.
+
+~~~
+GROUP_DROP Message {
+  Message Length (i)
+  Start Group (i)
+  End Group (i)
+  Error Code (i)
+}
+~~~
+
+**Start Group**:
+The first group sequence in the dropped range (inclusive, absolute).
+
+**End Group**:
+The last group sequence in the dropped range (inclusive, absolute).
+
+**Error Code**:
+An application-specific error code.
+A value of 0 indicates no error; the groups are simply unavailable.
+
+## FETCH
+FETCH is sent by a subscriber to request a single group from a track.
+
+~~~
+FETCH Message {
+  Message Length (i)
+  Broadcast Path (s)
+  Track Name (s)
+  Subscriber Priority (8)
+  Group Sequence (i)
+}
+~~~
+
+**Broadcast Path**:
+The broadcast path of the track to fetch from.
+
+**Track Name**:
+The name of the track to fetch from.
+
+**Subscriber Priority**:
+The priority of the fetch within the session, represented as a u8.
+See the [Prioritization](#prioritization) section for more information.
+
+**Group Sequence**:
+The sequence number of the group to fetch.
+
+The publisher responds with FRAME messages on the same stream.
+The publisher FINs the stream after the last frame, or resets on error.
+
+## PROBE
+PROBE is used to measure the available bitrate of the connection.
+
+~~~
+PROBE Message {
+  Message Length (i)
+  Bitrate (i)
+}
+~~~
+
+**Bitrate**:
+When sent by the subscriber (stream opener): the target bitrate in bits per second that the publisher should pad up to.
+When sent by the publisher (responder): the current measured bitrate in bits per second.
 
 ## GROUP
 The GROUP message contains information about a Group, as well as a reference to the subscription being served.
@@ -637,6 +676,14 @@ A generic library or relay MUST NOT inspect or modify the contents unless otherw
 # Appendix A: Changelog
 
 ## moq-lite-03
+- Version negotiated via ALPN (`moq-lite-xx`, latest `moq-lite-03`) instead of SETUP messages.
+- Removed Session, SessionCompat streams and SESSION_CLIENT/SESSION_SERVER/SESSION_UPDATE messages.
+- Unknown stream types reset instead of fatal; enables extension negotiation via stream probing.
+- Added FETCH stream for single group download.
+- Added Start Group and End Group (+1 encoded) to SUBSCRIBE, SUBSCRIBE_UPDATE, and SUBSCRIBE_OK.
+- Added GROUP_DROP on Subscribe stream.
+- Subscribe stream closed (FIN) when all groups accounted for.
+- Added PROBE stream replacing SESSION_UPDATE bitrate.
 - Added `Subscriber Max Latency` and `Subscriber Ordered` to SUBSCRIBE and SUBSCRIBE_UPDATE.
 - Added `Publisher Priority`, `Publisher Max Latency`, and `Publisher Ordered` to SUBSCRIBE_OK.
 - Added `Instant Delta` to FRAME.
@@ -655,11 +702,12 @@ A quick comparison of moq-lite and moq-transport-14:
 
 - Streams instead of request IDs.
 - Pull only: No unsolicited publishing.
-- Uses HTTP for VOD instead of FETCH.
-- Extensions instead of parameters.
+- FETCH is HTTP-like (single request/response) vs MoqTransport FETCH (multiple groups).
+- Extensions negotiated via stream probing instead of parameters.
+- Both moq-lite and MoqTransport use ALPN for version identification.
 - Names use utf-8 strings instead of byte arrays.
 - Track Namespace is a string, not an array of any array of bytes.
-- Subscriptions start at the latest group, not the latest object.
+- Subscriptions default to the latest group, not the latest object.
 - No subgroups
 - No group/object ID gaps
 - No object properties
@@ -676,7 +724,6 @@ A quick comparison of moq-lite and moq-transport-14:
 - PUBLISH
 - PUBLISH_OK
 - PUBLISH_ERROR
-- FETCH
 - FETCH_OK
 - FETCH_ERROR
 - FETCH_CANCEL
@@ -704,9 +751,7 @@ Some of these fields occur in multiple messages.
 - Track Alias
 - Group Order
 - Filter Type
-- StartGroup
 - StartObject
-- EndGroup
 - Expires
 - ContentExists
 - Largest Group ID
