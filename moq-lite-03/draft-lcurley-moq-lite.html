@@ -1949,16 +1949,16 @@ SUBSCRIBE_OK Message {
   Publisher Priority (8)
   Publisher Ordered (1)
   Publisher Max Latency (i)
-  Start Group (i)
-  End Group (i)
+  Group Sequence (i)
+  Group Count (i)
 }
 </pre><a href="#section-7.8-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.8-3"><strong>Start Group</strong>:
-The resolved absolute start group sequence + 1.
-This <span class="bcp14">MUST NOT</span> be 0.<a href="#section-7.8-3" class="pilcrow">¶</a></p>
-<p id="section-7.8-4"><strong>End Group</strong>:
-The resolved absolute end group sequence + 1, or 0 if unbounded.<a href="#section-7.8-4" class="pilcrow">¶</a></p>
+<p id="section-7.8-3"><strong>Group Sequence</strong>:
+The resolved absolute start group sequence.<a href="#section-7.8-3" class="pilcrow">¶</a></p>
+<p id="section-7.8-4"><strong>Group Count</strong>:
+The number of consecutive groups in the subscription, starting from Group Sequence.
+A value of 0 means unbounded.<a href="#section-7.8-4" class="pilcrow">¶</a></p>
 <p id="section-7.8-5">See <a href="#subscribe" class="auto internal xref">Section 5.1.2</a> for information about the other fields.<a href="#section-7.8-5" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1972,16 +1972,17 @@ The resolved absolute end group sequence + 1, or 0 if unbounded.<a href="#sectio
 <pre>
 GROUP_DROP Message {
   Message Length (i)
-  Start Group (i)
-  End Group (i)
+  Group Sequence (i)
+  Group Count (i)
   Error Code (i)
 }
 </pre><a href="#section-7.9-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.9-3"><strong>Start Group</strong>:
-The first group sequence in the dropped range (inclusive, absolute).<a href="#section-7.9-3" class="pilcrow">¶</a></p>
-<p id="section-7.9-4"><strong>End Group</strong>:
-The last group sequence in the dropped range (inclusive, absolute).<a href="#section-7.9-4" class="pilcrow">¶</a></p>
+<p id="section-7.9-3"><strong>Group Sequence</strong>:
+The first group sequence in the dropped range.<a href="#section-7.9-3" class="pilcrow">¶</a></p>
+<p id="section-7.9-4"><strong>Group Count</strong>:
+The number of consecutive groups being dropped, starting from Group Sequence.
+A value of 0 means all remaining groups in the subscription.<a href="#section-7.9-4" class="pilcrow">¶</a></p>
 <p id="section-7.9-5"><strong>Error Code</strong>:
 An application-specific error code.
 A value of 0 indicates no error; the groups are simply unavailable.<a href="#section-7.9-5" class="pilcrow">¶</a></p>
