@@ -3,9 +3,9 @@
 
 
 moq                                                            L. Curley
-Internet-Draft                                          24 February 2026
+Internet-Draft                                          25 February 2026
 Intended status: Informational                                          
-Expires: 28 August 2026
+Expires: 29 August 2026
 
 
                          Media over QUIC - Hang
@@ -44,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 28 August 2026.
+   This Internet-Draft will expire on 29 August 2026.
 
 Copyright Notice
 
