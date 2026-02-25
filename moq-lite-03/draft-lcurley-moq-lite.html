@@ -1048,7 +1048,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Curley</td>
-<td class="center">Expires 28 August 2026</td>
+<td class="center">Expires 29 August 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1061,12 +1061,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-lcurley-moq-lite-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-02-24" class="published">24 February 2026</time>
+<time datetime="2026-02-25" class="published">25 February 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-08-28">28 August 2026</time></dd>
+<dd class="expires"><time datetime="2026-08-29">29 August 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1112,7 +1112,7 @@ While primarily designed for media, the transport is payload agnostic and can be
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 28 August 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 29 August 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1386,8 +1386,9 @@ The moq-lite layer provides fanout, prioritization, and caching even for latency
         </h3>
 <p id="section-3.1-1">A Session consists of a connection between a client and a server.
 There is currently no P2P support within QUIC so it's out of scope for moq-lite.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
-<p id="section-3.1-2">The moq-lite version is negotiated via ALPN during the QUIC handshake.
-The ALPN format is <code>moq-lite-xx</code> where <code>xx</code> is the two-digit draft version.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
+<p id="section-3.1-2">The moq-lite version identifier is <code>moq-lite-xx</code> where <code>xx</code> is the two-digit draft version.
+For bare QUIC, this is negotiated as an ALPN token during the QUIC handshake.
+For WebTransport over HTTP/3, the QUIC ALPN remains <code>h3</code> and the moq-lite version is advertised via the <code>WT-Available-Protocols</code> and <code>WT-Protocol</code> CONNECT headers.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
 <p id="section-3.1-3">The session is active immediately after the QUIC/WebTransport connection is established.
 Extensions are negotiated via stream probing: an endpoint opens a stream with an unknown type and the peer resets it if unsupported.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
 <p id="section-3.1-4">While moq-lite is a point-to-point protocol, it's intended to work end-to-end via relays.
@@ -1492,9 +1493,7 @@ However, it is ultimately the other peer's responsibility to close their send di
         <h3 id="name-handshake">
 <a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-handshake" class="section-name selfRef">Handshake</a>
         </h3>
-<p id="section-4.3-1">The moq-lite version is negotiated via ALPN during the QUIC handshake.
-The ALPN format is <code>moq-lite-xx</code> where <code>xx</code> is the two-digit draft version.
-The session is active immediately after the connection is established.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+<p id="section-4.3-1">See the <a href="#session" class="auto internal xref">Section 3.1</a> section for ALPN negotiation and session activation details.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1578,8 +1577,8 @@ There <span class="bcp14">MAY</span> be multiple Announce Streams, potentially c
 <p id="section-5.1.2-2">The subscriber <span class="bcp14">MUST</span> start a Subscribe Stream with a SUBSCRIBE message followed by any number of SUBSCRIBE_UPDATE messages.
 The publisher replies with a SUBSCRIBE_OK message followed by any number of SUBSCRIBE_DROP and additional SUBSCRIBE_OK messages.
 The first message on the response stream <span class="bcp14">MUST</span> be a SUBSCRIBE_OK; it is not valid to send a SUBSCRIBE_DROP before SUBSCRIBE_OK.<a href="#section-5.1.2-2" class="pilcrow">¶</a></p>
-<p id="section-5.1.2-3">The publisher closes the stream (FIN) when every group from start to end has been accounted for, either via a completed GROUP stream or a SUBSCRIBE_DROP message.
-Unbounded subscriptions (no end group) stay open until the track ends or either endpoint cancels.
+<p id="section-5.1.2-3">The publisher closes the stream (FIN) when every group from start to end has been accounted for, either via a GROUP stream (completed or reset) or a SUBSCRIBE_DROP message.
+Unbounded subscriptions (no end group) stay open until the publisher closes the stream to indicate the track has ended, or either endpoint resets.
 Either endpoint <span class="bcp14">MAY</span> reset/cancel the stream at any time.<a href="#section-5.1.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1657,7 +1656,7 @@ ali/audio: subscriber_priority=2 publisher_priority=2
 bob/video: subscriber_priority=1 publisher_priority=2
 ali/video: subscriber_priority=1 publisher_priority=1
 </code><a href="#section-6.1.1-6" class="pilcrow">¶</a></p>
-<p id="section-6.1.1-7">The subscriber priority takes precedence, so we could override it if we decided to full screen Ali's window:
+<p id="section-6.1.1-7">The subscriber priority takes precedence, so we could override it if we decided to full-screen Ali's window:
 <code>
 ali/audio subscriber_priority=4 publisher_priority=2
 ali/video subscriber_priority=3 publisher_priority=1
@@ -1671,8 +1670,8 @@ bob/video subscriber_priority=1 publisher_priority=2
           <h4 id="name-ordered">
 <a href="#section-6.1.2" class="section-number selfRef">6.1.2. </a><a href="#name-ordered" class="section-name selfRef">Ordered</a>
           </h4>
-<p id="section-6.1.2-1">The <code>Subscriber Ordered</code> boolean signals if older (true) or newer (false) groups should be transmitted first within a Track.
-The <code>Publisher Ordered</code> boolean <span class="bcp14">MAY</span> likewise be used to resolve conflicts.<a href="#section-6.1.2-1" class="pilcrow">¶</a></p>
+<p id="section-6.1.2-1">The <code>Subscriber Ordered</code> field signals if older (0x1) or newer (0x0) groups should be transmitted first within a Track.
+The <code>Publisher Ordered</code> field <span class="bcp14">MAY</span> likewise be used to resolve conflicts.<a href="#section-6.1.2-1" class="pilcrow">¶</a></p>
 <p id="section-6.1.2-2">An application <span class="bcp14">SHOULD</span> use <code>ordered</code> when it wants to provide a VOD-like experience, preferring to buffer old groups rather than skip them.
 An application <span class="bcp14">SHOULD NOT</span> use <code>ordered</code> when it wants to provide a live experience, preferring to skip old groups rather than buffer them.<a href="#section-6.1.2-2" class="pilcrow">¶</a></p>
 <p id="section-6.1.2-3">Note that <a href="#expiration" class="auto internal xref">Section 6.2</a> is not affected by <code>ordered</code>.
@@ -1805,7 +1804,7 @@ Implementations <span class="bcp14">SHOULD</span> consider reasonable limits on 
 <p id="section-7.4-1">A publisher sends an ANNOUNCE message to advertise a change in broadcast availability.
 Only the suffix is encoded on the wire, as the full path can be constructed by prepending the requested prefix.<a href="#section-7.4-1" class="pilcrow">¶</a></p>
 <p id="section-7.4-2">The status is relative to all prior ANNOUNCE messages on the same stream.
-A client <span class="bcp14">MUST</span> ONLY alternate between status values (from active to ended or vice versa).<a href="#section-7.4-2" class="pilcrow">¶</a></p>
+A publisher <span class="bcp14">MUST</span> ONLY alternate between status values (from active to ended or vice versa).<a href="#section-7.4-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-7.4-3">
 <pre>
 ANNOUNCE Message {
@@ -1848,7 +1847,7 @@ SUBSCRIBE Message {
   Broadcast Path (s)
   Track Name (s)
   Subscriber Priority (8)
-  Subscriber Ordered (1)
+  Subscriber Ordered (8)
   Subscriber Max Latency (i)
   Start Group (i)
   End Group (i)
@@ -1863,7 +1862,7 @@ The priority of the subscription within the session, represented as a u8.
 The publisher <span class="bcp14">SHOULD</span> transmit <em>higher</em> values first during congestion.
 See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> section for more information.<a href="#section-7.5-4" class="pilcrow">¶</a></p>
 <p id="section-7.5-5"><strong>Subscriber Ordered</strong>:
-A boolean representing whether groups are transmitted in ascending (true) or descending (false) order.
+A single byte representing whether groups are transmitted in ascending (0x1) or descending (0x0) order.
 The publisher <span class="bcp14">SHOULD</span> transmit <em>older</em> groups first during congestion if true.
 See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> section for more information.<a href="#section-7.5-5" class="pilcrow">¶</a></p>
 <p id="section-7.5-6"><strong>Subscriber Max Latency</strong>:
@@ -1893,7 +1892,7 @@ The start and end group can be changed in either direction (growing or shrinking
 SUBSCRIBE_UPDATE Message {
   Message Length (i)
   Subscriber Priority (8)
-  Subscriber Ordered (1)
+  Subscriber Ordered (8)
   Subscriber Max Latency (i)
   Start Group (i)
   End Group (i)
@@ -1917,20 +1916,23 @@ SUBSCRIBE_OK Message {
   Type (i) = 0x0
   Message Length (i)
   Publisher Priority (8)
-  Publisher Ordered (1)
+  Publisher Ordered (8)
   Publisher Max Latency (i)
-  Group Sequence (i)
-  Group Count (i)
+  Start Group (i)
+  End Group (i)
 }
 </pre><a href="#section-7.7-2" class="pilcrow">¶</a>
 </div>
 <p id="section-7.7-3"><strong>Type</strong>:
 Set to 0x0 to indicate a SUBSCRIBE_OK message.<a href="#section-7.7-3" class="pilcrow">¶</a></p>
-<p id="section-7.7-4"><strong>Group Sequence</strong>:
-The resolved absolute start group sequence.<a href="#section-7.7-4" class="pilcrow">¶</a></p>
-<p id="section-7.7-5"><strong>Group Count</strong>:
-The number of consecutive groups in the subscription, starting from Group Sequence.
-A value of 0 means unbounded.<a href="#section-7.7-5" class="pilcrow">¶</a></p>
+<p id="section-7.7-4"><strong>Start Group</strong>:
+The resolved absolute start group sequence.
+A value of 0 means the start group is not yet known; the publisher <span class="bcp14">MUST</span> send a subsequent SUBSCRIBE_OK with a resolved value.
+A non-zero value is the absolute group sequence + 1.<a href="#section-7.7-4" class="pilcrow">¶</a></p>
+<p id="section-7.7-5"><strong>End Group</strong>:
+The resolved absolute end group sequence (inclusive).
+A value of 0 means unbounded.
+A non-zero value is the absolute group sequence + 1.<a href="#section-7.7-5" class="pilcrow">¶</a></p>
 <p id="section-7.7-6">See <a href="#subscribe" class="auto internal xref">Section 5.1.2</a> for information about the other fields.<a href="#section-7.7-6" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1945,19 +1947,18 @@ A value of 0 means unbounded.<a href="#section-7.7-5" class="pilcrow">¶</a></p>
 SUBSCRIBE_DROP Message {
   Type (i) = 0x1
   Message Length (i)
-  Group Sequence (i)
-  Group Count (i)
+  Start Group (i)
+  End Group (i)
   Error Code (i)
 }
 </pre><a href="#section-7.8-2" class="pilcrow">¶</a>
 </div>
 <p id="section-7.8-3"><strong>Type</strong>:
 Set to 0x1 to indicate a SUBSCRIBE_DROP message.<a href="#section-7.8-3" class="pilcrow">¶</a></p>
-<p id="section-7.8-4"><strong>Group Sequence</strong>:
-The first group sequence in the dropped range.<a href="#section-7.8-4" class="pilcrow">¶</a></p>
-<p id="section-7.8-5"><strong>Group Count</strong>:
-The number of consecutive groups being dropped, starting from Group Sequence.
-A value of 0 means all remaining groups in the subscription.<a href="#section-7.8-5" class="pilcrow">¶</a></p>
+<p id="section-7.8-4"><strong>Start Group</strong>:
+The first absolute group sequence in the dropped range.<a href="#section-7.8-4" class="pilcrow">¶</a></p>
+<p id="section-7.8-5"><strong>End Group</strong>:
+The last absolute group sequence in the dropped range (inclusive).<a href="#section-7.8-5" class="pilcrow">¶</a></p>
 <p id="section-7.8-6"><strong>Error Code</strong>:
 An application-specific error code.
 A value of 0 indicates no error; the groups are simply unavailable.<a href="#section-7.8-6" class="pilcrow">¶</a></p>

@@ -3,9 +3,9 @@
 
 
 moq                                                            L. Curley
-Internet-Draft                                          24 February 2026
+Internet-Draft                                          25 February 2026
 Intended status: Informational                                          
-Expires: 28 August 2026
+Expires: 29 August 2026
 
 
                          Media over QUIC - Lite
@@ -46,7 +46,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 28 August 2026.
+   This Internet-Draft will expire on 29 August 2026.
 
 Copyright Notice
 
@@ -183,9 +183,11 @@ Table of Contents
    There is currently no P2P support within QUIC so it's out of scope
    for moq-lite.
 
-   The moq-lite version is negotiated via ALPN during the QUIC
-   handshake.  The ALPN format is moq-lite-xx where xx is the two-digit
-   draft version.
+   The moq-lite version identifier is moq-lite-xx where xx is the two-
+   digit draft version.  For bare QUIC, this is negotiated as an ALPN
+   token during the QUIC handshake.  For WebTransport over HTTP/3, the
+   QUIC ALPN remains h3 and the moq-lite version is advertised via the
+   WT-Available-Protocols and WT-Protocol CONNECT headers.
 
    The session is active immediately after the QUIC/WebTransport
    connection is established.  Extensions are negotiated via stream
@@ -293,10 +295,8 @@ Table of Contents
 
 4.3.  Handshake
 
-   The moq-lite version is negotiated via ALPN during the QUIC
-   handshake.  The ALPN format is moq-lite-xx where xx is the two-digit
-   draft version.  The session is active immediately after the
-   connection is established.
+   See the Section 3.1 section for ALPN negotiation and session
+   activation details.
 
 5.  Streams
 
@@ -359,10 +359,11 @@ Table of Contents
    valid to send a SUBSCRIBE_DROP before SUBSCRIBE_OK.
 
    The publisher closes the stream (FIN) when every group from start to
-   end has been accounted for, either via a completed GROUP stream or a
-   SUBSCRIBE_DROP message.  Unbounded subscriptions (no end group) stay
-   open until the track ends or either endpoint cancels.  Either
-   endpoint MAY reset/cancel the stream at any time.
+   end has been accounted for, either via a GROUP stream (completed or
+   reset) or a SUBSCRIBE_DROP message.  Unbounded subscriptions (no end
+   group) stay open until the publisher closes the stream to indicate
+   the track has ended, or either endpoint resets.  Either endpoint MAY
+   reset/cancel the stream at any time.
 
 5.1.3.  Fetch
 
@@ -441,7 +442,7 @@ Table of Contents
    publisher_priority=1
 
    The subscriber priority takes precedence, so we could override it if
-   we decided to full screen Ali's window: ali/audio
+   we decided to full-screen Ali's window: ali/audio
    subscriber_priority=4 publisher_priority=2 ali/video
    subscriber_priority=3 publisher_priority=1 bob/audio
    subscriber_priority=2 publisher_priority=3 bob/video
@@ -449,9 +450,9 @@ Table of Contents
 
 6.1.2.  Ordered
 
-   The Subscriber Ordered boolean signals if older (true) or newer
-   (false) groups should be transmitted first within a Track.  The
-   Publisher Ordered boolean MAY likewise be used to resolve conflicts.
+   The Subscriber Ordered field signals if older (0x1) or newer (0x0)
+   groups should be transmitted first within a Track.  The Publisher
+   Ordered field MAY likewise be used to resolve conflicts.
 
    An application SHOULD use ordered when it wants to provide a VOD-like
    experience, preferring to buffer old groups rather than skip them.
@@ -569,7 +570,7 @@ Table of Contents
    the full path can be constructed by prepending the requested prefix.
 
    The status is relative to all prior ANNOUNCE messages on the same
-   stream.  A client MUST ONLY alternate between status values (from
+   stream.  A publisher MUST ONLY alternate between status values (from
    active to ended or vice versa).
 
    ANNOUNCE Message {
@@ -602,7 +603,7 @@ Table of Contents
      Broadcast Path (s)
      Track Name (s)
      Subscriber Priority (8)
-     Subscriber Ordered (1)
+     Subscriber Ordered (8)
      Subscriber Max Latency (i)
      Start Group (i)
      End Group (i)
@@ -617,8 +618,8 @@ Table of Contents
    values first during congestion.  See the Section 6.1 section for more
    information.
 
-   *Subscriber Ordered*: A boolean representing whether groups are
-   transmitted in ascending (true) or descending (false) order.  The
+   *Subscriber Ordered*: A single byte representing whether groups are
+   transmitted in ascending (0x1) or descending (0x0) order.  The
    publisher SHOULD transmit _older_ groups first during congestion if
    true.  See the Section 6.1 section for more information.
 
@@ -646,7 +647,7 @@ Table of Contents
    SUBSCRIBE_UPDATE Message {
      Message Length (i)
      Subscriber Priority (8)
-     Subscriber Ordered (1)
+     Subscriber Ordered (8)
      Subscriber Max Latency (i)
      Start Group (i)
      End Group (i)
@@ -665,18 +666,22 @@ Table of Contents
      Type (i) = 0x0
      Message Length (i)
      Publisher Priority (8)
-     Publisher Ordered (1)
+     Publisher Ordered (8)
      Publisher Max Latency (i)
-     Group Sequence (i)
-     Group Count (i)
+     Start Group (i)
+     End Group (i)
    }
 
    *Type*: Set to 0x0 to indicate a SUBSCRIBE_OK message.
 
-   *Group Sequence*: The resolved absolute start group sequence.
+   *Start Group*: The resolved absolute start group sequence.  A value
+   of 0 means the start group is not yet known; the publisher MUST send
+   a subsequent SUBSCRIBE_OK with a resolved value.  A non-zero value is
+   the absolute group sequence + 1.
 
-   *Group Count*: The number of consecutive groups in the subscription,
-   starting from Group Sequence.  A value of 0 means unbounded.
+   *End Group*: The resolved absolute end group sequence (inclusive).  A
+   value of 0 means unbounded.  A non-zero value is the absolute group
+   sequence + 1.
 
    See Section 5.1.2 for information about the other fields.
 
@@ -688,18 +693,18 @@ Table of Contents
    SUBSCRIBE_DROP Message {
      Type (i) = 0x1
      Message Length (i)
-     Group Sequence (i)
-     Group Count (i)
+     Start Group (i)
+     End Group (i)
      Error Code (i)
    }
 
    *Type*: Set to 0x1 to indicate a SUBSCRIBE_DROP message.
 
-   *Group Sequence*: The first group sequence in the dropped range.
+   *Start Group*: The first absolute group sequence in the dropped
+   range.
 
-   *Group Count*: The number of consecutive groups being dropped,
-   starting from Group Sequence.  A value of 0 means all remaining
-   groups in the subscription.
+   *End Group*: The last absolute group sequence in the dropped range
+   (inclusive).
 
    *Error Code*: An application-specific error code.  A value of 0
    indicates no error; the groups are simply unavailable.
