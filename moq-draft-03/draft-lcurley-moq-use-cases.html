@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="en" class="Internet-Draft">
+<head>
+<meta charset="utf-8">
+<meta content="Common,Latin" name="scripts">
+<meta content="initial-scale=1.0" name="viewport">
+<title>Media over QUIC - Use Cases</title>
+<meta content="Luke Curley" name="author">
+<meta content="
+       MoQ is designed to serve live tracks over a CDN to viewers with varying latency and quality targets: the entire spectrum between real-time and VOD.
+However, it's difficult to understand how to use the transport given the layering and complexity of live media delivery.
+This document outlines how an application could use MoQ to deliver video, audio, and metadata in a variety of scenarios. 
+    " name="description">
+<meta content="xml2rfc 3.31.0" name="generator">
+<meta content="draft-lcurley-moq-use-cases-latest" name="ietf.draft">
+<!-- Generator version information:
+  xml2rfc 3.31.0
+    Python 3.12.12
+    ConfigArgParse 1.7
+    google-i18n-address 3.1.1
+    intervaltree 3.2.1
+    Jinja2 3.1.6
+    lxml 6.0.2
+    platformdirs 4.5.1
+    pycountry 24.6.1
+    PyYAML 6.0.3
+    requests 2.32.5
+    wcwidth 0.3.0
+-->
+<link href="draft-lcurley-moq-use-cases.xml" rel="alternate" type="application/rfc+xml">
+<link href="#copyright" rel="license">
+<style type="text/css">@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Lora SemiBold'), local('Lora-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-semibold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: light dark;
+  --background-color: #fff;
+  --text-color: #222;
+  --title-color: #191919;
+  --link-color: #2a6496;
+  --highlight-color: #f9f9f9;
+  --line-color: #eee;
+  --pilcrow-weak: #ddd;
+  --pilcrow-strong: #bbb;
+  --small-font-size: 14.5px;
+  --font-mono: 'Oxygen Mono', monospace;
+  --font-title: "Sofia Sans Semi Condensed", sans-serif;
+  scrollbar-color: #bbb #eee;
+}
+body {
+  max-width: 600px;
+  margin: 75px auto;
+  padding: 0 5px;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  font: 16px/22px "Lora", serif;
+  scroll-behavior: smooth;
+}
+
+.ears {
+  display: none;
+}
+
+/* headings */
+section {
+  clear: both;
+}
+.section-number {
+  padding-right: 0.5em;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+  font-weight: 680;
+  margin: 0.8em 0 0.3em;
+  font-size-adjust: 0.5;
+  color: var(--title-color);
+}
+h1#title {
+  font-size: 32px;
+  line-height: 40px;
+  clear: both;
+}
+h1#title, h1#rfcnum {
+  margin: 1.5em 0 0.2em;
+}
+h1#rfcnum + h1#title {
+  margin: 0.2em 0;
+}
+
+h1, h2, h3 {
+  font-size: 22px;
+  line-height: 27px;
+}
+h4, h5, h6 {
+  font-size: 20px;
+  line-height: 24px;
+}
+
+/* general structure */
+.author {
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+#abstract+p {
+  font-size: 18px;
+  line-height: 24px;
+}
+#abstract+p code, #abstract+p samp, #abstract+p tt {
+  font-size: 16px;
+  line-height: 0;
+}
+
+p {
+  padding: 0;
+  margin: 0.5em 0;
+  text-align: left;
+}
+div {
+  margin: 0;
+}
+.alignRight.art-text {
+  background-color: var(--highlight-color);
+  border: 1px solid var(--line-color);
+  border-radius: 3px;
+  padding: 0.5em 1em 0;
+  margin-bottom: 0.5em;
+}
+.alignRight.art-text pre {
+  padding: 0;
+  width: auto;
+}
+.alignRight {
+  margin: 1em 0;
+}
+.alignRight > *:first-child {
+  border: none;
+  margin: 0;
+  float: right;
+  clear: both;
+}
+.alignRight > *:nth-child(2) {
+  clear: both;
+  display: block;
+  border: none;
+}
+svg {
+  display: block;
+}
+/* font-family isn't space-separated, but =~ will have to do */
+svg[font-family~="monospace" i], svg [font-family~="monospace" i] {
+  font-family: var(--font-mono);
+}
+.alignCenter.art-text {
+  background-color: var(--highlight-color);
+  border: 1px solid var(--line-color);
+  border-radius: 3px;
+  padding: 0.5em 1em 0;
+  margin-bottom: 0.5em;
+}
+.alignCenter.art-text pre {
+  padding: 0;
+  width: auto;
+}
+.alignCenter {
+  margin: 1em 0;
+}
+.alignCenter > *:first-child {
+  border: none;
+  /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
+     support flexbox yet.
+  */
+  display: table;
+  margin: 0 auto;
+}
+
+/* lists */
+ol, ul {
+  padding: 0;
+  margin: 0 0 0.5em 2em;
+  & :is(ol, ul) {
+    margin-left: 1em;
+  }
+}
+li {
+  margin: 0 0 0.25em 0;
+}
+ul.empty, .ulEmpty {
+  list-style-type: none;
+  & li {
+    margin-top: 0.5em;
+  }
+}
+:is(ul, ol).compact, .ulCompact, .olCompact {
+  margin: 0 0 0 2em;
+  & li {
+    margin: 0;
+    & :first-child { margin-top: 0; }
+    & :last-child { margin-bottom: 0; }
+  }
+}
+
+/* definition lists */
+dl {
+  clear: left;
+  --indent: 3ch;
+  /* --indent: attr(indent ch); not supported in any browser, but we can dream */
+  &.olPercent {
+    --indent: 5ch;
+    & > dt {
+      min-width: calc(var(--indent) - 2ch);
+    }
+  }
+  &.olPercent > dt {
+    float: none;
+  }
+
+  dl > dd > & {
+    margin-top: 0.5em;
+    margin-bottom: 0;
+  }
+}
+dl:not(.dlNewline) > dt {
+  float: left;
+  margin-right: 2ch;
+  min-width: 8ch;
+}
+dl > dd {
+  margin-bottom: .8em;
+  margin-left: var(--indent) !important; /* stupid element overrides */
+  min-height: 2ex;
+}
+:is(dl.compact, .dlCompact) > dd {
+  margin-bottom: 0;
+  & > :is(:first-child, .break:first-child + *) {
+    margin-top: 0;
+  }
+  & > :is(:last-child) {
+    margin-bottom: 0;
+  }
+}
+:is(dd, span).break {
+  display: none;
+}
+
+/* links */
+a, a[href].selfRef:hover {
+  text-decoration: none;
+}
+a[href] {
+  color: var(--link-color);
+}
+a[href].selfRef, .iref + a[href].internal {
+  color: var(--text-color);
+}
+a[href]:hover {
+  text-decoration: underline;
+}
+a[href].selfRef:hover {
+  background-color: var(--highlight-color);
+}
+a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
+  white-space: nowrap;
+}
+
+/* Figures */
+tt, code, pre {
+  background-color: var(--highlight-color);
+  font: 14px/22px var(--font-mono);
+}
+tt, code {
+  /* changing the font for inline elements leads to different ascender
+     and descender heights; as we want to retain baseline alignment,
+     remove leading to avoid altering the final height of lines
+     note: this fails if these blocks take an entire line,
+     a different solution would be great */
+  line-height: 0;
+}
+:is(h1, h2, h3, h4, h5, h6) :is(tt, code) {
+  font-size: 84%;
+}
+pre {
+  border: 1px solid var(--line-color);
+  font-size: 13.5px;
+  line-height: 16px;
+  letter-spacing: -0.2px;
+  margin: 5px;
+  padding: 5px;
+}
+img {
+  max-width: 100%;
+}
+figure {
+  margin: 0.5em 0;
+  padding: 0;
+}
+figure blockquote {
+  margin: 0.8em 0.4em 0.4em;
+}
+figcaption, caption {
+  font-style: italic;
+  margin: 0.5em 1.5em;
+  text-align: left;
+  caption-side: bottom;
+}
+@media screen {
+  /* Auto-collapse boilerplate. */
+  :is(#status-of-memo, #copyright) p {
+    margin: -2px 0;
+    max-height: 0;
+    transition: max-height 2s ease, margin 0.5s ease 0.5s;
+    overflow: hidden;
+  }
+  :is(#status-of-memo, #copyright):hover p,
+  :is(#status-of-memo, #copyright) h2:target ~ p {
+    margin: 0.5em 0;
+    max-height: 500px;
+    overflow: auto;
+  }
+  pre, svg {
+    display: inline-block;
+    /* In the horizontal direction, sometimes people make over-sized figures.
+       Scrollbars for those is therefore necessary: auto adds them as necessary..
+       In the vertical direction, the line-height can combine with the font
+       asender/descender height to produce scrollbars: hidden avoids that. */
+    overflow: auto hidden;
+  }
+  pre {
+    max-width: 100%;
+    width: calc(100% - 22px - 1em);
+  }
+  svg {
+    max-width: calc(100% - 22px - 1em);
+  }
+  figure pre {
+    display: block;
+    width: calc(100% - 25px);
+  }
+  :is(pre, svg) + .pilcrow {
+    display: inline-block;
+    vertical-align: text-bottom;
+    padding-bottom: 8px;
+  }
+}
+
+/* aside, blockquote */
+aside, blockquote {
+  margin-left: 0;
+  padding: 0 2em;
+  font-style: italic;
+}
+blockquote {
+  margin: 1em 0;
+}
+cite {
+  display: block;
+  text-align: right;
+  font-style: italic;
+}
+
+/* tables */
+table {
+  width: auto;
+  max-width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+}
+table.right {
+  margin-left: auto;
+}
+table.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+table.left {
+  margin-right: auto;
+}
+table .text-left {
+  text-align: left;
+}
+table .text-center {
+  text-align: center;
+}
+table .text-right {
+  text-align: right;
+}
+
+thead, tbody {
+  border: 1px solid var(--line-color);
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 5px 10px;
+}
+th {
+  background-color: var(--line-color);
+}
+:is(tr:nth-child(2n), thead+tbody > tr:nth-child(2n+1)) > td {
+  background-color: var(--background-color);
+}
+:is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
+  background-color: var(--highlight-color);
+}
+table caption {
+  margin: 0;
+  padding: 3px 0 3px 1em;
+}
+table p {
+  margin: 0;
+}
+
+/* pilcrow */
+a.pilcrow {
+  margin-left: 3px;
+  opacity: 0.2;
+  user-select: none;
+  &[href] {
+    color: var(--pilcrow-weak);
+    &:hover { text-decoration: none; }
+  }
+}
+@media not print {
+  :hover > a.pilcrow {
+    opacity: 1;
+  }
+  a.pilcrow[href]:hover {
+    color: var(--pilcrow-strong);
+    background-color: transparent;
+  }
+}
+@media print {
+  a.pilcrow {
+    display: none;
+  }
+}
+
+/* misc */
+hr {
+  border: 0;
+  border-top: 1px solid var(--line-color);
+}
+.bcp14 {
+  font-variant: small-caps;
+  font-weight: 600;
+  font-size: var(--small-font-size);
+}
+.role {
+  font-variant: all-small-caps;
+}
+sub, sup {
+  line-height: 1;
+  font-size: 80%;
+}
+
+/* info block */
+#identifiers {
+  margin: 0;
+  font-size: var(--small-font-size);
+  line-height: 18px;
+  --identifier-width: 15ch;
+  & dt {
+    width: var(--identifier-width);
+    min-width: var(--identifier-width);
+    clear: left;
+    float: left;
+    text-align: right;
+    margin-right: 1ch;
+  }
+  & dd {
+    margin: 0;
+    margin-left: calc(1em + var(--identifier-width)) !important;
+    min-width: 5em;
+  }
+  & .authors {
+    & .author {
+      display: inline-block;
+      margin-right: 1.5em;
+    }
+    & .org {
+      font-style: italic;
+    }
+  }
+}
+
+/* The prepared/rendered info at the very bottom of the page */
+.docInfo {
+  color: #999;
+  font-size: 0.9em;
+  font-style: italic;
+  margin-top: 2em;
+}
+.docInfo .prepared {
+  float: right;
+}
+
+/* table of contents */
+#toc {
+  padding: 0.75em 0 2em 0;
+  margin-bottom: 1em;
+
+  & nav {
+    & ul {
+      margin: 0 0.5em 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    & li {
+      line-height: 1.3em;
+      margin: 2px 0;
+      padding-left: 1.2em;
+      text-indent: -1.2em;
+    }
+  }
+  & a.xref {
+    white-space: normal;
+  }
+}
+
+.references {
+  & > dt {
+    text-align: right;
+    font-weight: bold;
+    min-width: 10ch;
+    margin-right: 1.5ch;
+    &:target::before {
+      content: "⇒";
+      margin: 0 10px 0 -25px;
+    }
+  }
+  & > dd {
+    margin-left: 12ch !important;
+    overflow: visible;
+    & .refInstance {
+      margin-bottom: 0.8em;
+    }
+    & .ascii {
+      margin-bottom: 0.25em;
+    }
+  }
+}
+
+#rfc\.index\.index + ul {
+  margin-left: 0;
+}
+
+/* authors */
+address.vcard {
+  font-style: normal;
+  max-width: 20em;
+  margin: 1em auto 1em 0;
+
+  & .nameRole {
+    font-weight: 700;
+    margin-left: 0;
+  }
+  & .label {
+    margin: 0.5em 0;
+  }
+  & .type {
+    display: none;
+  }
+  & .alternative-contact {
+    margin: 0.5em 0 0.25em 0;
+  }
+  & .non-ascii {
+    margin: 0 0 0 2em;
+  }
+  & div.left {
+    text-align: left;
+  }
+  & div.right {
+    text-align: right;
+  }
+}
+
+hr.addr {
+  border-top: 1px dashed;
+  margin: 0;
+  color: #ddd;
+  max-width: calc(100% - 16px);
+}
+@media (min-width: 500px) {
+  #authors-addresses > section {
+    column-count: 2;
+    column-gap: 20px;
+  }
+  #authors-addresses > section > h2 {
+    column-span: all;
+  }
+  /* hack for break-inside: avoid-column */
+  #authors-addresses address {
+    display: inline-block;
+    break-inside: avoid-column;
+  }
+}
+
+/* Comments */
+.rfcEditorRemove p:first-of-type {
+  font-style: italic;
+}
+.cref {
+  background-color: rgba(249, 232, 105, 0.3);
+  padding: 2px 4px;
+}
+.crefSource {
+  font-style: italic;
+}
+
+@media screen {
+  #toc nav {
+    font-family: var(--font-title);
+    font-weight: 360;
+    & > ul { margin-bottom: 2em; }
+    & ul {
+      margin: 0 0 0 4px;
+      & :is(p, li) {
+        margin: 2px 0;
+      }
+    }
+  }
+  #toc a.toplink {
+    float: right;
+  }
+}
+@media not screen {
+  #toc a.toplink {
+    display: none;
+  }
+}
+
+
+/* TOC layout for smaller screens */
+@media screen and (max-width: 929px) {
+  #toc {
+    position: fixed;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    padding: 1px 0 0 0;
+    margin: 0;
+    border-bottom: 1px solid #ccc;
+    opacity: 0.6;
+  }
+  #toc h2 {
+    margin: 0;
+    padding: 2px 0 2px 6px;
+    padding-right: 1em;
+    font-size: 18px;
+    line-height: 24px;
+    min-width: 190px;
+    text-align: right;
+    background-color: #444;
+    color: white;
+    cursor: pointer;
+    &::before { /* css hamburger */
+      float: right;
+      position: relative;
+      width: 1em;
+      height: 1px;
+      left: -164px;
+      margin: 8px 0 0 0;
+      background: white none repeat scroll 0 0;
+      box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+      content: "";
+    }
+  }
+  #toc nav {
+    display: none;
+    background-color: var(--background-color);
+    padding: 0.5em 1em 1em;
+    overflow: auto;
+    overscroll-behavior: contain;
+    height: calc(100vh - 48px);
+    border-left: 1px solid #ddd;
+  }
+  #toc.active {
+    opacity: 1;
+    & nav { display: block; }
+  }
+  /* Make the collapsed ToC header render white on gray also when it's a link */
+  #toc h2 a,
+  #toc h2 a:is(:link, :focus, :hover),
+  #toc a.toplink,
+  #toc a.toplink:hover {
+    color: white;
+    background-color: #444;
+    text-decoration: none;
+  }
+  #toc a.toplink {
+    margin: 2px 0.5em 0;
+  }
+}
+
+/* TOC layout for wide screens */
+@media screen and (min-width: 930px) {
+  body {
+    padding-right: 360px;
+    padding-right: calc(min(180px + 20%, 500px));
+  }
+  #toc {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    right: calc(50vw - 480px);
+    width: 312px;
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+  }
+  #toc h2 {
+    margin: 0;
+    padding: 0.25em 1em 1em 0;
+  }
+  #toc nav {
+    display: block;
+    height: calc(90vh - 84px);
+    bottom: 0;
+    padding: 0.5em 0 2em;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  img { /* future proofing */
+    max-width: 100%;
+    height: auto;
+  }
+  #toc a.toplink {
+    margin: 8px 0.5em 0;
+  }
+}
+
+/* pagination */
+@media print {
+  body {
+    width: 100%;
+  }
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+  #n-copyright-notice {
+    border-bottom: none;
+  }
+  #toc, #n-introduction {
+    page-break-before: always;
+  }
+  #toc {
+    border-top: none;
+    padding-top: 0;
+  }
+  figure, pre, .vcard {
+    page-break-inside: avoid;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  :is(h2, h3, h4, h5, h6)+*, dd {
+    page-break-before: avoid;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 10pt;
+  }
+  table {
+    border: 1px solid #ddd;
+  }
+  td {
+    border-top: 1px solid #ddd;
+  }
+}
+
+@page :first {
+  padding-top: 0;
+  @top-left {
+    content: normal;
+    border: none;
+  }
+  @top-center {
+    content: normal;
+    border: none;
+  }
+  @top-right {
+    content: normal;
+    border: none;
+  }
+}
+
+@page {
+  size: A4;
+  margin-bottom: 45mm;
+  padding-top: 20px;
+}
+
+/* Dark mode. */
+@media (prefers-color-scheme: dark) {
+:root {
+  --background-color: #121212;
+  --text-color: #f0f0f0;
+  --title-color: #fff;
+  --link-color: #4da4f0;
+  --highlight-color: #282828;
+  --line-color: #444;
+  --pilcrow-weak: #444;
+  --pilcrow-strong: #666;
+  scrollbar-color: #777 #333;
+}
+}
+
+/* SVG Trick: a prefix match works because only black and white are allowed */
+svg :is([stroke="black"], [stroke^="#000"]) {
+  stroke: var(--text-color);
+}
+svg :is([stroke="white"], [stroke^="#fff"]) {
+  stroke: var(--background-color);
+}
+svg :is([fill="black"], [fill^="#000"], :not([fill])) {
+  fill: var(--text-color);
+}
+svg :is([fill="white"], [fill^="#fff"]) {
+  fill: var(--background-color);
+}
+</style>
+
+</head>
+<body class="xml2rfc">
+<table class="ears">
+<thead><tr>
+<td class="left">Internet-Draft</td>
+<td class="center">moqtf</td>
+<td class="right">February 2026</td>
+</tr></thead>
+<tfoot><tr>
+<td class="left">Curley</td>
+<td class="center">Expires 29 August 2026</td>
+<td class="right">[Page]</td>
+</tr></tfoot>
+</table>
+<div id="external-metadata" class="document-information"></div>
+<div id="internal-metadata" class="document-information">
+<dl id="identifiers">
+<dt class="label-workgroup">Workgroup:</dt>
+<dd class="workgroup">moq</dd>
+<dt class="label-internet-draft">Internet-Draft:</dt>
+<dd class="internet-draft">draft-lcurley-moq-use-cases-latest</dd>
+<dt class="label-published">Published:</dt>
+<dd class="published">
+<time datetime="2026-02-25" class="published">25 February 2026</time>
+    </dd>
+<dt class="label-intended-status">Intended Status:</dt>
+<dd class="intended-status">Informational</dd>
+<dt class="label-expires">Expires:</dt>
+<dd class="expires"><time datetime="2026-08-29">29 August 2026</time></dd>
+<dt class="label-authors">Author:</dt>
+<dd class="authors">
+<div class="author">
+      <div class="author-name">L. Curley</div>
+<div class="org">Discord</div>
+</div>
+</dd>
+</dl>
+</div>
+<h1 id="title">Media over QUIC - Use Cases</h1>
+<section id="section-abstract">
+      <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
+<p id="section-abstract-1">MoQ is designed to serve live tracks over a CDN to viewers with varying latency and quality targets: the entire spectrum between real-time and VOD.
+However, it's difficult to understand how to use the transport given the layering and complexity of live media delivery.
+This document outlines how an application could use MoQ to deliver video, audio, and metadata in a variety of scenarios.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+</section>
+<section class="note rfcEditorRemove" id="section-note.1">
+      <h2 id="name-discussion-venues">
+<a href="#name-discussion-venues" class="section-name selfRef">Discussion Venues</a>
+      </h2>
+<p id="section-note.1-1">This note is to be removed before publishing as an RFC.<a href="#section-note.1-1" class="pilcrow">¶</a></p>
+<p id="section-note.1-2">Discussion of this document takes place on the
+    Media Over QUIC Working Group mailing list (moq@ietf.org),
+    which is archived at <span><a href="https://mailarchive.ietf.org/arch/browse/moq/">https://mailarchive.ietf.org/arch/browse/moq/</a></span>.<a href="#section-note.1-2" class="pilcrow">¶</a></p>
+<p id="section-note.1-3">Source for this draft and an issue tracker can be found at
+    <span><a href="https://github.com/kixelated/moq-drafts">https://github.com/kixelated/moq-drafts</a></span>.<a href="#section-note.1-3" class="pilcrow">¶</a></p>
+</section>
+<div id="status-of-memo">
+<section id="section-boilerplate.1">
+        <h2 id="name-status-of-this-memo">
+<a href="#name-status-of-this-memo" class="section-name selfRef">Status of This Memo</a>
+        </h2>
+<p id="section-boilerplate.1-1">
+        This Internet-Draft is submitted in full conformance with the
+        provisions of BCP 78 and BCP 79.<a href="#section-boilerplate.1-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-2">
+        Internet-Drafts are working documents of the Internet Engineering Task
+        Force (IETF). Note that other groups may also distribute working
+        documents as Internet-Drafts. The list of current Internet-Drafts is
+        at <span><a href="https://datatracker.ietf.org/drafts/current/">https://datatracker.ietf.org/drafts/current/</a></span>.<a href="#section-boilerplate.1-2" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-3">
+        Internet-Drafts are draft documents valid for a maximum of six months
+        and may be updated, replaced, or obsoleted by other documents at any
+        time. It is inappropriate to use Internet-Drafts as reference
+        material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-4">
+        This Internet-Draft will expire on 29 August 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="copyright">
+<section id="section-boilerplate.2">
+        <h2 id="name-copyright-notice">
+<a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
+        </h2>
+<p id="section-boilerplate.2-1">
+            Copyright (c) 2026 IETF Trust and the persons identified as the
+            document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.2-2">
+            This document is subject to BCP 78 and the IETF Trust's Legal
+            Provisions Relating to IETF Documents
+            (<span><a href="https://trustee.ietf.org/license-info">https://trustee.ietf.org/license-info</a></span>) in effect on the date of
+            publication of this document. Please review these documents
+            carefully, as they describe your rights and restrictions with
+            respect to this document. Code Components extracted from this
+            document must include Revised BSD License text as described in
+            Section 4.e of the Trust Legal Provisions and are provided without
+            warranty as described in the Revised BSD License.<a href="#section-boilerplate.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="toc">
+<section id="section-toc.1">
+        <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents">
+<a href="#name-table-of-contents" class="section-name selfRef">Table of Contents</a>
+        </h2>
+<nav class="toc"><ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1">
+            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-conventions-and-definitions" class="internal xref">Conventions and Definitions</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
+            <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-video" class="internal xref">Video</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
+                <p id="section-toc.1-1.3.2.1.1" class="keepWithNext"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-group-of-pictures" class="internal xref">Group of Pictures</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2">
+                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-layers" class="internal xref">Layers</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3">
+                <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="auto internal xref">3.3</a>.  <a href="#name-non-reference-frames" class="internal xref">Non-Reference Frames</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-audio" class="internal xref">Audio</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-frames" class="internal xref">Frames</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2">
+                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-groups" class="internal xref">Groups</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3">
+                <p id="section-toc.1-1.4.2.3.1"><a href="#section-4.3" class="auto internal xref">4.3</a>.  <a href="#name-fec" class="internal xref">FEC</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-metadata" class="internal xref">Metadata</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-catalog" class="internal xref">Catalog</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-timeline" class="internal xref">Timeline</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.3">
+                <p id="section-toc.1-1.5.2.3.1"><a href="#section-5.3" class="auto internal xref">5.3</a>.  <a href="#name-interaction" class="internal xref">Interaction</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-latency" class="internal xref">Latency</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
+                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-real-time" class="internal xref">Real-Time</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
+                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-unreliable-live" class="internal xref">Unreliable Live</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.3">
+                <p id="section-toc.1-1.6.2.3.1"><a href="#section-6.3" class="auto internal xref">6.3</a>.  <a href="#name-reliable-live" class="internal xref">Reliable Live</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.4">
+                <p id="section-toc.1-1.6.2.4.1"><a href="#section-6.4" class="auto internal xref">6.4</a>.  <a href="#name-vod-dvr" class="internal xref">VOD / DVR</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.5">
+                <p id="section-toc.1-1.6.2.5.1"><a href="#section-6.5" class="auto internal xref">6.5</a>.  <a href="#name-upstream" class="internal xref">Upstream</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-broadcast" class="internal xref">Broadcast</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1">
+                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-abr" class="internal xref">ABR</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.2">
+                <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-svc" class="internal xref">SVC</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-conferences" class="internal xref">Conferences</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1">
+                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-discovery" class="internal xref">Discovery</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.2">
+                <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="auto internal xref">8.2</a>.  <a href="#name-participants" class="internal xref">Participants</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#section-10" class="auto internal xref">10</a>. <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
+            <p id="section-toc.1-1.11.1"><a href="#section-11" class="auto internal xref">11</a>. <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12">
+            <p id="section-toc.1-1.12.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13">
+            <p id="section-toc.1-1.13.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
+</li>
+        </ul>
+</nav>
+</section>
+</div>
+<div id="conventions-and-definitions">
+<section id="section-1">
+      <h2 id="name-conventions-and-definitions">
+<a href="#section-1" class="section-number selfRef">1. </a><a href="#name-conventions-and-definitions" class="section-name selfRef">Conventions and Definitions</a>
+      </h2>
+<p id="section-1-1">The key words "<span class="bcp14">MUST</span>", "<span class="bcp14">MUST NOT</span>", "<span class="bcp14">REQUIRED</span>", "<span class="bcp14">SHALL</span>", "<span class="bcp14">SHALL NOT</span>", "<span class="bcp14">SHOULD</span>", "<span class="bcp14">SHOULD NOT</span>", "<span class="bcp14">RECOMMENDED</span>", "<span class="bcp14">NOT RECOMMENDED</span>",
+"<span class="bcp14">MAY</span>", and "<span class="bcp14">OPTIONAL</span>" in this document are to be interpreted as
+described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> when, and only when, they
+appear in all capitals, as shown here.<a href="#section-1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="introduction">
+<section id="section-2">
+      <h2 id="name-introduction">
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
+      </h2>
+<p id="section-2-1">Media over QUIC is still in the concept phase; a loose collection of ideas and drafts on how to utilize QUIC for live media delivery.
+It's difficult to grasp how to utilize the various layers:<a href="#section-2-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-2-2.1">
+          <p id="section-2-2.1.1">QUIC: A transport layer that provides reliable, ordered, and secure streams.<a href="#section-2-2.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-2-2.2">
+          <p id="section-2-2.2.1">moq-lite: A pub/sub layer that provides caching and fanout.<a href="#section-2-2.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-2-2.3">
+          <p id="section-2-2.3.1">moq-karp: A proposed media layer on top of moq-lite that deals with encoding and containers.<a href="#section-2-2.3.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-2-2.4">
+          <p id="section-2-2.4.1">Application: Your application that utilizes any of the above layers.<a href="#section-2-2.4.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<p id="section-2-3">This document briefly overviews how live media works and how you could use MoQ to deliver it.<a href="#section-2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="video">
+<section id="section-3">
+      <h2 id="name-video">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-video" class="section-name selfRef">Video</a>
+      </h2>
+<p id="section-3-1">Video encoding involves complex dependencies between frames/slices.
+The terminology in this section stems from H.264 but is applicable to most modern codecs.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">Each frame of video is encoded as one or more slices but to simplify the discussion, we'll refer to a slice as a frame.
+There are three types of frames:<a href="#section-3-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3-3.1">
+          <p id="section-3-3.1.1"><strong>I-Frame</strong>: A frame that can be decoded independently.<a href="#section-3-3.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-3-3.2">
+          <p id="section-3-3.2.1"><strong>P-Frame</strong>: A frame that depends on previous frames.<a href="#section-3-3.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-3-3.3">
+          <p id="section-3-3.3.1"><strong>B-Frame</strong>: A frame that depends on previous or future frames.<a href="#section-3-3.3.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<div id="group-of-pictures">
+<section id="section-3.1">
+        <h3 id="name-group-of-pictures">
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-group-of-pictures" class="section-name selfRef">Group of Pictures</a>
+        </h3>
+<p id="section-3.1-1">A simple application can ignore the complexity of P/B frames and focus on I-Frames.
+This is the optimal approach for many encoding configurations.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.1-2">Each I-Frame begins a Group of Pictures (GoP).
+A GoP is a set of frames that <span class="bcp14">MAY</span> depend on each other and <span class="bcp14">MUST NOT</span> depend on other GoPs.
+Each frame has a decode order (DTS) and a frame <span class="bcp14">MUST NOT</span> depend on frames with a higher DTS.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
+<p id="section-3.1-3">This perfectly maps to a QUIC stream, as they too are independent and ordered.
+The easiest way to use moq-lite is to send each GoP as a GROUP with each frame as a FRAME, hence the names.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
+<p id="section-3.1-4">Each SUBSCRIBE starts at a Group to ensure that it starts with an I-Frame.
+Each Group is delivered in decode order ensuring that all frames are decodable (no artifacts).<a href="#section-3.1-4" class="pilcrow">¶</a></p>
+<p id="section-3.1-5">A subscriber can choose the Group Order based on the desired user experience:<a href="#section-3.1-5" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.1-6.1">
+            <p id="section-3.1-6.1.1"><code>SUBSCRIBE order=DESC</code>: Transmits new Groups first to allow skipping, intended for low-latency live streams.<a href="#section-3.1-6.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-3.1-6.2">
+            <p id="section-3.1-6.2.1"><code>SUBSCRIBE order=ASC</code>: Transmits old Groups first to avoid skipping, intended for VOD and reliable live streams.<a href="#section-3.1-6.2.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-3.1-7">A publisher or subscriber can skip the remainder of a Group by resetting a Group Stream or by issuing a SUBSCRIBE_UPDATE.
+A FETCH can be used to recover any partial groups.<a href="#section-3.1-7" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="layers">
+<section id="section-3.2">
+        <h3 id="name-layers">
+<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-layers" class="section-name selfRef">Layers</a>
+        </h3>
+<p id="section-3.2-1">An advanced application can subdivide a GoP into layers.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+<p id="section-3.2-2">The most comprehensive way to do this is with Scalable Video Coding (SVC).
+There is a base layer and one or more enhancement layers that depend on lower layers.
+For example, a 4K stream could be broken into 4K, 1080p, and 360p (base) layers.
+However, SVC has limited support and is complex to encode.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
+<p id="section-3.2-3">Another approach is to use temporal scalability via something like B-pyramids.
+The frames within a GoP are sub-divided based on their dependencies, intentionally creating a hierarchy.
+For example, even frames could be prevented from referencing odd frames, creating a base 30fps layer and an enhancement 60fps layer.
+This is effectively a custom SVC scheme however it's limited to time and doesn't require special decoder support.<a href="#section-3.2-3" class="pilcrow">¶</a></p>
+<p id="section-3.2-4">The purpose of these layers is to support degrading the quality of the broadcast.
+A subscriber could limit bandwidth usage by choose to only receive the base layer or a subset of the enhancements layers.
+During congestion, the base layer can be prioritized while the enhancement layers can be deprioritized or dropped.
+However, the cost is a small increase in bitrate (10%) as limiting potential references can only hurt the compression ratio.<a href="#section-3.2-4" class="pilcrow">¶</a></p>
+<p id="section-3.2-5">When using moq-lite, each layer is delivered as a separate Track.
+This allows the subscriber to choose which layers to receive and how to prioritize them in SUBSCRIBE.
+It also enables layers to be prioritized within the layer application, for example Alice's base layer is more important than Bob's enhancement layer.<a href="#section-3.2-5" class="pilcrow">¶</a></p>
+<p id="section-3.2-6">The application is responsible for determining the relationship between layers, since they're unrelated tracks as MoqTransport is concerned.
+The application could use a catalog to advertise the layers and how to synchronize them, for example based on the Group Sequence.<a href="#section-3.2-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="non-reference-frames">
+<section id="section-3.3">
+        <h3 id="name-non-reference-frames">
+<a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-non-reference-frames" class="section-name selfRef">Non-Reference Frames</a>
+        </h3>
+<p id="section-3.3-1">While not explicitly stated, I believe the complexity in MoqTransport stems almost entirely from a single use-case: the ability to drop individual non-reference frames in the middle of a group.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
+<p id="section-3.3-2">In theory, transmitting enhancement layers as tracks like mentioned above could introduce head-of-line blocking depending on the encoding.
+This would occur when enhancement layers are not self-referential, a rare configuration which also hurts the compression ratio.
+And in practice, there's no discernible user impact given the disproportionate size difference between base and enhancement layers.<a href="#section-3.3-2" class="pilcrow">¶</a></p>
+<p id="section-3.3-3">The ability to drop individual non-reference frames in the middle of a group is an explicit non-goal for moq-lite.<a href="#section-3.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="audio">
+<section id="section-4">
+      <h2 id="name-audio">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-audio" class="section-name selfRef">Audio</a>
+      </h2>
+<p id="section-4-1">Unlike video, audio is simple and yet has perhaps more potential for optimization.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<div id="frames">
+<section id="section-4.1">
+        <h3 id="name-frames">
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-frames" class="section-name selfRef">Frames</a>
+        </h3>
+<p id="section-4.1-1">Audio samples are very small and for the sake of compression, are grouped into a frame.
+This depends on the codec and the sample rate but each frame is typically 10-50ms of audio.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.1-2">Audio frames are independent, which means they map nicely to moq-lite Groups.
+Each audio frame can be transmitted as a GROUP with a single FRAME.<a href="#section-4.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="groups">
+<section id="section-4.2">
+        <h3 id="name-groups">
+<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-groups" class="section-name selfRef">Groups</a>
+        </h3>
+<p id="section-4.2-1">Audio FRAMEs can also be combined into periodic GROUPs to reduce overhead at the cost of some introducing head-of-line blocking.
+This won't increase latency except under significant congestion as each FRAME is still streamed.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.2-2">For example, an application could then subscribe to video and audio starting at group X for both tracks, instead of trying to maintain a mapping between the two based on timestamp.
+This is quite common in HLS/DASH as there's no reason to subdivide audio segments at frame boundaries.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="fec">
+<section id="section-4.3">
+        <h3 id="name-fec">
+<a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-fec" class="section-name selfRef">FEC</a>
+        </h3>
+<p id="section-4.3-1">Real-time audio applications often use Forward Error Correction (FEC) to conceal packet loss.
+Audio frames are a good candidate for FEC given that they are small and independent.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+<p id="section-4.3-2">In an ideal world, FEC would be performed by QUIC based on the properties of the hop.
+However this is not currently not supported and FEC is left to the application.<a href="#section-4.3-2" class="pilcrow">¶</a></p>
+<p id="section-4.3-3">In moq-lite, each FEC packet is transmitted as a separate GROUP with a single FRAME.
+This means using QUIC streams instead of QUIC datagrams to automatically adjust to the viewer's RTT, automatically retransmitting in scenarios where RTT is small.
+Lost packets will be retransmitted unless a real-time subscriber updates the subscription to skip them.
+For example, if group 3 and group 5 are used to reconstruct group 4, then the subscriber can update the subscription to start at group 5, causing group 4 to be skipped.<a href="#section-4.3-3" class="pilcrow">¶</a></p>
+<p id="section-4.3-4">This round trip of feedback to avoid retransmissions is not ideal but keep in mind that Group Order = DESC will be respected, meaning group 4 won't be (re)transmitted if there's more important data to send.
+This can result in wasted bandwidth versus something like a timeout on the sender, but it does not impact the user experience nor are these unnecessarily retransmittted audio FEC packets large enough to matter.<a href="#section-4.3-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="metadata">
+<section id="section-5">
+      <h2 id="name-metadata">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-metadata" class="section-name selfRef">Metadata</a>
+      </h2>
+<p id="section-5-1">There's a number of non-media use cases that can be served by moq-lite.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<div id="catalog">
+<section id="section-5.1">
+        <h3 id="name-catalog">
+<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-catalog" class="section-name selfRef">Catalog</a>
+        </h3>
+<p id="section-5.1-1">Originally part of the transport itself, the catalog is a list of all tracks within a broadcast.
+It's since been delegated to the application and is now just another track with a well-known name.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.1-2">The proposed MoQ catalog format supports live updates.
+It does this by encoding a base JSON blob and then applying JSON patches over time.
+If the number of deltas becomes too large, the producer can start over with a new base JSON blob.<a href="#section-5.1-2" class="pilcrow">¶</a></p>
+<p id="section-5.1-3">In moq-lite, the base and all deltas are a single GROUP.
+The base is the first FRAME and all deltas are subsequent FRAMEs.
+The producer can create a new GROUP to start over, repeating the process.<a href="#section-5.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="timeline">
+<section id="section-5.2">
+        <h3 id="name-timeline">
+<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-timeline" class="section-name selfRef">Timeline</a>
+        </h3>
+<p id="section-5.2-1">Another track that is commonly pitched is a timeline track.
+This records the presentation timestamp of each Group, giving a VOD viewer to seek to a specific time.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<p id="section-5.2-2">The <code>timeline</code> track is a single Group containing a Frame for each timestamp.
+The live nature of the timeline track is great for DVR applications while being concise enough for VOD.
+Timed metadata would use a similar approach or perhaps leverage this track.<a href="#section-5.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="interaction">
+<section id="section-5.3">
+        <h3 id="name-interaction">
+<a href="#section-5.3" class="section-number selfRef">5.3. </a><a href="#name-interaction" class="section-name selfRef">Interaction</a>
+        </h3>
+<p id="section-5.3-1">Another common use-case is to transmit user interactions, such as controller inputs or chat messages.
+It's up to the application to determine the format and encoding of these messages.<a href="#section-5.3-1" class="pilcrow">¶</a></p>
+<p id="section-5.3-2">Let's take controller input as an example.
+The application needs to determine its loss vs latency tolerance, as reordering or dropping inputs will lead to a poor user experience.<a href="#section-5.3-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-5.3-3.1">
+            <p id="section-5.3-3.1.1">If you don't want loss, then use a single GROUP with a FRAME per input.<a href="#section-5.3-3.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-5.3-3.2">
+            <p id="section-5.3-3.2.1">If you don't want latency, then use a GROUP per input with a single FRAME.<a href="#section-5.3-3.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-5.3-3.3">
+            <p id="section-5.3-3.3.1">If you want a hybrid, then use form of clustering inputs into GROUPs and FRAMEs based on time.<a href="#section-5.3-3.3.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-5.3-4">A publisher could monitor the session RTT or stream acknowledgements to get a sense of the latency and create Groups accordingly.
+However, this only applies to the first hop and won't be applicable when relays are involved.<a href="#section-5.3-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="latency">
+<section id="section-6">
+      <h2 id="name-latency">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-latency" class="section-name selfRef">Latency</a>
+      </h2>
+<p id="section-6-1">One explicit goal of moq-lite is to support multiple latency targets.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">This is accomplished by using the same Tracks and Group for all viewers, but slightly changing the behavior based on the subscription.
+This is driven by the subscriber, allowing them to choose the trade-off between latency and reliability.
+This may be done on the fly via SUBSCRIBE_UPDATE, for example if a high-latency viewer wishes to join the stage and suddenly needs real-time latency.<a href="#section-6-2" class="pilcrow">¶</a></p>
+<p id="section-6-3">The below examples assume one audio and one video track.
+See the next section for more complicated broadcasts.<a href="#section-6-3" class="pilcrow">¶</a></p>
+<div id="real-time">
+<section id="section-6.1">
+        <h3 id="name-real-time">
+<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-real-time" class="section-name selfRef">Real-Time</a>
+        </h3>
+<p id="section-6.1-1">Real-time latency is accomplished by prioritizing the most important media during congestion and skipping the rest.<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+<p id="section-6.1-2">This is slightly different from other media protocols which instead opt to drop packets.
+The end result is similar, but prioritization means utilizing all available bandwidth as determined by the congestion controller.
+A subscriber or publisher can reset groups to avoid wasting bandwidth on old data.<a href="#section-6.1-2" class="pilcrow">¶</a></p>
+<p id="section-6.1-3">A real-time viewer could issue:<a href="#section-6.1-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6.1-4">
+<pre>
+SUBSCRIBE track=audio priority=1 order=DESC
+SUBSCRIBE track=video priority=0 order=DESC
+</pre><a href="#section-6.1-4" class="pilcrow">¶</a>
+</div>
+<p id="section-6.1-5">In this example, audio is higher priority than video, and newer groups are higher priority than older groups.
+Suppose a viewer fell behind after a burst of congestion and has to decide which groups to deliver next.
+This configuration would result in the transmission order:<a href="#section-6.1-5" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6.1-6">
+<pre>
+GROUP track=audio sequence=102
+GROUP track=audio sequence=101
+GROUP track=audio sequence=100
+GROUP track=video sequence=5
+GROUP track=video sequence=4
+</pre><a href="#section-6.1-6" class="pilcrow">¶</a>
+</div>
+<p id="section-6.1-7">The user experience depends on the amount of congestion:<a href="#section-6.1-7" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6.1-8.1">
+            <p id="section-6.1-8.1.1">If there's no congestion, all audio and video is delivered.<a href="#section-6.1-8.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-6.1-8.2">
+            <p id="section-6.1-8.2.1">If there's moderate congestion, the tail of the old video group is dropped.<a href="#section-6.1-8.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-6.1-8.3">
+            <p id="section-6.1-8.3.1">If there's severe congestion, all video will be late/dropped and some audio groups/frames will be dropped.<a href="#section-6.1-8.3.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+</section>
+</div>
+<div id="unreliable-live">
+<section id="section-6.2">
+        <h3 id="name-unreliable-live">
+<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-unreliable-live" class="section-name selfRef">Unreliable Live</a>
+        </h3>
+<p id="section-6.2-1">Unreliable live is a term I made up.
+Basically we want low latency, but we don't need it at all costs and we're willing to skip some video to achieve it.
+This is useful for broadcasts where latency is important but so is picture quality.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+<p id="section-6.2-2">An unreliable live viewer could issue:<a href="#section-6.2-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6.2-3">
+<pre>
+SUBSCRIBE track=audio priority=1 order=ASC
+SUBSCRIBE track=video priority=0 order=DESC
+</pre><a href="#section-6.2-3" class="pilcrow">¶</a>
+</div>
+<p id="section-6.2-4">This example is different from the real-time one in that audio is reliable and delivered in order.
+Of course this is optional and up to the application, as it will result in buffering during significant congestion.
+If the viewer goes through a tunnel and then comes back online, they won't miss any audio.<a href="#section-6.2-4" class="pilcrow">¶</a></p>
+<p id="section-6.2-5">Video will be delivered out of order but the player can maintain a jitter buffer.
+For example, it could hold onto up to 3s of video frames in memory so it can tolerate an equal amount of congestion.
+If the buffer fills up, the player can STOP_SENDING any old groups and/or update the subscription to skip them.<a href="#section-6.2-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="reliable-live">
+<section id="section-6.3">
+        <h3 id="name-reliable-live">
+<a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-reliable-live" class="section-name selfRef">Reliable Live</a>
+        </h3>
+<p id="section-6.3-1">Reliable live is another term I made up.
+This is when we have a live stream but primarily care about picture quality.
+A good example is a sports game where you want to see every frame.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
+<p id="section-6.3-2">A reliable live viewer could issue:<a href="#section-6.3-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6.3-3">
+<pre>
+SUBSCRIBE track=audio priority=0 order=ASC
+SUBSCRIBE track=video priority=0 order=ASC
+</pre><a href="#section-6.3-3" class="pilcrow">¶</a>
+</div>
+<p id="section-6.3-4">This will deliver both audio and video in order, and with the same priority.
+The viewer won't miss any content unless the publisher resets a group.
+However, this can result in buffering during congestion and provides a similar user experience to HLS/DASH.<a href="#section-6.3-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="vod-dvr">
+<section id="section-6.4">
+        <h3 id="name-vod-dvr">
+<a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-vod-dvr" class="section-name selfRef">VOD / DVR</a>
+        </h3>
+<p id="section-6.4-1">Video on Demand (VOD) and Digital Video Recorder (DVR) both involve seeking backwards in a live stream.
+moq-lite can serve this use-case too, don't worry.<a href="#section-6.4-1" class="pilcrow">¶</a></p>
+<p id="section-6.4-2">A VOD viewer could issue:<a href="#section-6.4-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6.4-3">
+<pre>
+SUBSCRIBE track=audio priority=0 order=ASC start=345 end=396
+SUBSCRIBE track=video priority=0 order=ASC start=123 end=134
+</pre><a href="#section-6.4-3" class="pilcrow">¶</a>
+</div>
+<p id="section-6.4-4">The application is responsible for determining the group sequence numbers based on the desired timestamp.
+This could be done via a <code>timeline</code> track or out-of-band.<a href="#section-6.4-4" class="pilcrow">¶</a></p>
+<p id="section-6.4-5">A subscriber will need a specific <code>end</code> or else it will download too much data at once, as old media is transmitted at network speed and not encode speed.
+It will need to issue an updated SUBSCRIBE to expand the range as playback continues and the buffer depletes.
+A subscriber could use SUBSCRIBE_UPDATE, however there are race conditions involved.<a href="#section-6.4-5" class="pilcrow">¶</a></p>
+<p id="section-6.4-6">A DVR player does the same thing but can automatically support joining the live stream.
+It's perfectly valid to specify a <code>end</code> in the future and it will behave like reliable live viewer once it reaches the live playhead.<a href="#section-6.4-6" class="pilcrow">¶</a></p>
+<p id="section-6.4-7">Alternatively, a DVR player could prefetch the live playhead by issuing a parallel SUBSCRIBE at a lower priority.
+This would allow playback to immediately continue after clicking the "Go Live" button, canceling or deprioritizing the VOD subscription.<a href="#section-6.4-7" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6.4-8">
+<pre>
+SUBSCRIBE track=video priority=1 order=ASC start=123 end=134
+SUBSCRIBE track=video priority=0 order=DESC
+</pre><a href="#section-6.4-8" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="upstream">
+<section id="section-6.5">
+        <h3 id="name-upstream">
+<a href="#section-6.5" class="section-number selfRef">6.5. </a><a href="#name-upstream" class="section-name selfRef">Upstream</a>
+        </h3>
+<p id="section-6.5-1">All of these separate viewers could be watching the same broadcast.
+How is a relay supposed to fetch the content from upstream?<a href="#section-6.5-1" class="pilcrow">¶</a></p>
+<p id="section-6.5-2">moq-lite addresses this by providing the publisher's Track Priority and Group Order in the INFO message.
+This is the intended behavior for the first hop and dictates which viewers are preferred.<a href="#section-6.5-2" class="pilcrow">¶</a></p>
+<p id="section-6.5-3">For example, suppose the producer chooses:<a href="#section-6.5-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6.5-4">
+<pre>
+INFO track=audio priority=1 order=DESC
+INFO track=video priority=0 order=DESC
+</pre><a href="#section-6.5-4" class="pilcrow">¶</a>
+</div>
+<p id="section-6.5-5">If Alice is watching a VOD and issues:<a href="#section-6.5-5" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6.5-6">
+<pre>
+SUBSCRIBE track=audio priority=0 order=ASC
+SUBSCRIBE track=video priority=0 order=ASC
+</pre><a href="#section-6.5-6" class="pilcrow">¶</a>
+</div>
+<p id="section-6.5-7">If Bob is watching real-time and issues:<a href="#section-6.5-7" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6.5-8">
+<pre>
+SUBSCRIBE track=audio priority=1 order=DESC
+SUBSCRIBE track=video priority=0 order=DESC
+</pre><a href="#section-6.5-8" class="pilcrow">¶</a>
+</div>
+<p id="section-6.5-9">For any congestion on the first mile, then the relay will improve Bob's experience by following the producer's preference.
+However any congestion on the last mile will always use the viewer's preference.<a href="#section-6.5-9" class="pilcrow">¶</a></p>
+<p id="section-6.5-10">A relay should use the publisher's priority/order only when there's a conflict.
+If viewers have the same priority/order, then the relay should use the viewer's preference and it can always issue a SUBSCRIBE_UPDATE when this changes.<a href="#section-6.5-10" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="broadcast">
+<section id="section-7">
+      <h2 id="name-broadcast">
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-broadcast" class="section-name selfRef">Broadcast</a>
+      </h2>
+<p id="section-7-1">A broadcast is a collection of tracks from a single producer.
+This usually includes an audio track and/or a video track, but there are reasons to have more than that.
+This is transparent to moq-lite, as the a higher level application is responsible for any grouping between tracks.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<div id="abr">
+<section id="section-7.1">
+        <h3 id="name-abr">
+<a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-abr" class="section-name selfRef">ABR</a>
+        </h3>
+<p id="section-7.1-1">Virtually all mass fan-out use-cases rely on Adaptive Bitrate (ABR) streaming.
+The idea is to encode the same content at multiple bitrates and resolutions, allowing the viewer to choose based on their unique situation.<a href="#section-7.1-1" class="pilcrow">¶</a></p>
+<p id="section-7.1-2">moq-lite unsurprisingly supports this via multiple Tracks, but relies on the application to determine the relationship between them.
+This is often done via a <code>catalog</code> track that details each track's name, bitrate, resolution, and codec.
+This includes how a group in one track corresponds to a group in another track.
+A common approach is to use the same Group Sequence number for all tracks, or perhaps utilize a <code>timeline</code> track to map between Group Sequences and presentation timestamps.<a href="#section-7.1-2" class="pilcrow">¶</a></p>
+<p id="section-7.1-3">The viewer may limit the available tracks based on capabilities or preferences.
+For example, the device may not support the 4K track since it uses AV1, or the screen size may be too small to justify the bandwidth.
+This is easy enough to support; just ignore these tracks in the catalog.<a href="#section-7.1-3" class="pilcrow">¶</a></p>
+<p id="section-7.1-4">The primary reason to use ABR is to adapt to changing network conditions.
+The viewer learns about the estimated bandwidth via the SESSION_UPDATE message, or by measuring network traffic and can then choose the appropriate track based on bitrate.<a href="#section-7.1-4" class="pilcrow">¶</a></p>
+<p id="section-7.1-5">Transitioning between tracks can be done seamlessly by utilizing prioritization.
+For example, suppose a viewer is watching the 360p track and wants to switch to 1080p at group 69.<a href="#section-7.1-5" class="pilcrow">¶</a></p>
+<p id="section-7.1-6">A real-time or unreliable live viewer could issue:<a href="#section-7.1-6" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.1-7">
+<pre>
+SUBSCRIBE_UPDATE track=360p  priority=0 order=DESC end=69
+SUBSCRIBE        track=1080p priority=1 order=DESC start=69
+</pre><a href="#section-7.1-7" class="pilcrow">¶</a>
+</div>
+<p id="section-7.1-8">A reliable live or VOD viewer could issue:<a href="#section-7.1-8" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.1-9">
+<pre>
+SUBSCRIBE_UPDATE track=360p  priority=1 order=ASC end=69
+SUBSCRIBE        track=1080p priority=0 order=ASC start=69
+</pre><a href="#section-7.1-9" class="pilcrow">¶</a>
+</div>
+<p id="section-7.1-10">The difference between them is whether to prioritize the old track or the new track.
+In both scenarios, the subscription will seamlessly switch at group 69 even if it's seconds in the future.
+The same behavior can be used to switch down.<a href="#section-7.1-10" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="svc">
+<section id="section-7.2">
+        <h3 id="name-svc">
+<a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-svc" class="section-name selfRef">SVC</a>
+        </h3>
+<p id="section-7.2-1">We touched on SVC before, but it's worth mentioning as an alternative to ABR.
+I want to see it used more often but I doubt it will be.<a href="#section-7.2-1" class="pilcrow">¶</a></p>
+<p id="section-7.2-2">Instead of choosing the track based on the bitrate, the viewer subscribes to them all:<a href="#section-7.2-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.2-3">
+<pre>
+SUBSCRIBE track=360p  priority=2 order=DESC
+SUBSCRIBE track=1080p priority=1 order=DESC
+SUBSCRIBE track=4k    priority=0 order=DESC
+</pre><a href="#section-7.2-3" class="pilcrow">¶</a>
+</div>
+<p id="section-7.2-4">During congestion, the 4k enhancement layer will be deprioritized followed by the 1080p enhancement layer.
+This is a more efficient use of bandwidth than ABR, but it requires more complex encoding.<a href="#section-7.2-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="conferences">
+<section id="section-8">
+      <h2 id="name-conferences">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-conferences" class="section-name selfRef">Conferences</a>
+      </h2>
+<p id="section-8-1">Some applications involve multiple producers, such as a conference calls or a live events.
+Even though these are separate broadcasts from potentially separate origins, moq-lite can still serve them over the same session.<a href="#section-8-1" class="pilcrow">¶</a></p>
+<div id="discovery">
+<section id="section-8.1">
+        <h3 id="name-discovery">
+<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-discovery" class="section-name selfRef">Discovery</a>
+        </h3>
+<p id="section-8.1-1">The first step to joining a conference is to discover the available tracks.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
+<p id="section-8.1-2">That's where <code>ANNOUNCE</code> comes in.
+The subscriber indicates interest in any tracks that start with a prefix, such as <code>["meeting", "1234"]</code>.
+As new participants join, new tracks are announced, and the subscriber can choose to subscribe to them.<a href="#section-8.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="participants">
+<section id="section-8.2">
+        <h3 id="name-participants">
+<a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-participants" class="section-name selfRef">Participants</a>
+        </h3>
+<p id="section-8.2-1">Extending the idea that audio is more important than video, we can prioritize tracks regardless of the source.
+This works because <code>SUBSCRIBE priority</code> is scoped to the session and not the broadcast.<a href="#section-8.2-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-8.2-2">
+<pre>
+SUBSCRIBE track=[alice, audio] priority=3
+SUBSCRIBE track=[frank, audio] priority=3
+SUBSCRIBE track=[alice, video] priority=1
+SUBSCRIBE track=[frank, video] priority=1
+</pre><a href="#section-8.2-2" class="pilcrow">¶</a>
+</div>
+<p id="section-8.2-3">When Alice starts talking or is focused, we can actually issue a SUBSCRIBE_UPDATE to increase her priority:<a href="#section-8.2-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-8.2-4">
+<pre>
+SUBSCRIBE_UPDATE track=[alice, audio] priority=2
+SUBSCRIBE_UPDATE track=[frank, video] priority=0
+</pre><a href="#section-8.2-4" class="pilcrow">¶</a>
+</div>
+<p id="section-8.2-5">Note that audio is still more important than video, but Alice is now more important than Frank. (poor Frank)<a href="#section-8.2-5" class="pilcrow">¶</a></p>
+<p id="section-8.2-6">This concept can further be extended to work with SVC or ABR:<a href="#section-8.2-6" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-8.2-7">
+<pre>
+SUBSCRIBE track=[alice, 360p] priority=4
+SUBSCRIBE track=[frank, 360p] priority=3
+SUBSCRIBE track=[alice, 720p] priority=2
+SUBSCRIBE track=[frank, 720p] priority=1
+</pre><a href="#section-8.2-7" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="security-considerations">
+<section id="section-9">
+      <h2 id="name-security-considerations">
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      </h2>
+<p id="section-9-1">TODO Security<a href="#section-9-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="iana-considerations">
+<section id="section-10">
+      <h2 id="name-iana-considerations">
+<a href="#section-10" class="section-number selfRef">10. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+      </h2>
+<p id="section-10-1">This document has no IANA actions.<a href="#section-10-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="sec-normative-references">
+<section id="section-11">
+      <h2 id="name-normative-references">
+<a href="#section-11" class="section-number selfRef">11. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+      </h2>
+<dl class="references">
+<dt id="RFC2119">[RFC2119]</dt>
+      <dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8174">[RFC8174]</dt>
+    <dd>
+<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="acknowledgments">
+<section id="appendix-A">
+      <h2 id="name-acknowledgments">
+<a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
+      </h2>
+<p id="appendix-A-1">TODO acknowledge.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="authors-addresses">
+<section id="appendix-B">
+      <h2 id="name-authors-address">
+<a href="#name-authors-address" class="section-name selfRef">Author's Address</a>
+      </h2>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Luke Curley</span></div>
+<div dir="auto" class="left"><span class="org">Discord</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:kixelated@gmail.com" class="email">kixelated@gmail.com</a>
+</div>
+</address>
+</section>
+</div>
+<script>const toc = document.getElementById("toc");
+toc.querySelector("h2").addEventListener("click", e => {
+  toc.classList.toggle("active");
+});
+toc.querySelector("nav").addEventListener("click", e => {
+  toc.classList.remove("active");
+});
+</script>
+</body>
+</html>
