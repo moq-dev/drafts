@@ -506,8 +506,8 @@ A SUBSCRIBE_DROP message is sent by the publisher on the Subscribe Stream when g
 SUBSCRIBE_DROP Message {
   Type (i) = 0x1
   Message Length (i)
-  Group Sequence (i)
-  Group Count (i)
+  Start Group (i)
+  End Group (i)
   Error Code (i)
 }
 ~~~
@@ -515,12 +515,11 @@ SUBSCRIBE_DROP Message {
 **Type**:
 Set to 0x1 to indicate a SUBSCRIBE_DROP message.
 
-**Group Sequence**:
-The first group sequence in the dropped range.
+**Start Group**:
+The first absolute group sequence in the dropped range.
 
-**Group Count**:
-The number of consecutive groups being dropped, starting from Group Sequence.
-A value of 0 means unbounded.
+**End Group**:
+The last absolute group sequence in the dropped range (inclusive).
 
 **Error Code**:
 An application-specific error code.
