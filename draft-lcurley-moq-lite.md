@@ -211,7 +211,8 @@ Either endpoint MAY reset/cancel the stream at any time.
 A subscriber opens a Fetch Stream (0x3) to request a single Group from a Track.
 
 The subscriber sends a FETCH message containing the broadcast path, track name, priority, and group sequence.
-The publisher responds with FRAME messages on the same bidirectional stream.
+Unlike Group Streams (which MUST start with a GROUP message), the publisher responds with FRAME messages directly on the same bidirectional stream — there is no preceding GROUP header.
+The Subscribe ID and Group Sequence for the returned FRAME messages are implicit, taken from the original FETCH request.
 The publisher FINs the stream after the last frame, or resets the stream on error.
 
 Fetch behaves like HTTP: a single request/response per stream.
@@ -219,11 +220,12 @@ Fetch behaves like HTTP: a single request/response per stream.
 ### Probe
 A subscriber opens a Probe Stream (0x4) to measure the available bitrate of the connection.
 
-The subscriber sends a PROBE message with a target bitrate.
-The publisher SHOULD pad the connection to achieve the target bitrate.
-The publisher periodically replies with PROBE messages containing the current measured bitrate.
+The subscriber sends a PROBE message with a target bitrate on the bidirectional stream.
+The subscriber MAY send additional PROBE messages on the same stream to update the target bitrate; the publisher MUST treat each PROBE as a new target to attempt.
+The publisher SHOULD pad the connection to achieve the most recent target bitrate.
+The publisher periodically replies with PROBE messages on the same bidirectional stream containing the current measured bitrate.
 
-If the publisher does not support PROBE (e.g., congestion controller is not exposed), it resets the stream.
+If the publisher does not support PROBE (e.g., congestion controller is not exposed), it MUST reset the stream.
 
 # Delivery
 The most important concept in moq-lite is how to deliver a subscription.
