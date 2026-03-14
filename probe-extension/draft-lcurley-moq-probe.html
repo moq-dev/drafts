@@ -1198,6 +1198,9 @@ The publisher periodically responds with the measured bitrate and an elapsed tim
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.2">
                 <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-moqt-stream-type" class="internal xref">MOQT Stream Type</a></p>
 </li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3">
+                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-moqt-datagram-type" class="internal xref">MOQT Datagram Type</a></p>
+</li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
@@ -1349,7 +1352,9 @@ PROBE_RESPONSE {
 </pre><a href="#section-4.2-2" class="pilcrow">¶</a>
 </div>
 <p id="section-4.2-3"><strong>Measured Bitrate</strong>:
-The current measured bitrate in kilobits per second across all streams on the connection.
+The estimated bitrate in kilobits per second.
+How this value is computed is implementation-defined and depends on the congestion controller.
+Pacing-based algorithms (e.g. BBR) can report the current pacing rate directly, while window-based algorithms (e.g. CUBIC, Reno) may want to smooth the estimate since the sending rate is inherently bursty.
 This includes media, padding, and any other data sent by the publisher.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
 <p id="section-4.2-4"><strong>Elapsed</strong>:
 The number of milliseconds since the previous PROBE_RESPONSE on this stream.
@@ -1421,6 +1426,8 @@ The goal is to fill unused capacity, not to cause congestion.<a href="#section-5
 <p id="section-6-1">A malicious subscriber could request an excessively high target to waste publisher resources or cause network congestion.
 Implementations <span class="bcp14">SHOULD</span> enforce reasonable limits on the target and <span class="bcp14">MAY</span> ignore or cap requests that exceed these limits.<a href="#section-6-1" class="pilcrow">¶</a></p>
 <p id="section-6-2">A publisher <span class="bcp14">SHOULD</span> rate-limit the amount of padding it sends to avoid being used as an amplification vector.<a href="#section-6-2" class="pilcrow">¶</a></p>
+<p id="section-6-3">A publisher <span class="bcp14">MAY</span> rate-limit or ignore frequent PROBE_REQUEST messages to prevent flooding or oscillation.
+Implementations <span class="bcp14">SHOULD</span> enforce a minimum inter-request interval for PROBE_REQUESTs from a given subscriber.<a href="#section-6-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="iana-considerations">
@@ -1462,6 +1469,31 @@ Implementations <span class="bcp14">SHOULD</span> enforce reasonable limits on t
 <p id="section-7.2-1">This document registers the following entry in the "MoQ Stream Types" registry:<a href="#section-7.2-1" class="pilcrow">¶</a></p>
 <table class="center" id="table-2">
           <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">Value</th>
+              <th class="text-left" rowspan="1" colspan="1">Name</th>
+              <th class="text-left" rowspan="1" colspan="1">Reference</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0xPROBE_TODO</td>
+              <td class="text-left" rowspan="1" colspan="1">PROBE</td>
+              <td class="text-left" rowspan="1" colspan="1">This Document</td>
+            </tr>
+          </tbody>
+        </table>
+</section>
+</div>
+<div id="moqt-datagram-type">
+<section id="section-7.3">
+        <h3 id="name-moqt-datagram-type">
+<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-moqt-datagram-type" class="section-name selfRef">MOQT Datagram Type</a>
+        </h3>
+<p id="section-7.3-1">This document registers the following entry in the "MoQ Datagram Types" registry:<a href="#section-7.3-1" class="pilcrow">¶</a></p>
+<table class="center" id="table-3">
+          <caption><a href="#table-3" class="selfRef">Table 3</a></caption>
 <thead>
             <tr>
               <th class="text-left" rowspan="1" colspan="1">Value</th>
