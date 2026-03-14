@@ -131,7 +131,9 @@ PROBE_RESPONSE {
 ~~~
 
 **Measured Bitrate**:
-The current measured bitrate in kilobits per second across all streams on the connection.
+The estimated bitrate in kilobits per second.
+How this value is computed is implementation-defined and depends on the congestion controller.
+Pacing-based algorithms (e.g. BBR) can report the current pacing rate directly, while window-based algorithms (e.g. CUBIC, Reno) may want to smooth the estimate since the sending rate is inherently bursty.
 This includes media, padding, and any other data sent by the publisher.
 
 **Elapsed**:
@@ -185,6 +187,9 @@ Implementations SHOULD enforce reasonable limits on the target and MAY ignore or
 
 A publisher SHOULD rate-limit the amount of padding it sends to avoid being used as an amplification vector.
 
+A publisher MAY rate-limit or ignore frequent PROBE_REQUEST messages to prevent flooding or oscillation.
+Implementations SHOULD enforce a minimum inter-request interval for PROBE_REQUESTs from a given subscriber.
+
 
 # IANA Considerations
 
@@ -201,6 +206,14 @@ This document registers the following entry in the "MoQ Setup Option Types" regi
 ## MOQT Stream Type
 
 This document registers the following entry in the "MoQ Stream Types" registry:
+
+| Value | Name | Reference |
+|:------|:-----|:----------|
+| 0xPROBE_TODO | PROBE | This Document |
+
+## MOQT Datagram Type
+
+This document registers the following entry in the "MoQ Datagram Types" registry:
 
 | Value | Name | Reference |
 |:------|:-----|:----------|
