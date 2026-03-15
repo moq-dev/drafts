@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta content="Common,Latin" name="scripts">
 <meta content="initial-scale=1.0" name="viewport">
-<title>Media over QUIC - Hang</title>
+<title>MoQ Probe Extension</title>
 <meta content="Luke Curley" name="author">
 <meta content="
-       Hang is a real-time conferencing protocol built on top of moq-lite.
-A room consists of multiple participants who publish media tracks.
-All updates are live, such as a change in participants or media tracks. 
+       This document defines a PROBE extension for MoQ Transport  .
+A subscriber opens a bidirectional PROBE stream to request that the publisher pad the connection up to a target.
+The publisher periodically responds with the measured bitrate and an elapsed timestamp, enabling the subscriber to estimate the available bandwidth. 
     " name="description">
 <meta content="xml2rfc 3.31.0" name="generator">
-<meta content="draft-lcurley-moq-hang-latest" name="ietf.draft">
+<meta content="draft-lcurley-moq-probe-latest" name="ietf.draft">
 <!-- Generator version information:
   xml2rfc 3.31.0
     Python 3.12.12
@@ -27,7 +27,7 @@ All updates are live, such as a change in participants or media tracks.
     requests 2.32.5
     wcwidth 0.3.0
 -->
-<link href="draft-lcurley-moq-hang.xml" rel="alternate" type="application/rfc+xml">
+<link href="draft-lcurley-moq-probe.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
 <style type="text/css">@font-face {
   font-family: 'Lora';
@@ -1043,7 +1043,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <table class="ears">
 <thead><tr>
 <td class="left">Internet-Draft</td>
-<td class="center">hang</td>
+<td class="center">moq-probe</td>
 <td class="right">March 2026</td>
 </tr></thead>
 <tfoot><tr>
@@ -1058,7 +1058,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dt class="label-workgroup">Workgroup:</dt>
 <dd class="workgroup">moq</dd>
 <dt class="label-internet-draft">Internet-Draft:</dt>
-<dd class="internet-draft">draft-lcurley-moq-hang-latest</dd>
+<dd class="internet-draft">draft-lcurley-moq-probe-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
 <time datetime="2026-03-15" class="published">15 March 2026</time>
@@ -1075,12 +1075,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </dd>
 </dl>
 </div>
-<h1 id="title">Media over QUIC - Hang</h1>
+<h1 id="title">MoQ Probe Extension</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">Hang is a real-time conferencing protocol built on top of moq-lite.
-A room consists of multiple participants who publish media tracks.
-All updates are live, such as a change in participants or media tracks.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">This document defines a PROBE extension for MoQ Transport <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>.
+A subscriber opens a bidirectional PROBE stream to request that the publisher pad the connection up to a target.
+The publisher periodically responds with the measured bitrate and an elapsed timestamp, enabling the subscriber to estimate the available bandwidth.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-discussion-venues">
@@ -1145,33 +1145,63 @@ All updates are live, such as a change in participants or media tracks.<a href="
             <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-conventions-and-definitions" class="internal xref">Conventions and Definitions</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
-            <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-terminology" class="internal xref">Terminology</a></p>
+            <p id="section-toc.1-1.2.1"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.1">
+                <p id="section-toc.1-1.2.2.1.1" class="keepWithNext"><a href="#section-2.1" class="auto internal xref">2.1</a>.  <a href="#name-application-limited" class="internal xref">Application-Limited</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.2">
+                <p id="section-toc.1-1.2.2.2.1" class="keepWithNext"><a href="#section-2.2" class="auto internal xref">2.2</a>.  <a href="#name-hop-by-hop" class="internal xref">Hop-by-Hop</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.3">
+                <p id="section-toc.1-1.2.2.3.1"><a href="#section-2.3" class="auto internal xref">2.3</a>.  <a href="#name-this-extension" class="internal xref">This Extension</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
-            <p id="section-toc.1-1.3.1" class="keepWithNext"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-discovery" class="internal xref">Discovery</a></p>
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-setup-negotiation" class="internal xref">Setup Negotiation</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
-            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-catalog" class="internal xref">Catalog</a></p>
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-probe-stream" class="internal xref">PROBE Stream</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
-                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-root" class="internal xref">Root</a></p>
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-probe_request" class="internal xref">PROBE_REQUEST</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2">
-                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-video" class="internal xref">Video</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3">
-                <p id="section-toc.1-1.4.2.3.1"><a href="#section-4.3" class="auto internal xref">4.3</a>.  <a href="#name-audio" class="internal xref">Audio</a></p>
+                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-probe_response" class="internal xref">PROBE_RESPONSE</a></p>
 </li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
-            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-container" class="internal xref">Container</a></p>
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-padding" class="internal xref">Padding</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-quic-level-padding" class="internal xref">QUIC-Level Padding</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-datagram-padding" class="internal xref">Datagram Padding</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.3">
+                <p id="section-toc.1-1.5.2.3.1"><a href="#section-5.3" class="auto internal xref">5.3</a>.  <a href="#name-general-requirements" class="internal xref">General Requirements</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
             <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
             <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1">
+                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-moqt-setup-option-type" class="internal xref">MOQT Setup Option Type</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.2">
+                <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-moqt-stream-type" class="internal xref">MOQT Stream Type</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3">
+                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-moqt-datagram-type" class="internal xref">MOQT Datagram Type</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
             <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
@@ -1197,224 +1227,195 @@ described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</s
 appear in all capitals, as shown here.<a href="#section-1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="terminology">
+<div id="introduction">
 <section id="section-2">
-      <h2 id="name-terminology">
-<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-terminology" class="section-name selfRef">Terminology</a>
+      <h2 id="name-introduction">
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
-<p id="section-2-1">Hang is built on top of moq-lite <span>[<a href="#moql" class="cite xref">moql</a>]</span> and uses much of the same terminology.
-A quick recap:<a href="#section-2-1" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-2-2.1">
-          <p id="section-2-2.1.1"><strong>Broadcast</strong>: A collection of Tracks from a single publisher.<a href="#section-2-2.1.1" class="pilcrow">¶</a></p>
-</li>
-        <li class="normal" id="section-2-2.2">
-          <p id="section-2-2.2.1"><strong>Track</strong>: An series of Groups, each of which can be delivered and decoded <em>out-of-order</em>.<a href="#section-2-2.2.1" class="pilcrow">¶</a></p>
-</li>
-        <li class="normal" id="section-2-2.3">
-          <p id="section-2-2.3.1"><strong>Group</strong>: An series of Frames, each of which must be delivered and decoded <em>in-order</em>.<a href="#section-2-2.3.1" class="pilcrow">¶</a></p>
-</li>
-        <li class="normal" id="section-2-2.4">
-          <p id="section-2-2.4.1"><strong>Frame</strong>: A sized payload of bytes representing a single moment in time.<a href="#section-2-2.4.1" class="pilcrow">¶</a></p>
-</li>
-      </ul>
-<p id="section-2-3">Hang introduces additional terminology:<a href="#section-2-3" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-2-4.1">
-          <p id="section-2-4.1.1"><strong>Room</strong>: A collection of participants, publishing under a common prefix.<a href="#section-2-4.1.1" class="pilcrow">¶</a></p>
-</li>
-        <li class="normal" id="section-2-4.2">
-          <p id="section-2-4.2.1"><strong>Participant</strong>: A moq-lite broadcaster that may produce any number of media tracks.<a href="#section-2-4.2.1" class="pilcrow">¶</a></p>
-</li>
-        <li class="normal" id="section-2-4.3">
-          <p id="section-2-4.3.1"><strong>Catalog</strong>: A JSON document that describes each available media track, supporting live updates.<a href="#section-2-4.3.1" class="pilcrow">¶</a></p>
-</li>
-        <li class="normal" id="section-2-4.4">
-          <p id="section-2-4.4.1"><strong>Container</strong>: A tiny header in front of each media payload containing the timestamp.<a href="#section-2-4.4.1" class="pilcrow">¶</a></p>
-</li>
-      </ul>
-</section>
-</div>
-<div id="discovery">
-<section id="section-3">
-      <h2 id="name-discovery">
-<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-discovery" class="section-name selfRef">Discovery</a>
-      </h2>
-<p id="section-3-1">The first requirement for a real-time conferencing application is to discover other participants in the same room.
-Hang does this using moq-lite's ANNOUNCE capabilities.<a href="#section-3-1" class="pilcrow">¶</a></p>
-<p id="section-3-2">A room consists of a path.
-Any participants within the room <span class="bcp14">MUST</span> publish a broadcast with the room path as a prefix which <span class="bcp14">SHOULD</span> end with the <code>.hang</code> suffix.<a href="#section-3-2" class="pilcrow">¶</a></p>
-<p id="section-3-3">For example:<a href="#section-3-3" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-3-4">
-<pre>
-/room123/alice.hang
-/room123/bob.hang
-/room456/zoe.hang
-</pre><a href="#section-3-4" class="pilcrow">¶</a>
-</div>
-<p id="section-3-5">A participant issues an ANNOUNCE_PLEASE message to discover any other participants in the same room.
-The server (relay) will then respond with an ANNOUNCE message for any matching broadcasts, including their own.<a href="#section-3-5" class="pilcrow">¶</a></p>
-<p id="section-3-6">For example:<a href="#section-3-6" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-3-7">
-<pre>
-ANNOUNCE_PLEASE prefix=/room/
-ANNOUNCE suffix=alice.hang active=true
-ANNOUNCE suffix=bob.hang   active=true
-</pre><a href="#section-3-7" class="pilcrow">¶</a>
-</div>
-<p id="section-3-8">If a publisher no longer wants to participant, or is disconnected somehow, their presence will be unannounced.
-Publishers and subscribers <span class="bcp14">SHOULD</span> terminate any subscriptions once a participant is unannounced.<a href="#section-3-8" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-3-9">
-<pre>
-ANNOUNCE suffix=alice.hang active=false
-</pre><a href="#section-3-9" class="pilcrow">¶</a>
-</div>
-</section>
-</div>
-<div id="catalog">
-<section id="section-4">
-      <h2 id="name-catalog">
-<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-catalog" class="section-name selfRef">Catalog</a>
-      </h2>
-<p id="section-4-1">The catalog describes the available media tracks for a single participant.
-It's a JSON document that extends the the W3C WebCodecs specification.<a href="#section-4-1" class="pilcrow">¶</a></p>
-<p id="section-4-2">The catalog is published as a <code>catalog.json</code> track within the broadcast so it can be updated live as the participant's media tracks change.
-A participant <span class="bcp14">MAY</span> forgo publishing a catalog if it does not wish to publish any media tracks now and in the future.<a href="#section-4-2" class="pilcrow">¶</a></p>
-<p id="section-4-3">The catalog track consists of multiple groups, one for each update.
-Each group contains a single frame with UTF-8 JSON.<a href="#section-4-3" class="pilcrow">¶</a></p>
-<p id="section-4-4">A publisher <span class="bcp14">MUST NOT</span> write multiple frames to a group until a future specification includes a delta-encoding mechanism (via JSON Patch most likely).<a href="#section-4-4" class="pilcrow">¶</a></p>
-<div id="root">
-<section id="section-4.1">
-        <h3 id="name-root">
-<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-root" class="section-name selfRef">Root</a>
+<p id="section-2-1">Bandwidth estimation is essential for adaptive bitrate media delivery.
+A subscriber needs to know the available bandwidth in order to select appropriate media tracks and qualities.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<div id="application-limited">
+<section id="section-2.1">
+        <h3 id="name-application-limited">
+<a href="#section-2.1" class="section-number selfRef">2.1. </a><a href="#name-application-limited" class="section-name selfRef">Application-Limited</a>
         </h3>
-<p id="section-4.1-1">The root of the catalog is a JSON document with the following schema:<a href="#section-4.1-1" class="pilcrow">¶</a></p>
+<p id="section-2.1-1">Many MoQ applications are application-limited: the average bitrate of the media is less than the available bandwidth.
+Most congestion control algorithms only grow the congestion window or bandwidth estimate when fully utilized.
+This means the available bandwidth is often underestimated, and the subscriber has no way to know if it can safely switch to a higher quality track.<a href="#section-2.1-1" class="pilcrow">¶</a></p>
+<p id="section-2.1-2">This is particularly problematic for adaptive bitrate (ABR) algorithms.
+A viewer may get stuck at a low quality rendition indefinitely because the congestion window never grows to reflect the true link capacity.
+If the viewer does attempt to switch to a higher rendition without first probing, they risk buffering — either because the congestion window has not been warmed up to support the higher bitrate, or because the network genuinely cannot sustain it.
+Without probing, the subscriber cannot distinguish between these two cases.<a href="#section-2.1-2" class="pilcrow">¶</a></p>
+<p id="section-2.1-3"><span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 3.7.2 suggests subscribing to additional tracks at low priority to fill the congestion window during probing intervals.
+However, this is difficult in practice because the subscriber does not know when probing is needed or by how much.
+The congestion window and bandwidth estimate are internal to the sender's congestion controller and are not exposed to the application, let alone the remote peer.
+The subscriber cannot distinguish between "the network has more capacity" and "the congestion controller is already fully utilizing the link".
+It also requires the publisher to have pre-encoded padding tracks and the subscriber to manage extra subscriptions.<a href="#section-2.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="hop-by-hop">
+<section id="section-2.2">
+        <h3 id="name-hop-by-hop">
+<a href="#section-2.2" class="section-number selfRef">2.2. </a><a href="#name-hop-by-hop" class="section-name selfRef">Hop-by-Hop</a>
+        </h3>
+<p id="section-2.2-1">MoQ is designed to work end-to-end via relays.
+Each hop may have different network conditions, so bandwidth estimation must be performed per-hop rather than end-to-end.
+A subscriber needs to know the capacity of its immediate connection, not the capacity of the origin.<a href="#section-2.2-1" class="pilcrow">¶</a></p>
+<p id="section-2.2-2">Using a wire-level extension ensures that PROBE measurements are scoped to a single hop.
+A relay terminates the PROBE stream and does not forward it upstream, avoiding incorrect measurements that reflect intermediate link capacity.<a href="#section-2.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="this-extension">
+<section id="section-2.3">
+        <h3 id="name-this-extension">
+<a href="#section-2.3" class="section-number selfRef">2.3. </a><a href="#name-this-extension" class="section-name selfRef">This Extension</a>
+        </h3>
+<p id="section-2.3-1">This extension provides a simple mechanism for bandwidth estimation.
+The subscriber opens a PROBE stream and requests that the publisher pad the connection to a target.
+The publisher responds with periodic measurements, allowing the subscriber to adjust its subscriptions accordingly.<a href="#section-2.3-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="setup-negotiation">
+<section id="section-3">
+      <h2 id="name-setup-negotiation">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-setup-negotiation" class="section-name selfRef">Setup Negotiation</a>
+      </h2>
+<p id="section-3-1">The PROBE extension is negotiated during the SETUP exchange as defined in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 9.4.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">Both endpoints indicate support by including the following Setup Option:<a href="#section-3-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-3-3">
+<pre>
+PROBE Setup Option {
+  Option Key (vi64) = 0xPROBE_TODO
+  Option Value Length (vi64) = 0
+}
+</pre><a href="#section-3-3" class="pilcrow">¶</a>
+</div>
+<p id="section-3-4">If both endpoints include this option, the PROBE extension is available for the session.
+If a peer receives a PROBE stream without having negotiated the extension, it <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION.<a href="#section-3-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="probe-stream">
+<section id="section-4">
+      <h2 id="name-probe-stream">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-probe-stream" class="section-name selfRef">PROBE Stream</a>
+      </h2>
+<p id="section-4-1">The PROBE extension uses a new bidirectional stream type.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4-2">
+<pre>
+STREAM_TYPE = 0xPROBE_TODO
+</pre><a href="#section-4-2" class="pilcrow">¶</a>
+</div>
+<p id="section-4-3">The stream type is sent at the beginning of the stream, encoded as a variable-length integer, consistent with <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> stream type framing.<a href="#section-4-3" class="pilcrow">¶</a></p>
+<p id="section-4-4">A subscriber (stream opener) sends PROBE_REQUEST messages on the stream.
+The publisher (responder) sends PROBE_RESPONSE messages on the stream.
+Either endpoint <span class="bcp14">MAY</span> close or reset the stream at any time.<a href="#section-4-4" class="pilcrow">¶</a></p>
+<div id="proberequest">
+<section id="section-4.1">
+        <h3 id="name-probe_request">
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-probe_request" class="section-name selfRef">PROBE_REQUEST</a>
+        </h3>
+<p id="section-4.1-1">A subscriber sends a PROBE_REQUEST to indicate the target the publisher should attempt to reach.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.1-2">
 <pre>
-type Catalog = {
-        "audio": AudioSchema | undefined,
-        "video": VideoSchema | undefined,
-        // ... any custom fields ...
+PROBE_REQUEST {
+  Message Length (vi64)
+  Target Bitrate (vi64)
 }
 </pre><a href="#section-4.1-2" class="pilcrow">¶</a>
 </div>
-<p id="section-4.1-3">Additional fields <span class="bcp14">MAY</span> be added based on the application.
-The catalog <span class="bcp14">SHOULD</span> be mostly static, delegating any dynamic content to other tracks.<a href="#section-4.1-3" class="pilcrow">¶</a></p>
-<p id="section-4.1-4">For example, a <code>"chat"</code> section should include the name of a chat track, not individual chat messages.
-This way catalog updates are rare and a client <span class="bcp14">MAY</span> choose to not subscribe.<a href="#section-4.1-4" class="pilcrow">¶</a></p>
-<p id="section-4.1-5">This specification currently only defines audio and video tracks.<a href="#section-4.1-5" class="pilcrow">¶</a></p>
+<p id="section-4.1-3"><strong>Target Bitrate</strong>:
+The desired bitrate in kilobits per second.
+The publisher <span class="bcp14">SHOULD</span> pad the connection to attempt to reach this rate.
+A value of 0 indicates no padding is needed; the publisher <span class="bcp14">SHOULD</span> only send media data but <span class="bcp14">MUST</span> continue sending PROBE_RESPONSE messages.
+This is useful for passively monitoring the current bitrate without actively probing for more bandwidth.
+Either endpoint <span class="bcp14">MAY</span> close or reset the stream to stop receiving updates entirely.<a href="#section-4.1-3" class="pilcrow">¶</a></p>
+<p id="section-4.1-4">The subscriber <span class="bcp14">MAY</span> send multiple PROBE_REQUEST messages on the same stream.
+Each new PROBE_REQUEST supersedes the previous one.
+The publisher <span class="bcp14">MUST</span> use the most recently received target.<a href="#section-4.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="video">
+<div id="proberesponse">
 <section id="section-4.2">
-        <h3 id="name-video">
-<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-video" class="section-name selfRef">Video</a>
+        <h3 id="name-probe_response">
+<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-probe_response" class="section-name selfRef">PROBE_RESPONSE</a>
         </h3>
-<p id="section-4.2-1">A video track contains the necessary information to decode a video stream.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.2-1">The publisher periodically sends PROBE_RESPONSE messages containing the measured bitrate and the elapsed time since the last response.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.2-2">
 <pre>
-type VideoSchema = {
-        "renditions": Map&lt;TrackName, VideoDecoderConfig&gt;,
-        "priority": u8,
-        "display": {
-                "width": number,
-                "height": number,
-        } | undefined,
-        "rotation": number | undefined,
-        "flip": boolean | undefined,
+PROBE_RESPONSE {
+  Message Length (vi64)
+  Measured Bitrate (vi64)
+  Elapsed (vi64)
 }
 </pre><a href="#section-4.2-2" class="pilcrow">¶</a>
 </div>
-<p id="section-4.2-3">The <code>renditions</code> field contains a map of track names to video decoder configurations.
-See the <a href="https://www.w3.org/TR/webcodecs/#video-decoder-config">WebCodecs specification</a> for specifics and registered codecs.
-Any Uint8Array fields are hex-encoded as a string.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
-<p id="section-4.2-4">For example:<a href="#section-4.2-4" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.2-5">
-<pre>
-{
-        "renditions": {
-                "720p": {
-                        "codec": "avc1.64001f",
-                        "codedWidth": 1280,
-                        "codedHeight": 720,
-                        "bitrate": 6000000,
-                        "framerate": 30.0
-                },
-                "480p": {
-                        "codec": "avc1.64001e",
-                        "codedWidth": 848,
-                        "codedHeight": 480,
-                        "bitrate": 2000000,
-                        "framerate": 30.0
-                }
-        },
-        "priority": 2,
-        "display": {
-                "width": 1280,
-                "height": 720
-        },
-        "rotation": 0,
-        "flip": false,
-}
-</pre><a href="#section-4.2-5" class="pilcrow">¶</a>
-</div>
-</section>
-</div>
-<div id="audio">
-<section id="section-4.3">
-        <h3 id="name-audio">
-<a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-audio" class="section-name selfRef">Audio</a>
-        </h3>
-<p id="section-4.3-1">An audio track contains the necessary information to decode an audio stream.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.3-2">
-<pre>
-type AudioSchema = {
-        "renditions": Map&lt;TrackName, AudioDecoderConfig&gt;,
-        "priority": u8,
-}
-</pre><a href="#section-4.3-2" class="pilcrow">¶</a>
-</div>
-<p id="section-4.3-3">The <code>renditions</code> field contains a map of track names to audio decoder configurations.
-See the <a href="https://www.w3.org/TR/webcodecs/#audio-decoder-config">WebCodecs specification</a> for specifics and registered codecs.
-Any Uint8Array fields are hex-encoded as a string.<a href="#section-4.3-3" class="pilcrow">¶</a></p>
-<p id="section-4.3-4">For example:<a href="#section-4.3-4" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.3-5">
-<pre>
-{
-        "renditions": {
-                "stereo": {
-                        "codec": "opus",
-                        "sampleRate": 48000,
-                        "numberOfChannels": 2,
-                        "bitrate": 128000
-                },
-                "mono": {
-                        "codec": "opus",
-                        "sampleRate": 48000,
-                        "numberOfChannels": 1,
-                        "bitrate": 64000
-                }
-        },
-        "priority": 1,
-}
-</pre><a href="#section-4.3-5" class="pilcrow">¶</a>
-</div>
+<p id="section-4.2-3"><strong>Measured Bitrate</strong>:
+The estimated bitrate in kilobits per second.
+How this value is computed is implementation-defined and depends on the congestion controller.
+Pacing-based algorithms (e.g. BBR) can report the current pacing rate directly, while window-based algorithms (e.g. CUBIC, Reno) may want to smooth the estimate since the sending rate is inherently bursty.
+This includes media, padding, and any other data sent by the publisher.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.2-4"><strong>Elapsed</strong>:
+The number of milliseconds since the previous PROBE_RESPONSE on this stream.
+For the first PROBE_RESPONSE, this is the number of milliseconds since the corresponding PROBE_REQUEST was received.
+This allows the subscriber to assess the freshness of the measurement and detect stale updates caused by network delays.<a href="#section-4.2-4" class="pilcrow">¶</a></p>
+<p id="section-4.2-5">The publisher <span class="bcp14">SHOULD</span> send PROBE_RESPONSE messages at regular intervals while probing is active.
+The interval is implementation-defined but a value between 100ms and 1000ms is <span class="bcp14">RECOMMENDED</span>.<a href="#section-4.2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
 </div>
-<div id="container">
+<div id="padding">
 <section id="section-5">
-      <h2 id="name-container">
-<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-container" class="section-name selfRef">Container</a>
+      <h2 id="name-padding">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-padding" class="section-name selfRef">Padding</a>
       </h2>
-<p id="section-5-1">Audio and video tracks use a lightweight container to encapsulate the media payload.<a href="#section-5-1" class="pilcrow">¶</a></p>
-<p id="section-5-2">Each moq-lite group <span class="bcp14">MUST</span> start with a keyframe.
-If codec does not support delta frames (ex. audio), then a group <span class="bcp14">MAY</span> consist of multiple keyframes.
-Otherwise, a group <span class="bcp14">MUST</span> consist of a single keyframe followed by zero or more delta frames.<a href="#section-5-2" class="pilcrow">¶</a></p>
-<p id="section-5-3">Each frame starts with a timestamp, a QUIC variable-length integer (62-bit max) encoded in microseconds.
-The remainder of the payload is codec specific; see the WebCodecs specification for specifics.<a href="#section-5-3" class="pilcrow">¶</a></p>
-<p id="section-5-4">For example, h.264 with no <code>description</code> field would be annex.b encoded, while h.264 with a <code>description</code> field would be AVCC encoded.<a href="#section-5-4" class="pilcrow">¶</a></p>
+<p id="section-5-1">Padding is optional and depends on the capabilities of the QUIC implementation.
+A publisher that does not support padding <span class="bcp14">MUST</span> still send PROBE_RESPONSE messages based on the actual sending rate.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<div id="quic-level-padding">
+<section id="section-5.1">
+        <h3 id="name-quic-level-padding">
+<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-quic-level-padding" class="section-name selfRef">QUIC-Level Padding</a>
+        </h3>
+<p id="section-5.1-1">The preferred method is for the QUIC implementation to send PING+PADDING frames.
+PADDING frames alone <span class="bcp14">MUST NOT</span> be used, as they are not ack-eliciting and can cause starvation of the congestion controller.
+PING+PADDING is transparent to the application and does not consume application-level flow control.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="datagram-padding">
+<section id="section-5.2">
+        <h3 id="name-datagram-padding">
+<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-datagram-padding" class="section-name selfRef">Datagram Padding</a>
+        </h3>
+<p id="section-5.2-1">If the QUIC implementation does not expose a padding API, the publisher <span class="bcp14">MAY</span> send QUIC datagrams as a fallback.
+Datagrams are unreliable and do not consume stream-level flow control, making them suitable for padding.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<p id="section-5.2-2">A PROBE datagram is identified by a well-known datagram type:<a href="#section-5.2-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.2-3">
+<pre>
+PROBE Datagram {
+  Datagram Type (vi64) = 0xPROBE_TODO
+  Padding (..)
+}
+</pre><a href="#section-5.2-3" class="pilcrow">¶</a>
+</div>
+<p id="section-5.2-4">The contents of the Padding field are arbitrary and <span class="bcp14">MUST</span> be discarded by the receiver.
+The receiver <span class="bcp14">MUST NOT</span> interpret the contents as application data.<a href="#section-5.2-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="general-requirements">
+<section id="section-5.3">
+        <h3 id="name-general-requirements">
+<a href="#section-5.3" class="section-number selfRef">5.3. </a><a href="#name-general-requirements" class="section-name selfRef">General Requirements</a>
+        </h3>
+<p id="section-5.3-1">Padding <span class="bcp14">SHOULD</span> be sent at the lowest priority to avoid interfering with media delivery.<a href="#section-5.3-1" class="pilcrow">¶</a></p>
+<p id="section-5.3-2">The publisher <span class="bcp14">MUST NOT</span> exceed the target with padding alone.
+If media traffic already meets or exceeds the target, no additional padding is necessary.<a href="#section-5.3-2" class="pilcrow">¶</a></p>
+<p id="section-5.3-3">The publisher <span class="bcp14">MUST</span> respect the QUIC congestion controller.
+Padding that would cause the congestion window to be exceeded <span class="bcp14">MUST NOT</span> be sent.
+The goal is to fill unused capacity, not to cause congestion.<a href="#section-5.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
 </section>
 </div>
 <div id="security-considerations">
@@ -1422,7 +1423,11 @@ The remainder of the payload is codec specific; see the WebCodecs specification 
       <h2 id="name-security-considerations">
 <a href="#section-6" class="section-number selfRef">6. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
-<p id="section-6-1">TODO Security<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-1">A malicious subscriber could request an excessively high target to waste publisher resources or cause network congestion.
+Implementations <span class="bcp14">SHOULD</span> enforce reasonable limits on the target and <span class="bcp14">MAY</span> ignore or cap requests that exceed these limits.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">A publisher <span class="bcp14">SHOULD</span> rate-limit the amount of padding it sends to avoid being used as an amplification vector.<a href="#section-6-2" class="pilcrow">¶</a></p>
+<p id="section-6-3">A publisher <span class="bcp14">MAY</span> rate-limit or ignore frequent PROBE_REQUEST messages to prevent flooding or oscillation.
+Implementations <span class="bcp14">SHOULD</span> enforce a minimum inter-request interval for PROBE_REQUESTs from a given subscriber.<a href="#section-6-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="iana-considerations">
@@ -1430,7 +1435,82 @@ The remainder of the payload is codec specific; see the WebCodecs specification 
       <h2 id="name-iana-considerations">
 <a href="#section-7" class="section-number selfRef">7. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
-<p id="section-7-1">This document has no IANA actions.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<p id="section-7-1">This document requests the following registrations:<a href="#section-7-1" class="pilcrow">¶</a></p>
+<div id="moqt-setup-option-type">
+<section id="section-7.1">
+        <h3 id="name-moqt-setup-option-type">
+<a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-moqt-setup-option-type" class="section-name selfRef">MOQT Setup Option Type</a>
+        </h3>
+<p id="section-7.1-1">This document registers the following entry in the "MoQ Setup Option Types" registry:<a href="#section-7.1-1" class="pilcrow">¶</a></p>
+<table class="center" id="table-1">
+          <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">Value</th>
+              <th class="text-left" rowspan="1" colspan="1">Name</th>
+              <th class="text-left" rowspan="1" colspan="1">Reference</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0xPROBE_TODO</td>
+              <td class="text-left" rowspan="1" colspan="1">PROBE</td>
+              <td class="text-left" rowspan="1" colspan="1">This Document</td>
+            </tr>
+          </tbody>
+        </table>
+</section>
+</div>
+<div id="moqt-stream-type">
+<section id="section-7.2">
+        <h3 id="name-moqt-stream-type">
+<a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-moqt-stream-type" class="section-name selfRef">MOQT Stream Type</a>
+        </h3>
+<p id="section-7.2-1">This document registers the following entry in the "MoQ Stream Types" registry:<a href="#section-7.2-1" class="pilcrow">¶</a></p>
+<table class="center" id="table-2">
+          <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">Value</th>
+              <th class="text-left" rowspan="1" colspan="1">Name</th>
+              <th class="text-left" rowspan="1" colspan="1">Reference</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0xPROBE_TODO</td>
+              <td class="text-left" rowspan="1" colspan="1">PROBE</td>
+              <td class="text-left" rowspan="1" colspan="1">This Document</td>
+            </tr>
+          </tbody>
+        </table>
+</section>
+</div>
+<div id="moqt-datagram-type">
+<section id="section-7.3">
+        <h3 id="name-moqt-datagram-type">
+<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-moqt-datagram-type" class="section-name selfRef">MOQT Datagram Type</a>
+        </h3>
+<p id="section-7.3-1">This document registers the following entry in the "MoQ Datagram Types" registry:<a href="#section-7.3-1" class="pilcrow">¶</a></p>
+<table class="center" id="table-3">
+          <caption><a href="#table-3" class="selfRef">Table 3</a></caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">Value</th>
+              <th class="text-left" rowspan="1" colspan="1">Name</th>
+              <th class="text-left" rowspan="1" colspan="1">Reference</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0xPROBE_TODO</td>
+              <td class="text-left" rowspan="1" colspan="1">PROBE</td>
+              <td class="text-left" rowspan="1" colspan="1">This Document</td>
+            </tr>
+          </tbody>
+        </table>
+</section>
+</div>
 </section>
 </div>
 <div id="sec-normative-references">
@@ -1439,10 +1519,6 @@ The remainder of the payload is codec specific; see the WebCodecs specification 
 <a href="#section-8" class="section-number selfRef">8. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
       </h2>
 <dl class="references">
-<dt id="moql">[moql]</dt>
-      <dd>
-<span class="refAuthor">Curley, L.</span>, <span class="refTitle">"Media over QUIC - Lite"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-lcurley-moq-lite-02</span>, <time datetime="2025-11-12" class="refDate">12 November 2025</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-lcurley-moq-lite-02">https://datatracker.ietf.org/doc/html/draft-lcurley-moq-lite-02</a>&gt;</span>. </dd>
-<dd class="break"></dd>
 <dt id="moqt">[moqt]</dt>
       <dd>
 <span class="refAuthor">Nandakumar, S.</span>, <span class="refAuthor">Vasiliev, V.</span>, <span class="refAuthor">Swett, I.</span>, and <span class="refAuthor">A. Frindell</span>, <span class="refTitle">"Media over QUIC Transport"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-moq-transport-17</span>, <time datetime="2026-03-02" class="refDate">2 March 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-17">https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-17</a>&gt;</span>. </dd>
@@ -1463,7 +1539,7 @@ The remainder of the payload is codec specific; see the WebCodecs specification 
       <h2 id="name-acknowledgments">
 <a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
       </h2>
-<p id="appendix-A-1">TODO acknowledge.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+<p id="appendix-A-1">This document was drafted with the assistance of Claude, an AI assistant by Anthropic.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="authors-addresses">
