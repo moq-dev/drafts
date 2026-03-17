@@ -73,7 +73,7 @@ Both endpoints indicate support by including the following Setup Option:
 
 ~~~
 PROBE Setup Option {
-  Option Key (vi64) = 0xPROBE_TODO
+  Option Key (vi64) = TBD1
   Option Value Length (vi64) = 0
 }
 ~~~
@@ -86,7 +86,7 @@ If a peer receives a PROBE stream without having negotiated the extension, it MU
 The PROBE extension uses a new bidirectional stream type.
 
 ~~~
-STREAM_TYPE = 0xPROBE_TODO
+STREAM_TYPE = TBD2
 ~~~
 
 The stream type is sent at the beginning of the stream, encoded as a variable-length integer, consistent with {{moqt}} stream type framing.
@@ -175,7 +175,7 @@ This document registers the following entry in the "MoQ Setup Option Types" regi
 
 | Value | Name | Reference |
 |:------|:-----|:----------|
-| 0xPROBE_TODO | PROBE | This Document |
+| TBD1 | PROBE | This Document |
 
 ## MOQT Stream Type
 
@@ -183,7 +183,7 @@ This document registers the following entry in the "MoQ Stream Types" registry:
 
 | Value | Name | Reference |
 |:------|:-----|:----------|
-| 0xPROBE_TODO | PROBE | This Document |
+| TBD2 | PROBE | This Document |
 
 
 --- back
