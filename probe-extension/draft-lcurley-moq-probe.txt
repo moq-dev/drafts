@@ -157,7 +157,7 @@ Table of Contents
    Option:
 
    PROBE Setup Option {
-     Option Key (vi64) = 0xPROBE_TODO
+     Option Key (vi64) = TBD1
      Option Value Length (vi64) = 0
    }
 
@@ -170,7 +170,7 @@ Table of Contents
 
    The PROBE extension uses a new bidirectional stream type.
 
-   STREAM_TYPE = 0xPROBE_TODO
+   STREAM_TYPE = TBD2
 
    The stream type is sent at the beginning of the stream, encoded as a
    variable-length integer, consistent with [moqt] stream type framing.
@@ -269,26 +269,26 @@ Table of Contents
    This document registers the following entry in the "MoQ Setup Option
    Types" registry:
 
-                 +==============+=======+===============+
-                 | Value        | Name  | Reference     |
-                 +==============+=======+===============+
-                 | 0xPROBE_TODO | PROBE | This Document |
-                 +--------------+-------+---------------+
+                     +=======+=======+===============+
+                     | Value | Name  | Reference     |
+                     +=======+=======+===============+
+                     | TBD1  | PROBE | This Document |
+                     +-------+-------+---------------+
 
-                                 Table 1
+                                  Table 1
 
 7.2.  MOQT Stream Type
 
    This document registers the following entry in the "MoQ Stream Types"
    registry:
 
-                 +==============+=======+===============+
-                 | Value        | Name  | Reference     |
-                 +==============+=======+===============+
-                 | 0xPROBE_TODO | PROBE | This Document |
-                 +--------------+-------+---------------+
+                     +=======+=======+===============+
+                     | Value | Name  | Reference     |
+                     +=======+=======+===============+
+                     | TBD2  | PROBE | This Document |
+                     +-------+-------+---------------+
 
-                                 Table 2
+                                  Table 2
 
 8.  Normative References
 
