@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-03-15T01:43:02.480590+00:00",
+  "timestamp": "2026-03-17T01:21:23.674389+00:00",
   "repo": "moq-dev/drafts",
   "labels": [
     {
@@ -798,24 +798,26 @@
       "id": "PR_kwDOLz_x-M7Kg4Xy",
       "title": "Add draft-lcurley-moq-probe extension",
       "url": "https://github.com/moq-dev/drafts/pull/17",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "kixelated",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "## Summary\n- Adds a new PROBE extension draft for MoQ Transport (draft-ietf-moq-transport)\n- Defines a bidirectional PROBE stream for bandwidth estimation, addressing the application-limited problem described in moq-transport Section 3.7.2\n- Subscriber sends target bitrate (kbps), publisher responds with measured bitrate and elapsed timestamp (ms)\n- Supports QUIC PING+PADDING for transparent padding, with QUIC datagram fallback\n- Related discussion: https://github.com/moq-wg/moq-transport/issues/1507\n\n## Test plan\n- [x] `make` builds successfully\n- [ ] Review rendered HTML for formatting and correctness\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
       "createdAt": "2026-03-14T00:19:09Z",
-      "updatedAt": "2026-03-14T02:21:22Z",
+      "updatedAt": "2026-03-15T17:45:40Z",
       "baseRepository": "moq-dev/drafts",
       "baseRefName": "main",
       "baseRefOid": "34601434c63b640e9d139ed62b288510382bb4b1",
       "headRepository": "moq-dev/drafts",
       "headRefName": "probe-extension",
       "headRefOid": "e5282494d515f1c3be1a83e24323037cc3b56545",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2026-03-15T17:45:40Z",
+      "mergedAt": "2026-03-15T17:45:40Z",
+      "mergedBy": "kixelated",
+      "mergeCommit": {
+        "oid": "59bdc77a6a5da3403ac0b9b4dff3b1490901151c"
+      },
       "comments": [
         {
           "author": "coderabbitai",
