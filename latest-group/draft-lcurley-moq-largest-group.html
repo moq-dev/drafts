@@ -1245,7 +1245,7 @@ However, this approach has several drawbacks:<a href="#section-2.1-1" class="pil
             <p id="section-2.1-2.3.1"><strong>Head-of-line blocking</strong>: If the group contains multiple sub-groups, the FETCH delivers them sequentially over a single stream, introducing head-of-line blocking that negates the benefits of sub-group parallelism.<a href="#section-2.1-2.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-2.1-2.4">
-            <p id="section-2.1-2.4.1"><strong>Priority</strong>: The FETCH should be delivered at a higher priority than the SUBSCRIBE to avoid flow control deadlocks for large groups. However, delivering the latest object first hurts responsiveness; ideally everything should be delivered in dependency order.<a href="#section-2.1-2.4.1" class="pilcrow">¶</a></p>
+            <p id="section-2.1-2.4.1"><strong>Priority</strong>: Everything should be delivered in dependency order to improve startup time and avoid potential flow control deadlocks. This requires prioritizing the FETCH higher than the SUBSCRIBE, which may be non-obvious or unsupported.<a href="#section-2.1-2.4.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-2.1-3">This extension avoids these issues by defining a Largest Group filter that starts delivery from the first object of the publisher's most recent group within the SUBSCRIBE itself, ensuring a complete group is delivered over the normal subscription path.

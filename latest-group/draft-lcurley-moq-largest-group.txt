@@ -137,11 +137,10 @@ Table of Contents
       introducing head-of-line blocking that negates the benefits of
       sub-group parallelism.
 
-   *  *Priority*: The FETCH should be delivered at a higher priority
-      than the SUBSCRIBE to avoid flow control deadlocks for large
-      groups.  However, delivering the latest object first hurts
-      responsiveness; ideally everything should be delivered in
-      dependency order.
+   *  *Priority*: Everything should be delivered in dependency order to
+      improve startup time and avoid potential flow control deadlocks.
+      This requires prioritizing the FETCH higher than the SUBSCRIBE,
+      which may be non-obvious or unsupported.
 
    This extension avoids these issues by defining a Largest Group filter
    that starts delivery from the first object of the publisher's most
