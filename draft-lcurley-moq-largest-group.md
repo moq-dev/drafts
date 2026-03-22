@@ -54,7 +54,7 @@ However, this approach has several drawbacks:
 - **Complexity**: Libraries emulate Largest Group by coordinating a FETCH and SUBSCRIBE, then merging the results into a single coherent group. This requires handling various edge cases, such as one of the two requests failing independently.
 - **Split delivery**: The beginning of the group arrives via the FETCH stream while the remainder arrives via the SUBSCRIBE stream, splitting sub-groups across multiple streams and requiring reassembly.
 - **Head-of-line blocking**: If the group contains multiple sub-groups, the FETCH delivers them sequentially over a single stream, introducing head-of-line blocking that negates the benefits of sub-group parallelism.
-- **Priority**: The FETCH should be delivered at a higher priority than the SUBSCRIBE to avoid flow control deadlocks for large groups. However, delivering the latest object first hurts responsiveness; ideally everything should be delivered in dependency order.
+- **Priority**: Everything should be delivered in dependency order to improve startup time and avoid potential flow control deadlocks. This requires prioritizing the FETCH higher than the SUBSCRIBE, which may be non-obvious or unsupported.
 
 This extension avoids these issues by defining a Largest Group filter that starts delivery from the first object of the publisher's most recent group within the SUBSCRIBE itself, ensuring a complete group is delivered over the normal subscription path.
 Additionally, the first group of a subscription behaves the same as any other group.
