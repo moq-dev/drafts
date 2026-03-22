@@ -51,8 +51,7 @@ A subscriber using Next Group Start avoids this problem but must wait for the ne
 {{moqt}} does provide a workaround: a subscriber can issue a separate "joining" FETCH request alongside a SUBSCRIBE to retrieve the beginning of the current group.
 However, this approach has several drawbacks:
 
-- **Complexity**: Libraries emulate Largest Group by coordinating a FETCH and SUBSCRIBE, then merging the results into a single coherent group. This requires handling various edge cases, such as one of the two requests failing independently.
-- **Split delivery**: The beginning of the group arrives via the FETCH stream while the remainder arrives via the SUBSCRIBE stream, splitting sub-groups across multiple streams and requiring reassembly.
+- **Complexity**: Libraries emulate Largest Group by coordinating a FETCH and SUBSCRIBE, splitting the group across multiple streams. This requires merging the results into a single coherent group and handling various edge cases, such as one of the two requests failing independently.
 - **Head-of-line blocking**: If the group contains multiple sub-groups, the FETCH delivers them sequentially over a single stream, introducing head-of-line blocking that negates the benefits of sub-group parallelism.
 - **Priority**: Everything should be delivered in dependency order to improve startup time and avoid potential flow control deadlocks. This requires prioritizing the FETCH higher than the SUBSCRIBE, which may be non-obvious or unsupported.
 
