@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-03-24T01:19:12.210791+00:00",
+  "timestamp": "2026-03-26T01:28:56.539614+00:00",
   "repo": "moq-dev/drafts",
   "labels": [
     {
@@ -49,7 +49,39 @@
       "color": "ffffff"
     }
   ],
-  "issues": [],
+  "issues": [
+    {
+      "number": 20,
+      "id": "I_kwDOLz_x-M72MfrE",
+      "title": "Largest Group doesn't clearly explain relay semantics",
+      "url": "https://github.com/moq-dev/drafts/issues/20",
+      "state": "OPEN",
+      "author": "afrind",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": ">  Delivery begins from the first object (object 0) of that group.\n\nIt would help if you explain how a relay in particular is expected to handle this.\n\nIt requires the relay to know if it has the entire Largest Group in cache through Largest Object, or to FETCH if it does not, right?  The _first_ relay subscriber can send Largest Group upstream (if supported), but after that, it's dicey.",
+      "createdAt": "2026-03-24T20:29:49Z",
+      "updatedAt": "2026-03-24T22:12:17Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Sure, going to explain it here unless you want a 2nd draft version.\n\nThe relay knows the largest group if it has an active SUBSCRIBE. Doesn't matter what the cache looks like. \n\nIf the relay doesn't have an active SUBSCRIBE, it would start one with filter=LargestGroup. If the upstream doesn't support LargestGroup, the relay could do a JOINING FETCH, but falling back to a SUBSCRIBE filter=NextGroup may be required (ex. upstream doesn't cache). ",
+          "createdAt": "2026-03-24T22:05:33Z",
+          "updatedAt": "2026-03-24T22:05:33Z"
+        },
+        {
+          "author": "afrind",
+          "authorAssociation": "NONE",
+          "body": "ok, I think I see how all this works but the final product needs to have a lot of explanatory text around the edge cases.",
+          "createdAt": "2026-03-24T22:12:17Z",
+          "updatedAt": "2026-03-24T22:12:17Z"
+        }
+      ]
+    }
+  ],
   "pulls": [
     {
       "number": 1,
