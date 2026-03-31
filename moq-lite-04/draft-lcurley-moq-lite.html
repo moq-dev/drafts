@@ -1371,10 +1371,10 @@ This draft is the current state, not the end state.<a href="#section-2-6" class=
           <p id="section-3-2.2.1"><strong>Broadcast</strong>: A collection of Tracks from a single publisher.<a href="#section-3-2.2.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-3-2.3">
-          <p id="section-3-2.3.1"><strong>Track</strong>: An series of Groups, each of which can be delivered and decoded <em>out-of-order</em>.<a href="#section-3-2.3.1" class="pilcrow">¶</a></p>
+          <p id="section-3-2.3.1"><strong>Track</strong>: A series of Groups, each of which can be delivered and decoded <em>out-of-order</em>.<a href="#section-3-2.3.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-3-2.4">
-          <p id="section-3-2.4.1"><strong>Group</strong>: An series of Frames, each of which must be delivered and decoded <em>in-order</em>.<a href="#section-3-2.4.1" class="pilcrow">¶</a></p>
+          <p id="section-3-2.4.1"><strong>Group</strong>: A series of Frames, each of which must be delivered and decoded <em>in-order</em>.<a href="#section-3-2.4.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-3-2.5">
           <p id="section-3-2.5.1"><strong>Frame</strong>: A sized payload of bytes within a Group.<a href="#section-3-2.5.1" class="pilcrow">¶</a></p>
@@ -1462,7 +1462,7 @@ The contents are opaque to the moq-lite layer.<a href="#section-3.5-2" class="pi
 <a href="#section-4" class="section-number selfRef">4. </a><a href="#name-flow" class="section-name selfRef">Flow</a>
       </h2>
 <p id="section-4-1">This section outlines the flow of messages within a moq-lite session.
-See the section for Messages section for the specific encoding.<a href="#section-4-1" class="pilcrow">¶</a></p>
+See the Messages section for the specific encoding.<a href="#section-4-1" class="pilcrow">¶</a></p>
 <div id="connection">
 <section id="section-4.1">
         <h3 id="name-connection">
@@ -1702,7 +1702,7 @@ An implementation <span class="bcp14">MAY</span> use the minimum of both when de
 A group is never expired until at least the next group (by sequence number) has been received or queued.
 Once a newer group exists, a group is considered expired if the time between its arrival and the latest group's arrival exceeds <code>Max Latency</code>.
 The arrival time is when the first byte of a group is received (subscriber) or queued (publisher).
-An expired group <span class="bcp14">SHOULD</span> BE reset at the QUIC level to avoid consuming flow control.<a href="#section-6.2-4" class="pilcrow">¶</a></p>
+An expired group <span class="bcp14">SHOULD</span> be reset at the QUIC level to avoid consuming flow control.<a href="#section-6.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="unidirectional-streams">
@@ -1799,7 +1799,7 @@ ANNOUNCE_PLEASE Message {
 <p id="section-7.3-3"><strong>Broadcast Path Prefix</strong>:
 Indicate interest for any broadcasts with a path that starts with this prefix.<a href="#section-7.3-3" class="pilcrow">¶</a></p>
 <p id="section-7.3-4"><strong>Exclude Hop</strong>:
-If non-zero, the publisher <span class="bcp14">SHOULD</span> skip ANNOUNCE messages for broadcasts whose hop list contains this value.
+If non-zero, the publisher <span class="bcp14">SHOULD</span> skip ANNOUNCE messages for broadcasts whose Hop ID entries contain this value.
 This is used by relays to avoid routing loops in a cluster.<a href="#section-7.3-4" class="pilcrow">¶</a></p>
 <p id="section-7.3-5">The publisher <span class="bcp14">MUST</span> respond with ANNOUNCE messages for any matching and active broadcasts, followed by ANNOUNCE messages for any future updates.
 Implementations <span class="bcp14">SHOULD</span> consider reasonable limits on the number of matching broadcasts to prevent resource exhaustion.<a href="#section-7.3-5" class="pilcrow">¶</a></p>
@@ -1838,12 +1838,14 @@ A flag indicating the announce status.<a href="#section-7.4-4" class="pilcrow">�
 <p id="section-7.4-6"><strong>Broadcast Path Suffix</strong>:
 This is combined with the broadcast path prefix to form the full broadcast path.<a href="#section-7.4-6" class="pilcrow">¶</a></p>
 <p id="section-7.4-7"><strong>Hop Count</strong>:
-The number of Hop ID values that follow.<a href="#section-7.4-7" class="pilcrow">¶</a></p>
+The number of Hop ID entries that follow.
+A value of 0 means no Hop ID entries are present, indicating a fully unknown path (e.g. the announcement originated locally or was received from a peer that does not support hop tracking).
+A receiver <span class="bcp14">MUST</span> close the stream with a PROTOCOL_VIOLATION if the Hop Count does not match the number of subsequent Hop ID entries.<a href="#section-7.4-7" class="pilcrow">¶</a></p>
 <p id="section-7.4-8"><strong>Hop ID</strong>:
 A unique identifier for each relay in the path from the origin publisher.
-Each relay <span class="bcp14">SHOULD</span> append its own Hop ID when forwarding an announcement.
-The number of hops is used as a tiebreaker when there are multiple paths to the same broadcast.
-A value of 0 indicates an unknown hop (e.g. when bridging from an older protocol version).<a href="#section-7.4-8" class="pilcrow">¶</a></p>
+Each relay <span class="bcp14">MUST</span> append its own Hop ID and increment the Hop Count when forwarding an announcement, even if no prior Hop ID entries are present (e.g. when receiving from an older protocol version).
+The Hop Count is used as a tiebreaker when there are multiple paths to the same broadcast.
+A Hop ID value of 0 indicates an unknown or bridged relay hop (e.g. when bridging from an older protocol version that does not assign Hop IDs); the Hop Count still reflects the total number of entries including unknown hops.<a href="#section-7.4-8" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="subscribe-1">
