@@ -361,11 +361,16 @@ A subscriber sends an ANNOUNCE_PLEASE message to indicate it wants to receive an
 ANNOUNCE_PLEASE Message {
   Message Length (i)
   Broadcast Path Prefix (s),
+  Exclude Hop (i),
 }
 ~~~
 
 **Broadcast Path Prefix**:
 Indicate interest for any broadcasts with a path that starts with this prefix.
+
+**Exclude Hop**:
+If non-zero, the publisher SHOULD skip ANNOUNCE messages for broadcasts whose hop list contains this value.
+This is used by relays to avoid routing loops in a cluster.
 
 The publisher MUST respond with ANNOUNCE messages for any matching and active broadcasts, followed by ANNOUNCE messages for any future updates.
 Implementations SHOULD consider reasonable limits on the number of matching broadcasts to prevent resource exhaustion.
@@ -384,7 +389,8 @@ ANNOUNCE Message {
   Message Length (i)
   Announce Status (i),
   Broadcast Path Suffix (s),
-  Hops (i),
+  Hop Count (i),
+  Hop ID (i) ...,
 }
 ~~~
 
@@ -397,10 +403,14 @@ A flag indicating the announce status.
 **Broadcast Path Suffix**:
 This is combined with the broadcast path prefix to form the full broadcast path.
 
-**Hops**:
-The number of hops from the origin publisher.
-This is used as a tiebreaker when there are multiple paths to the same broadcast.
-A relay SHOULD increment this value when forwarding an announcement.
+**Hop Count**:
+The number of Hop ID values that follow.
+
+**Hop ID**:
+A unique identifier for each relay in the path from the origin publisher.
+Each relay SHOULD append its own Hop ID when forwarding an announcement.
+The number of hops is used as a tiebreaker when there are multiple paths to the same broadcast.
+A value of 0 indicates an unknown hop (e.g. when bridging from an older protocol version).
 
 
 ## SUBSCRIBE
@@ -607,6 +617,10 @@ A generic library or relay MUST NOT inspect or modify the contents unless otherw
 
 
 # Appendix A: Changelog
+
+## moq-lite-04
+- ANNOUNCE `Hops` count replaced with explicit `Hop ID` list for loop detection.
+- Added `Exclude Hop` to ANNOUNCE_PLEASE for relay loop avoidance.
 
 ## moq-lite-03
 - Version negotiated via ALPN (`moq-lite-xx`) instead of SETUP messages.
