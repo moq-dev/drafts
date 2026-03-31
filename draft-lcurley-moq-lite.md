@@ -64,8 +64,8 @@ moq-lite consists of:
 
 - **Session**: An established QUIC connection between a client and server.
 - **Broadcast**: A collection of Tracks from a single publisher.
-- **Track**: An series of Groups, each of which can be delivered and decoded *out-of-order*.
-- **Group**: An series of Frames, each of which must be delivered and decoded *in-order*.
+- **Track**: A series of Groups, each of which can be delivered and decoded *out-of-order*.
+- **Group**: A series of Frames, each of which must be delivered and decoded *in-order*.
 - **Frame**: A sized payload of bytes within a Group.
 
 The application determines how to split data into broadcast, tracks, groups, and frames.
@@ -132,7 +132,7 @@ The contents are opaque to the moq-lite layer.
 
 # Flow
 This section outlines the flow of messages within a moq-lite session.
-See the section for Messages section for the specific encoding.
+See the Messages section for the specific encoding.
 
 ## Connection
 moq-lite runs on top of WebTransport.
@@ -306,7 +306,7 @@ Group age is computed relative to the latest group by sequence number.
 A group is never expired until at least the next group (by sequence number) has been received or queued.
 Once a newer group exists, a group is considered expired if the time between its arrival and the latest group's arrival exceeds `Max Latency`.
 The arrival time is when the first byte of a group is received (subscriber) or queued (publisher).
-An expired group SHOULD BE reset at the QUIC level to avoid consuming flow control.
+An expired group SHOULD be reset at the QUIC level to avoid consuming flow control.
 
 ## Unidirectional Streams
 Unidirectional streams are used for data transmission.
@@ -369,7 +369,7 @@ ANNOUNCE_PLEASE Message {
 Indicate interest for any broadcasts with a path that starts with this prefix.
 
 **Exclude Hop**:
-If non-zero, the publisher SHOULD skip ANNOUNCE messages for broadcasts whose hop list contains this value.
+If non-zero, the publisher SHOULD skip ANNOUNCE messages for broadcasts whose Hop ID entries contain this value.
 This is used by relays to avoid routing loops in a cluster.
 
 The publisher MUST respond with ANNOUNCE messages for any matching and active broadcasts, followed by ANNOUNCE messages for any future updates.
@@ -404,13 +404,15 @@ A flag indicating the announce status.
 This is combined with the broadcast path prefix to form the full broadcast path.
 
 **Hop Count**:
-The number of Hop ID values that follow.
+The number of Hop ID entries that follow.
+A value of 0 means no Hop ID entries are present, indicating a fully unknown path (e.g. the announcement originated locally or was received from a peer that does not support hop tracking).
+A receiver MUST close the stream with a PROTOCOL_VIOLATION if the Hop Count does not match the number of subsequent Hop ID entries.
 
 **Hop ID**:
 A unique identifier for each relay in the path from the origin publisher.
-Each relay SHOULD append its own Hop ID when forwarding an announcement.
-The number of hops is used as a tiebreaker when there are multiple paths to the same broadcast.
-A value of 0 indicates an unknown hop (e.g. when bridging from an older protocol version).
+Each relay MUST append its own Hop ID and increment the Hop Count when forwarding an announcement, even if no prior Hop ID entries are present (e.g. when receiving from an older protocol version).
+The Hop Count is used as a tiebreaker when there are multiple paths to the same broadcast.
+A Hop ID value of 0 indicates an unknown or bridged relay hop (e.g. when bridging from an older protocol version that does not assign Hop IDs); the Hop Count still reflects the total number of entries including unknown hops.
 
 
 ## SUBSCRIBE
