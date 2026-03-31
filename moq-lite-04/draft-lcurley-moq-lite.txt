@@ -3,9 +3,9 @@
 
 
 moq                                                            L. Curley
-Internet-Draft                                          25 February 2026
+Internet-Draft                                             31 March 2026
 Intended status: Informational                                          
-Expires: 29 August 2026
+Expires: 2 October 2026
 
 
                          Media over QUIC - Lite
@@ -46,7 +46,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 29 August 2026.
+   This Internet-Draft will expire on 2 October 2026.
 
 Copyright Notice
 
@@ -103,9 +103,10 @@ Table of Contents
      7.11. GROUP
      7.12. FRAME
    8.  Appendix A: Changelog
-     8.1.  moq-lite-03
-     8.2.  moq-lite-02
-     8.3.  moq-lite-01
+     8.1.  moq-lite-04
+     8.2.  moq-lite-03
+     8.3.  moq-lite-02
+     8.4.  moq-lite-01
    9.  Appendix B: Upstream Differences
      9.1.  Deleted Messages
      9.2.  Renamed Messages
@@ -561,10 +562,15 @@ Table of Contents
    ANNOUNCE_PLEASE Message {
      Message Length (i)
      Broadcast Path Prefix (s),
+     Exclude Hop (i),
    }
 
    *Broadcast Path Prefix*: Indicate interest for any broadcasts with a
    path that starts with this prefix.
+
+   *Exclude Hop*: If non-zero, the publisher SHOULD skip ANNOUNCE
+   messages for broadcasts whose hop list contains this value.  This is
+   used by relays to avoid routing loops in a cluster.
 
    The publisher MUST respond with ANNOUNCE messages for any matching
    and active broadcasts, followed by ANNOUNCE messages for any future
@@ -585,7 +591,8 @@ Table of Contents
      Message Length (i)
      Announce Status (i),
      Broadcast Path Suffix (s),
-     Hops (i),
+     Hop Count (i),
+     Hop ID (i) ...,
    }
 
    *Announce Status*: A flag indicating the announce status.
@@ -597,9 +604,14 @@ Table of Contents
    *Broadcast Path Suffix*: This is combined with the broadcast path
    prefix to form the full broadcast path.
 
-   *Hops*: The number of hops from the origin publisher.  This is used
-   as a tiebreaker when there are multiple paths to the same broadcast.
-   A relay SHOULD increment this value when forwarding an announcement.
+   *Hop Count*: The number of Hop ID values that follow.
+
+   *Hop ID*: A unique identifier for each relay in the path from the
+   origin publisher.  Each relay SHOULD append its own Hop ID when
+   forwarding an announcement.  The number of hops is used as a
+   tiebreaker when there are multiple paths to the same broadcast.  A
+   value of 0 indicates an unknown hop (e.g. when bridging from an older
+   protocol version).
 
 7.5.  SUBSCRIBE
 
@@ -789,7 +801,14 @@ Table of Contents
 
 8.  Appendix A: Changelog
 
-8.1.  moq-lite-03
+8.1.  moq-lite-04
+
+   *  ANNOUNCE Hops count replaced with explicit Hop ID list for loop
+      detection.
+
+   *  Added Exclude Hop to ANNOUNCE_PLEASE for relay loop avoidance.
+
+8.2.  moq-lite-03
 
    *  Version negotiated via ALPN (moq-lite-xx) instead of SETUP
       messages.
@@ -823,13 +842,13 @@ Table of Contents
 
    *  SUBSCRIBE_OK may be sent multiple times.
 
-8.2.  moq-lite-02
+8.3.  moq-lite-02
 
    *  Added SessionCompat stream.
 
    *  Editorial stuff.
 
-8.3.  moq-lite-01
+8.4.  moq-lite-01
 
    *  Added Message Length (i) to all messages.
 
@@ -965,9 +984,9 @@ Table of Contents
 
    [moqt]     Nandakumar, S., Vasiliev, V., Swett, I., and A. Frindell,
               "Media over QUIC Transport", Work in Progress, Internet-
-              Draft, draft-ietf-moq-transport-16, 13 January 2026,
+              Draft, draft-ietf-moq-transport-17, 2 March 2026,
               <https://datatracker.ietf.org/doc/html/draft-ietf-moq-
-              transport-16>.
+              transport-17>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,

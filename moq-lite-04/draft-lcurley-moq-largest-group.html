@@ -4,30 +4,29 @@
 <meta charset="utf-8">
 <meta content="Common,Latin" name="scripts">
 <meta content="initial-scale=1.0" name="viewport">
-<title>Media over QUIC - Hang</title>
+<title>MoQ Largest Group Extension</title>
 <meta content="Luke Curley" name="author">
 <meta content="
-       Hang is a real-time conferencing protocol built on top of moq-lite.
-A room consists of multiple participants who publish media tracks.
-All updates are live, such as a change in participants or media tracks. 
+       This document defines a Largest Group subscription filter type for MoQ Transport  .
+A subscriber uses this filter to request delivery starting from the first object of the publisher's largest (most recent) group, ensuring a complete group is received. 
     " name="description">
-<meta content="xml2rfc 3.31.0" name="generator">
-<meta content="draft-lcurley-moq-hang-latest" name="ietf.draft">
+<meta content="xml2rfc 3.32.0" name="generator">
+<meta content="draft-lcurley-moq-largest-group-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.31.0
+  xml2rfc 3.32.0
     Python 3.12.12
     ConfigArgParse 1.7
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
     lxml 6.0.2
-    platformdirs 4.5.1
+    platformdirs 4.9.4
     pycountry 24.6.1
     PyYAML 6.0.3
     requests 2.32.5
-    wcwidth 0.3.0
+    wcwidth 0.6.0
 -->
-<link href="draft-lcurley-moq-hang.xml" rel="alternate" type="application/rfc+xml">
+<link href="draft-lcurley-moq-largest-group.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
 <style type="text/css">@font-face {
   font-family: 'Lora';
@@ -1043,12 +1042,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <table class="ears">
 <thead><tr>
 <td class="left">Internet-Draft</td>
-<td class="center">hang</td>
-<td class="right">February 2026</td>
+<td class="center">moq-largest-group</td>
+<td class="right">March 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Curley</td>
-<td class="center">Expires 29 August 2026</td>
+<td class="center">Expires 2 October 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1058,15 +1057,15 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dt class="label-workgroup">Workgroup:</dt>
 <dd class="workgroup">moq</dd>
 <dt class="label-internet-draft">Internet-Draft:</dt>
-<dd class="internet-draft">draft-lcurley-moq-hang-latest</dd>
+<dd class="internet-draft">draft-lcurley-moq-largest-group-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-02-25" class="published">25 February 2026</time>
+<time datetime="2026-03-31" class="published">31 March 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-08-29">29 August 2026</time></dd>
+<dd class="expires"><time datetime="2026-10-02">2 October 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1075,12 +1074,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </dd>
 </dl>
 </div>
-<h1 id="title">Media over QUIC - Hang</h1>
+<h1 id="title">MoQ Largest Group Extension</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">Hang is a real-time conferencing protocol built on top of moq-lite.
-A room consists of multiple participants who publish media tracks.
-All updates are live, such as a change in participants or media tracks.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">This document defines a Largest Group subscription filter type for MoQ Transport <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>.
+A subscriber uses this filter to request delivery starting from the first object of the publisher's largest (most recent) group, ensuring a complete group is received.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-discussion-venues">
@@ -1112,7 +1110,7 @@ All updates are live, such as a change in participants or media tracks.<a href="
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 29 August 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 2 October 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1145,42 +1143,49 @@ All updates are live, such as a change in participants or media tracks.<a href="
             <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-conventions-and-definitions" class="internal xref">Conventions and Definitions</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
-            <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-terminology" class="internal xref">Terminology</a></p>
+            <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.1">
+                <p id="section-toc.1-1.2.2.1.1" class="keepWithNext"><a href="#section-2.1" class="auto internal xref">2.1</a>.  <a href="#name-joining-fetch-workaround" class="internal xref">Joining Fetch Workaround</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
-            <p id="section-toc.1-1.3.1" class="keepWithNext"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-discovery" class="internal xref">Discovery</a></p>
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-setup-negotiation" class="internal xref">Setup Negotiation</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
-            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-catalog" class="internal xref">Catalog</a></p>
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-largest-group-filter" class="internal xref">Largest Group Filter</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
-                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-root" class="internal xref">Root</a></p>
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-filter-type" class="internal xref">Filter Type</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2">
-                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-video" class="internal xref">Video</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3">
-                <p id="section-toc.1-1.4.2.3.1"><a href="#section-4.3" class="auto internal xref">4.3</a>.  <a href="#name-audio" class="internal xref">Audio</a></p>
+                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-semantics" class="internal xref">Semantics</a></p>
 </li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
-            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-container" class="internal xref">Container</a></p>
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
-            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
+                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-moq-setup-option-types" class="internal xref">MoQ Setup Option Types</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
+                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-moq-subscription-filter-typ" class="internal xref">MoQ Subscription Filter Types</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
-            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
-            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+            <p id="section-toc.1-1.8.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
-            <p id="section-toc.1-1.9.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
-</li>
-          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
-            <p id="section-toc.1-1.10.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
+            <p id="section-toc.1-1.9.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
 </li>
         </ul>
 </nav>
@@ -1197,255 +1202,193 @@ described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</s
 appear in all capitals, as shown here.<a href="#section-1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="terminology">
+<div id="introduction">
 <section id="section-2">
-      <h2 id="name-terminology">
-<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-terminology" class="section-name selfRef">Terminology</a>
+      <h2 id="name-introduction">
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
-<p id="section-2-1">Hang is built on top of moq-lite <span>[<a href="#moql" class="cite xref">moql</a>]</span> and uses much of the same terminology.
-A quick recap:<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-1"><span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 5.1.2 defines four subscription filter types that control where delivery begins:<a href="#section-2-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-2-2.1">
-          <p id="section-2-2.1.1"><strong>Broadcast</strong>: A collection of Tracks from a single publisher.<a href="#section-2-2.1.1" class="pilcrow">¶</a></p>
+          <p id="section-2-2.1.1"><strong>Next Group Start (0x1)</strong>: Starts at <code>{Largest.Group + 1, 0}</code>, skipping the remainder of the current group entirely.<a href="#section-2-2.1.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-2-2.2">
-          <p id="section-2-2.2.1"><strong>Track</strong>: An series of Groups, each of which can be delivered and decoded <em>out-of-order</em>.<a href="#section-2-2.2.1" class="pilcrow">¶</a></p>
+          <p id="section-2-2.2.1"><strong>Largest Object (0x2)</strong>: Despite the name, starts at <code>{Largest.Group, Largest.Object + 1}</code> — the object <em>after</em> the largest, not the largest object itself.<a href="#section-2-2.2.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-2-2.3">
-          <p id="section-2-2.3.1"><strong>Group</strong>: An series of Frames, each of which must be delivered and decoded <em>in-order</em>.<a href="#section-2-2.3.1" class="pilcrow">¶</a></p>
+          <p id="section-2-2.3.1"><strong>AbsoluteStart (0x3)</strong>: Starts at an explicit location specified by the subscriber.<a href="#section-2-2.3.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-2-2.4">
-          <p id="section-2-2.4.1"><strong>Frame</strong>: A sized payload of bytes representing a single moment in time.<a href="#section-2-2.4.1" class="pilcrow">¶</a></p>
+          <p id="section-2-2.4.1"><strong>AbsoluteRange (0x4)</strong>: Starts and ends at explicit locations specified by the subscriber.<a href="#section-2-2.4.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-2-3">Hang introduces additional terminology:<a href="#section-2-3" class="pilcrow">¶</a></p>
+<p id="section-2-3">There is no filter that starts from the <em>beginning</em> of the current group.
+Next Group Start skips the current group entirely, potentially adding latency equal to the group duration.
+Largest Object starts mid-group, delivering objects that may depend on earlier objects in the same group.<a href="#section-2-3" class="pilcrow">¶</a></p>
+<p id="section-2-4">Objects within a group are typically delta encoded (ex. video GOPs), so arbitrary objects in the middle of a group are undecodable without prior objects.
+A subscriber using Next Group Start avoids this problem but must wait for the next group to begin, unnecessarily increasing join latency.<a href="#section-2-4" class="pilcrow">¶</a></p>
+<div id="joining-fetch-workaround">
+<section id="section-2.1">
+        <h3 id="name-joining-fetch-workaround">
+<a href="#section-2.1" class="section-number selfRef">2.1. </a><a href="#name-joining-fetch-workaround" class="section-name selfRef">Joining Fetch Workaround</a>
+        </h3>
+<p id="section-2.1-1"><span>[<a href="#moqt" class="cite xref">moqt</a>]</span> does provide a workaround: a subscriber can issue a separate "joining" FETCH request alongside a SUBSCRIBE to retrieve the beginning of the current group.
+However, this approach has several drawbacks:<a href="#section-2.1-1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-2-4.1">
-          <p id="section-2-4.1.1"><strong>Room</strong>: A collection of participants, publishing under a common prefix.<a href="#section-2-4.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-2.1-2.1">
+            <p id="section-2.1-2.1.1"><strong>Complexity</strong>: Libraries emulate Largest Group by coordinating a FETCH and SUBSCRIBE, splitting the group across multiple streams. This requires merging the results into a single coherent group and handling various edge cases, such as one of the two requests failing independently.<a href="#section-2.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
-        <li class="normal" id="section-2-4.2">
-          <p id="section-2-4.2.1"><strong>Participant</strong>: A moq-lite broadcaster that may produce any number of media tracks.<a href="#section-2-4.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-2.1-2.2">
+            <p id="section-2.1-2.2.1"><strong>Head-of-line blocking</strong>: If the group contains multiple sub-groups, the FETCH delivers them sequentially over a single stream, introducing head-of-line blocking that negates the benefits of sub-group parallelism.<a href="#section-2.1-2.2.1" class="pilcrow">¶</a></p>
 </li>
-        <li class="normal" id="section-2-4.3">
-          <p id="section-2-4.3.1"><strong>Catalog</strong>: A JSON document that describes each available media track, supporting live updates.<a href="#section-2-4.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-2.1-2.3">
+            <p id="section-2.1-2.3.1"><strong>Priority</strong>: Everything should be delivered in dependency order to improve startup time and avoid potential flow control deadlocks. This requires prioritizing the FETCH higher than the SUBSCRIBE, which may be non-obvious or unsupported.<a href="#section-2.1-2.3.1" class="pilcrow">¶</a></p>
 </li>
-        <li class="normal" id="section-2-4.4">
-          <p id="section-2-4.4.1"><strong>Container</strong>: A tiny header in front of each media payload containing the timestamp.<a href="#section-2-4.4.1" class="pilcrow">¶</a></p>
-</li>
-      </ul>
+        </ul>
+<p id="section-2.1-3">This extension avoids these issues by defining a Largest Group filter that starts delivery from the first object of the publisher's most recent group within the SUBSCRIBE itself, ensuring a complete group is delivered over the normal subscription path.
+Additionally, the first group of a subscription behaves the same as any other group.<a href="#section-2.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="discovery">
+</section>
+</div>
+<div id="setup-negotiation">
 <section id="section-3">
-      <h2 id="name-discovery">
-<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-discovery" class="section-name selfRef">Discovery</a>
+      <h2 id="name-setup-negotiation">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-setup-negotiation" class="section-name selfRef">Setup Negotiation</a>
       </h2>
-<p id="section-3-1">The first requirement for a real-time conferencing application is to discover other participants in the same room.
-Hang does this using moq-lite's ANNOUNCE capabilities.<a href="#section-3-1" class="pilcrow">¶</a></p>
-<p id="section-3-2">A room consists of a path.
-Any participants within the room <span class="bcp14">MUST</span> publish a broadcast with the room path as a prefix which <span class="bcp14">SHOULD</span> end with the <code>.hang</code> suffix.<a href="#section-3-2" class="pilcrow">¶</a></p>
-<p id="section-3-3">For example:<a href="#section-3-3" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-3-4">
+<p id="section-3-1">The Largest Group extension is negotiated during the SETUP exchange as defined in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 9.4.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">Both endpoints indicate support by including the following Setup Option:<a href="#section-3-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-3-3">
 <pre>
-/room123/alice.hang
-/room123/bob.hang
-/room456/zoe.hang
-</pre><a href="#section-3-4" class="pilcrow">¶</a>
-</div>
-<p id="section-3-5">A participant issues an ANNOUNCE_PLEASE message to discover any other participants in the same room.
-The server (relay) will then respond with an ANNOUNCE message for any matching broadcasts, including their own.<a href="#section-3-5" class="pilcrow">¶</a></p>
-<p id="section-3-6">For example:<a href="#section-3-6" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-3-7">
-<pre>
-ANNOUNCE_PLEASE prefix=/room/
-ANNOUNCE suffix=alice.hang active=true
-ANNOUNCE suffix=bob.hang   active=true
-</pre><a href="#section-3-7" class="pilcrow">¶</a>
-</div>
-<p id="section-3-8">If a publisher no longer wants to participant, or is disconnected somehow, their presence will be unannounced.
-Publishers and subscribers <span class="bcp14">SHOULD</span> terminate any subscriptions once a participant is unannounced.<a href="#section-3-8" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-3-9">
-<pre>
-ANNOUNCE suffix=alice.hang active=false
-</pre><a href="#section-3-9" class="pilcrow">¶</a>
-</div>
-</section>
-</div>
-<div id="catalog">
-<section id="section-4">
-      <h2 id="name-catalog">
-<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-catalog" class="section-name selfRef">Catalog</a>
-      </h2>
-<p id="section-4-1">The catalog describes the available media tracks for a single participant.
-It's a JSON document that extends the the W3C WebCodecs specification.<a href="#section-4-1" class="pilcrow">¶</a></p>
-<p id="section-4-2">The catalog is published as a <code>catalog.json</code> track within the broadcast so it can be updated live as the participant's media tracks change.
-A participant <span class="bcp14">MAY</span> forgo publishing a catalog if it does not wish to publish any media tracks now and in the future.<a href="#section-4-2" class="pilcrow">¶</a></p>
-<p id="section-4-3">The catalog track consists of multiple groups, one for each update.
-Each group contains a single frame with UTF-8 JSON.<a href="#section-4-3" class="pilcrow">¶</a></p>
-<p id="section-4-4">A publisher <span class="bcp14">MUST NOT</span> write multiple frames to a group until a future specification includes a delta-encoding mechanism (via JSON Patch most likely).<a href="#section-4-4" class="pilcrow">¶</a></p>
-<div id="root">
-<section id="section-4.1">
-        <h3 id="name-root">
-<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-root" class="section-name selfRef">Root</a>
-        </h3>
-<p id="section-4.1-1">The root of the catalog is a JSON document with the following schema:<a href="#section-4.1-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.1-2">
-<pre>
-type Catalog = {
-        "audio": AudioSchema | undefined,
-        "video": VideoSchema | undefined,
-        // ... any custom fields ...
+LARGEST_GROUP Setup Option {
+  Option Key (vi64) = TBD1
+  Option Value Length (vi64) = 0
 }
-</pre><a href="#section-4.1-2" class="pilcrow">¶</a>
+</pre><a href="#section-3-3" class="pilcrow">¶</a>
 </div>
-<p id="section-4.1-3">Additional fields <span class="bcp14">MAY</span> be added based on the application.
-The catalog <span class="bcp14">SHOULD</span> be mostly static, delegating any dynamic content to other tracks.<a href="#section-4.1-3" class="pilcrow">¶</a></p>
-<p id="section-4.1-4">For example, a <code>"chat"</code> section should include the name of a chat track, not individual chat messages.
-This way catalog updates are rare and a client <span class="bcp14">MAY</span> choose to not subscribe.<a href="#section-4.1-4" class="pilcrow">¶</a></p>
-<p id="section-4.1-5">This specification currently only defines audio and video tracks.<a href="#section-4.1-5" class="pilcrow">¶</a></p>
+<p id="section-3-4">If both endpoints include this option, the Largest Group filter is available for the session.
+If a peer receives a SUBSCRIBE containing the Largest Group filter without having negotiated the extension, it <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION.<a href="#section-3-4" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="video">
-<section id="section-4.2">
-        <h3 id="name-video">
-<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-video" class="section-name selfRef">Video</a>
+<div id="largest-group-filter">
+<section id="section-4">
+      <h2 id="name-largest-group-filter">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-largest-group-filter" class="section-name selfRef">Largest Group Filter</a>
+      </h2>
+<p id="section-4-1">This document defines a new subscription filter type for use in the Subscription Filter field of SUBSCRIBE messages as defined in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 5.1.2.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<div id="filter-type">
+<section id="section-4.1">
+        <h3 id="name-filter-type">
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-filter-type" class="section-name selfRef">Filter Type</a>
         </h3>
-<p id="section-4.2-1">A video track contains the necessary information to decode a video stream.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1-1">
+<pre>
+Subscription Filter {
+  Filter Type (vi64) = 0x20
+}
+</pre><a href="#section-4.1-1" class="pilcrow">¶</a>
+</div>
+<p id="section-4.1-2">The Largest Group filter uses Filter Type value <code>0x20</code>.
+No additional fields (Start Location or End Group Delta) are present in the Subscription Filter.<a href="#section-4.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="semantics">
+<section id="section-4.2">
+        <h3 id="name-semantics">
+<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-semantics" class="section-name selfRef">Semantics</a>
+        </h3>
+<p id="section-4.2-1">When the publisher receives a SUBSCRIBE with the Largest Group filter, it computes the start location as:<a href="#section-4.2-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.2-2">
 <pre>
-type VideoSchema = {
-        "renditions": Map&lt;TrackName, VideoDecoderConfig&gt;,
-        "priority": u8,
-        "display": {
-                "width": number,
-                "height": number,
-        } | undefined,
-        "rotation": number | undefined,
-        "flip": boolean | undefined,
-}
+{Largest.Group, 0}
 </pre><a href="#section-4.2-2" class="pilcrow">¶</a>
 </div>
-<p id="section-4.2-3">The <code>renditions</code> field contains a map of track names to video decoder configurations.
-See the <a href="https://www.w3.org/TR/webcodecs/#video-decoder-config">WebCodecs specification</a> for specifics and registered codecs.
-Any Uint8Array fields are hex-encoded as a string.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
-<p id="section-4.2-4">For example:<a href="#section-4.2-4" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.2-5">
-<pre>
-{
-        "renditions": {
-                "720p": {
-                        "codec": "avc1.64001f",
-                        "codedWidth": 1280,
-                        "codedHeight": 720,
-                        "bitrate": 6000000,
-                        "framerate": 30.0
-                },
-                "480p": {
-                        "codec": "avc1.64001e",
-                        "codedWidth": 848,
-                        "codedHeight": 480,
-                        "bitrate": 2000000,
-                        "framerate": 30.0
-                }
-        },
-        "priority": 2,
-        "display": {
-                "width": 1280,
-                "height": 720
-        },
-        "rotation": 0,
-        "flip": false,
-}
-</pre><a href="#section-4.2-5" class="pilcrow">¶</a>
-</div>
+<p id="section-4.2-3">Where <code>Largest.Group</code> is the group sequence number of the largest object known to the publisher at the time the SUBSCRIBE is processed.
+Delivery begins from the first object (object 0) of that group.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.2-4">The subscription is open-ended: the publisher continues delivering subsequent groups until the subscription is cancelled or the session ends.
+This is consistent with the behavior of Next Group Start and Largest Object filters.<a href="#section-4.2-4" class="pilcrow">¶</a></p>
+<p id="section-4.2-5">The largest group is delivered using normal SUBSCRIBE semantics.
+If earlier objects in the group have been evicted from the cache, the publisher <span class="bcp14">MAY</span> attempt to repopulate the cache or simply drop the group as it would for any other subscription.<a href="#section-4.2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="audio">
-<section id="section-4.3">
-        <h3 id="name-audio">
-<a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-audio" class="section-name selfRef">Audio</a>
-        </h3>
-<p id="section-4.3-1">An audio track contains the necessary information to decode an audio stream.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.3-2">
-<pre>
-type AudioSchema = {
-        "renditions": Map&lt;TrackName, AudioDecoderConfig&gt;,
-        "priority": u8,
-}
-</pre><a href="#section-4.3-2" class="pilcrow">¶</a>
-</div>
-<p id="section-4.3-3">The <code>renditions</code> field contains a map of track names to audio decoder configurations.
-See the <a href="https://www.w3.org/TR/webcodecs/#audio-decoder-config">WebCodecs specification</a> for specifics and registered codecs.
-Any Uint8Array fields are hex-encoded as a string.<a href="#section-4.3-3" class="pilcrow">¶</a></p>
-<p id="section-4.3-4">For example:<a href="#section-4.3-4" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.3-5">
-<pre>
-{
-        "renditions": {
-                "stereo": {
-                        "codec": "opus",
-                        "sampleRate": 48000,
-                        "numberOfChannels": 2,
-                        "bitrate": 128000
-                },
-                "mono": {
-                        "codec": "opus",
-                        "sampleRate": 48000,
-                        "numberOfChannels": 1,
-                        "bitrate": 64000
-                }
-        },
-        "priority": 1,
-}
-</pre><a href="#section-4.3-5" class="pilcrow">¶</a>
-</div>
-</section>
-</div>
-</section>
-</div>
-<div id="container">
-<section id="section-5">
-      <h2 id="name-container">
-<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-container" class="section-name selfRef">Container</a>
-      </h2>
-<p id="section-5-1">Audio and video tracks use a lightweight container to encapsulate the media payload.<a href="#section-5-1" class="pilcrow">¶</a></p>
-<p id="section-5-2">Each moq-lite group <span class="bcp14">MUST</span> start with a keyframe.
-If codec does not support delta frames (ex. audio), then a group <span class="bcp14">MAY</span> consist of multiple keyframes.
-Otherwise, a group <span class="bcp14">MUST</span> consist of a single keyframe followed by zero or more delta frames.<a href="#section-5-2" class="pilcrow">¶</a></p>
-<p id="section-5-3">Each frame starts with a timestamp, a QUIC variable-length integer (62-bit max) encoded in microseconds.
-The remainder of the payload is codec specific; see the WebCodecs specification for specifics.<a href="#section-5-3" class="pilcrow">¶</a></p>
-<p id="section-5-4">For example, h.264 with no <code>description</code> field would be annex.b encoded, while h.264 with a <code>description</code> field would be AVCC encoded.<a href="#section-5-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="security-considerations">
-<section id="section-6">
+<section id="section-5">
       <h2 id="name-security-considerations">
-<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
-<p id="section-6-1">TODO Security<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-5-1">This extension introduces no new security considerations beyond those described in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>.
+The publisher already tracks group state; this filter uses existing state to compute the start location.<a href="#section-5-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="iana-considerations">
-<section id="section-7">
+<section id="section-6">
       <h2 id="name-iana-considerations">
-<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
-<p id="section-7-1">This document has no IANA actions.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<p id="section-6-1">This document requests the following registrations:<a href="#section-6-1" class="pilcrow">¶</a></p>
+<div id="moq-setup-option-types">
+<section id="section-6.1">
+        <h3 id="name-moq-setup-option-types">
+<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-moq-setup-option-types" class="section-name selfRef">MoQ Setup Option Types</a>
+        </h3>
+<p id="section-6.1-1">This document registers the following entry in the "MoQ Setup Option Types" registry established by <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>:<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+<table class="center" id="table-1">
+          <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">Value</th>
+              <th class="text-left" rowspan="1" colspan="1">Name</th>
+              <th class="text-left" rowspan="1" colspan="1">Reference</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">TBD1</td>
+              <td class="text-left" rowspan="1" colspan="1">LARGEST_GROUP</td>
+              <td class="text-left" rowspan="1" colspan="1">This Document</td>
+            </tr>
+          </tbody>
+        </table>
+</section>
+</div>
+<div id="moq-subscription-filter-types">
+<section id="section-6.2">
+        <h3 id="name-moq-subscription-filter-typ">
+<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-moq-subscription-filter-typ" class="section-name selfRef">MoQ Subscription Filter Types</a>
+        </h3>
+<p id="section-6.2-1">This document registers the following entry in the "MoQ Subscription Filter Types" registry established by <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>:<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+<table class="center" id="table-2">
+          <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">Value</th>
+              <th class="text-left" rowspan="1" colspan="1">Name</th>
+              <th class="text-left" rowspan="1" colspan="1">Reference</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0x20</td>
+              <td class="text-left" rowspan="1" colspan="1">LARGEST_GROUP</td>
+              <td class="text-left" rowspan="1" colspan="1">This Document</td>
+            </tr>
+          </tbody>
+        </table>
+</section>
+</div>
 </section>
 </div>
 <div id="sec-normative-references">
-<section id="section-8">
+<section id="section-7">
       <h2 id="name-normative-references">
-<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
       </h2>
 <dl class="references">
-<dt id="moql">[moql]</dt>
-      <dd>
-<span class="refAuthor">Curley, L.</span>, <span class="refTitle">"Media over QUIC - Lite"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-lcurley-moq-lite-02</span>, <time datetime="2025-11-12" class="refDate">12 November 2025</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-lcurley-moq-lite-02">https://datatracker.ietf.org/doc/html/draft-lcurley-moq-lite-02</a>&gt;</span>. </dd>
-<dd class="break"></dd>
 <dt id="moqt">[moqt]</dt>
       <dd>
-<span class="refAuthor">Nandakumar, S.</span>, <span class="refAuthor">Vasiliev, V.</span>, <span class="refAuthor">Swett, I.</span>, and <span class="refAuthor">A. Frindell</span>, <span class="refTitle">"Media over QUIC Transport"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-moq-transport-16</span>, <time datetime="2026-01-13" class="refDate">13 January 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-16">https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-16</a>&gt;</span>. </dd>
+<span class="refAuthor">Nandakumar, S.</span>, <span class="refAuthor">Vasiliev, V.</span>, <span class="refAuthor">Swett, I.</span>, and <span class="refAuthor">A. Frindell</span>, <span class="refTitle">"Media over QUIC Transport"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-moq-transport-17</span>, <time datetime="2026-03-02" class="refDate">2 March 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-17">https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-17</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC2119">[RFC2119]</dt>
       <dd>
@@ -1463,7 +1406,7 @@ The remainder of the payload is codec specific; see the WebCodecs specification 
       <h2 id="name-acknowledgments">
 <a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
       </h2>
-<p id="appendix-A-1">TODO acknowledge.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+<p id="appendix-A-1">This document was drafted with the assistance of Claude, an AI assistant by Anthropic.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="authors-addresses">
