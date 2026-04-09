@@ -178,6 +178,8 @@ There's a 1-byte STREAM_TYPE at the beginning of each stream.
 | ------- | ------------- | ---------- |
 |    0x4  | Probe        | Subscriber  |
 | ------- | ------------- | ----------- |
+|    0x5  | Goaway       | Either      |
+| ------- | ------------- | ----------- |
 
 ### Announce
 A subscriber can open a Announce Stream to discover broadcasts matching a prefix.
@@ -226,6 +228,16 @@ The publisher SHOULD pad the connection to achieve the most recent target bitrat
 The publisher periodically replies with PROBE messages on the same bidirectional stream containing the current measured bitrate.
 
 If the publisher does not support PROBE (e.g., congestion controller is not exposed), it MUST reset the stream.
+
+### Goaway
+Either endpoint can open a Goaway Stream (0x5) to initiate a graceful session shutdown.
+
+The sender sends a GOAWAY message containing an optional new session URI.
+If the URI is non-empty, the peer SHOULD establish a new session at the provided URI and migrate any active subscriptions.
+The peer MUST NOT open new streams on the current session after receiving a GOAWAY.
+
+The sender closes the stream (FIN) when it is ready to terminate the session.
+The peer SHOULD close all streams and the session after migrating or when it no longer needs the session.
 
 # Delivery
 The most important concept in moq-lite is how to deliver a subscription.
@@ -570,6 +582,20 @@ PROBE Message {
 When sent by the subscriber (stream opener): the target bitrate in bits per second that the publisher should pad up to.
 When sent by the publisher (responder): the current measured bitrate in bits per second.
 
+## GOAWAY
+A GOAWAY message is sent to initiate a graceful session shutdown with an optional redirect.
+
+~~~
+GOAWAY Message {
+  Message Length (i)
+  New Session URI (s)
+}
+~~~
+
+**New Session URI**:
+A URI for the peer to reconnect to.
+An empty string indicates no redirect; the peer should simply close the session.
+
 ## GROUP
 The GROUP message contains information about a Group, as well as a reference to the subscription being served.
 
@@ -607,6 +633,9 @@ A generic library or relay MUST NOT inspect or modify the contents unless otherw
 
 
 # Appendix A: Changelog
+
+## moq-lite-04
+- Added GOAWAY stream for graceful session shutdown and migration.
 
 ## moq-lite-03
 - Version negotiated via ALPN (`moq-lite-xx`) instead of SETUP messages.
@@ -648,7 +677,6 @@ A quick comparison of moq-lite and moq-transport-14:
 - No paused subscriptions (forward=0)
 
 ## Deleted Messages
-- GOAWAY
 - MAX_SUBSCRIBE_ID
 - REQUESTS_BLOCKED
 - SUBSCRIBE_ERROR
