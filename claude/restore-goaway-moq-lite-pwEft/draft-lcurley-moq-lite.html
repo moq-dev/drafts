@@ -1243,7 +1243,7 @@ While primarily designed for media, the transport is payload agnostic and can be
                 <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-stream_type" class="internal xref">STREAM_TYPE</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3">
-                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-announce_please" class="internal xref">ANNOUNCE_PLEASE</a></p>
+                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-announce_subscribe" class="internal xref">ANNOUNCE_SUBSCRIBE</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.4">
                 <p id="section-toc.1-1.7.2.4.1"><a href="#section-7.4" class="auto internal xref">7.4</a>.  <a href="#name-announce-2" class="internal xref">ANNOUNCE</a></p>
@@ -1413,7 +1413,7 @@ Any broadcasts and subscriptions are transparently proxied by the CDN behind the
 <p id="section-3.2-1">A Broadcast is a collection of Tracks from a single publisher.
 This corresponds to a MoqTransport's "track namespace".<a href="#section-3.2-1" class="pilcrow">¶</a></p>
 <p id="section-3.2-2">A publisher may produce multiple broadcasts, each of which is advertised via an ANNOUNCE message.
-The subscriber uses the ANNOUNCE_PLEASE message to discover available broadcasts.
+The subscriber uses the ANNOUNCE_SUBSCRIBE message to discover available broadcasts.
 These announcements are live and can change over time, allowing for dynamic origin discovery.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
 <p id="section-3.2-3">A broadcast consists of any number of Tracks.
 The contents, relationships, and encoding of tracks are determined by the application.<a href="#section-3.2-3" class="pilcrow">¶</a></p>
@@ -1564,7 +1564,7 @@ There's a 1-byte STREAM_TYPE at the beginning of each stream.<a href="#section-5
 <a href="#section-5.1.1" class="section-number selfRef">5.1.1. </a><a href="#name-announce" class="section-name selfRef">Announce</a>
           </h4>
 <p id="section-5.1.1-1">A subscriber can open a Announce Stream to discover broadcasts matching a prefix.<a href="#section-5.1.1-1" class="pilcrow">¶</a></p>
-<p id="section-5.1.1-2">The subscriber creates the stream with a ANNOUNCE_PLEASE message.
+<p id="section-5.1.1-2">The subscriber creates the stream with a ANNOUNCE_SUBSCRIBE message.
 The publisher replies with ANNOUNCE messages for any matching broadcasts and any future changes.
 Each ANNOUNCE message contains one of the following statuses:<a href="#section-5.1.1-2" class="pilcrow">¶</a></p>
 <ul class="normal">
@@ -1805,15 +1805,15 @@ A receiver <span class="bcp14">MUST</span> reset the stream if it receives an un
 Unknown stream types <span class="bcp14">MUST NOT</span> be treated as fatal; this enables extension negotiation via stream probing.<a href="#section-7.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="announceplease">
+<div id="announcesubscribe">
 <section id="section-7.3">
-        <h3 id="name-announce_please">
-<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-announce_please" class="section-name selfRef">ANNOUNCE_PLEASE</a>
+        <h3 id="name-announce_subscribe">
+<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-announce_subscribe" class="section-name selfRef">ANNOUNCE_SUBSCRIBE</a>
         </h3>
-<p id="section-7.3-1">A subscriber sends an ANNOUNCE_PLEASE message to indicate it wants to receive an ANNOUNCE message for any broadcasts with a path that starts with the requested prefix.<a href="#section-7.3-1" class="pilcrow">¶</a></p>
+<p id="section-7.3-1">A subscriber sends an ANNOUNCE_SUBSCRIBE message to indicate it wants to receive an ANNOUNCE message for any broadcasts with a path that starts with the requested prefix.<a href="#section-7.3-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-7.3-2">
 <pre>
-ANNOUNCE_PLEASE Message {
+ANNOUNCE_SUBSCRIBE Message {
   Message Length (i)
   Broadcast Path Prefix (s),
 }
@@ -2120,6 +2120,9 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
 <li class="normal" id="section-8.1-1.1">
             <p id="section-8.1-1.1.1">Added GOAWAY stream for graceful session shutdown and migration.<a href="#section-8.1-1.1.1" class="pilcrow">¶</a></p>
 </li>
+          <li class="normal" id="section-8.1-1.2">
+            <p id="section-8.1-1.2.1">Renamed ANNOUNCE_PLEASE to ANNOUNCE_SUBSCRIBE.<a href="#section-8.1-1.2.1" class="pilcrow">¶</a></p>
+</li>
         </ul>
 </section>
 </div>
@@ -2332,7 +2335,7 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
         </h3>
 <ul class="normal">
 <li class="normal" id="section-9.2-1.1">
-            <p id="section-9.2-1.1.1">SUBSCRIBE_NAMESPACE -&gt; ANNOUNCE_PLEASE<a href="#section-9.2-1.1.1" class="pilcrow">¶</a></p>
+            <p id="section-9.2-1.1.1">SUBSCRIBE_NAMESPACE -&gt; ANNOUNCE_SUBSCRIBE<a href="#section-9.2-1.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.2-1.2">
             <p id="section-9.2-1.2.1">SUBGROUP_HEADER -&gt; GROUP<a href="#section-9.2-1.2.1" class="pilcrow">¶</a></p>
