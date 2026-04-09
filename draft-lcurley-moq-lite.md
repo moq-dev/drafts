@@ -91,7 +91,7 @@ A Broadcast is a collection of Tracks from a single publisher.
 This corresponds to a MoqTransport's "track namespace".
 
 A publisher may produce multiple broadcasts, each of which is advertised via an ANNOUNCE message.
-The subscriber uses the ANNOUNCE_PLEASE message to discover available broadcasts.
+The subscriber uses the ANNOUNCE_SUBSCRIBE message to discover available broadcasts.
 These announcements are live and can change over time, allowing for dynamic origin discovery.
 
 A broadcast consists of any number of Tracks.
@@ -184,7 +184,7 @@ There's a 1-byte STREAM_TYPE at the beginning of each stream.
 ### Announce
 A subscriber can open a Announce Stream to discover broadcasts matching a prefix.
 
-The subscriber creates the stream with a ANNOUNCE_PLEASE message.
+The subscriber creates the stream with a ANNOUNCE_SUBSCRIBE message.
 The publisher replies with ANNOUNCE messages for any matching broadcasts and any future changes.
 Each ANNOUNCE message contains one of the following statuses:
 
@@ -366,11 +366,11 @@ A receiver MUST reset the stream if it receives an unknown stream type.
 Unknown stream types MUST NOT be treated as fatal; this enables extension negotiation via stream probing.
 
 
-## ANNOUNCE_PLEASE
-A subscriber sends an ANNOUNCE_PLEASE message to indicate it wants to receive an ANNOUNCE message for any broadcasts with a path that starts with the requested prefix.
+## ANNOUNCE_SUBSCRIBE
+A subscriber sends an ANNOUNCE_SUBSCRIBE message to indicate it wants to receive an ANNOUNCE message for any broadcasts with a path that starts with the requested prefix.
 
 ~~~
-ANNOUNCE_PLEASE Message {
+ANNOUNCE_SUBSCRIBE Message {
   Message Length (i)
   Broadcast Path Prefix (s),
 }
@@ -636,6 +636,7 @@ A generic library or relay MUST NOT inspect or modify the contents unless otherw
 
 ## moq-lite-04
 - Added GOAWAY stream for graceful session shutdown and migration.
+- Renamed ANNOUNCE_PLEASE to ANNOUNCE_SUBSCRIBE.
 
 ## moq-lite-03
 - Version negotiated via ALPN (`moq-lite-xx`) instead of SETUP messages.
@@ -702,7 +703,7 @@ A quick comparison of moq-lite and moq-transport-14:
 - OBJECT_DATAGRAM
 
 ## Renamed Messages
-- SUBSCRIBE_NAMESPACE -> ANNOUNCE_PLEASE
+- SUBSCRIBE_NAMESPACE -> ANNOUNCE_SUBSCRIBE
 - SUBGROUP_HEADER -> GROUP
 
 ## Deleted Fields
