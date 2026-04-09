@@ -93,7 +93,7 @@ Table of Contents
    7.  Encoding
      7.1.  Message Length
      7.2.  STREAM_TYPE
-     7.3.  ANNOUNCE_SUBSCRIBE
+     7.3.  ANNOUNCE_INTEREST
      7.4.  ANNOUNCE
      7.5.  SUBSCRIBE
      7.6.  SUBSCRIBE_UPDATE
@@ -209,7 +209,7 @@ Table of Contents
 
    A publisher may produce multiple broadcasts, each of which is
    advertised via an ANNOUNCE message.  The subscriber uses the
-   ANNOUNCE_SUBSCRIBE message to discover available broadcasts.  These
+   ANNOUNCE_INTEREST message to discover available broadcasts.  These
    announcements are live and can change over time, allowing for dynamic
    origin discovery.
 
@@ -333,7 +333,7 @@ Table of Contents
    A subscriber can open a Announce Stream to discover broadcasts
    matching a prefix.
 
-   The subscriber creates the stream with a ANNOUNCE_SUBSCRIBE message.
+   The subscriber creates the stream with a ANNOUNCE_INTEREST message.
    The publisher replies with ANNOUNCE messages for any matching
    broadcasts and any future changes.  Each ANNOUNCE message contains
    one of the following statuses:
@@ -572,13 +572,13 @@ Table of Contents
    types MUST NOT be treated as fatal; this enables extension
    negotiation via stream probing.
 
-7.3.  ANNOUNCE_SUBSCRIBE
+7.3.  ANNOUNCE_INTEREST
 
-   A subscriber sends an ANNOUNCE_SUBSCRIBE message to indicate it wants
+   A subscriber sends an ANNOUNCE_INTEREST message to indicate it wants
    to receive an ANNOUNCE message for any broadcasts with a path that
    starts with the requested prefix.
 
-   ANNOUNCE_SUBSCRIBE Message {
+   ANNOUNCE_INTEREST Message {
      Message Length (i)
      Broadcast Path Prefix (s),
    }
@@ -827,7 +827,7 @@ Table of Contents
 
    *  Added GOAWAY stream for graceful session shutdown and migration.
 
-   *  Renamed ANNOUNCE_PLEASE to ANNOUNCE_SUBSCRIBE.
+   *  Renamed ANNOUNCE_PLEASE to ANNOUNCE_INTEREST.
 
 8.2.  moq-lite-03
 
@@ -955,7 +955,7 @@ Table of Contents
 
 9.2.  Renamed Messages
 
-   *  SUBSCRIBE_NAMESPACE -> ANNOUNCE_SUBSCRIBE
+   *  SUBSCRIBE_NAMESPACE -> ANNOUNCE_INTEREST
 
    *  SUBGROUP_HEADER -> GROUP
 
