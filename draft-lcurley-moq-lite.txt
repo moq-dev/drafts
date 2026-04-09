@@ -3,9 +3,9 @@
 
 
 moq                                                            L. Curley
-Internet-Draft                                             22 March 2026
+Internet-Draft                                              9 April 2026
 Intended status: Informational                                          
-Expires: 23 September 2026
+Expires: 11 October 2026
 
 
                          Media over QUIC - Lite
@@ -46,7 +46,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 23 September 2026.
+   This Internet-Draft will expire on 11 October 2026.
 
 Copyright Notice
 
@@ -82,6 +82,7 @@ Table of Contents
        5.1.2.  Subscribe
        5.1.3.  Fetch
        5.1.4.  Probe
+       5.1.5.  Goaway
    6.  Delivery
      6.1.  Prioritization
        6.1.1.  Priority
@@ -92,7 +93,7 @@ Table of Contents
    7.  Encoding
      7.1.  Message Length
      7.2.  STREAM_TYPE
-     7.3.  ANNOUNCE_PLEASE
+     7.3.  ANNOUNCE_INTEREST
      7.4.  ANNOUNCE
      7.5.  SUBSCRIBE
      7.6.  SUBSCRIBE_UPDATE
@@ -100,12 +101,14 @@ Table of Contents
      7.8.  SUBSCRIBE_DROP
      7.9.  FETCH
      7.10. PROBE
-     7.11. GROUP
-     7.12. FRAME
+     7.11. GOAWAY
+     7.12. GROUP
+     7.13. FRAME
    8.  Appendix A: Changelog
-     8.1.  moq-lite-03
-     8.2.  moq-lite-02
-     8.3.  moq-lite-01
+     8.1.  moq-lite-04
+     8.2.  moq-lite-03
+     8.3.  moq-lite-02
+     8.4.  moq-lite-01
    9.  Appendix B: Upstream Differences
      9.1.  Deleted Messages
      9.2.  Renamed Messages
@@ -206,7 +209,7 @@ Table of Contents
 
    A publisher may produce multiple broadcasts, each of which is
    advertised via an ANNOUNCE message.  The subscriber uses the
-   ANNOUNCE_PLEASE message to discover available broadcasts.  These
+   ANNOUNCE_INTEREST message to discover available broadcasts.  These
    announcements are live and can change over time, allowing for dynamic
    origin discovery.
 
@@ -320,6 +323,8 @@ Table of Contents
                      +-----+-----------+------------+
                      | 0x4 | Probe     | Subscriber |
                      +-----+-----------+------------+
+                     | 0x5 | Goaway    | Either     |
+                     +-----+-----------+------------+
 
                                  Table 1
 
@@ -328,7 +333,7 @@ Table of Contents
    A subscriber can open a Announce Stream to discover broadcasts
    matching a prefix.
 
-   The subscriber creates the stream with a ANNOUNCE_PLEASE message.
+   The subscriber creates the stream with a ANNOUNCE_INTEREST message.
    The publisher replies with ANNOUNCE messages for any matching
    broadcasts and any future changes.  Each ANNOUNCE message contains
    one of the following statuses:
@@ -392,11 +397,26 @@ Table of Contents
    publisher MUST treat each PROBE as a new target to attempt.  The
    publisher SHOULD pad the connection to achieve the most recent target
    bitrate.  The publisher periodically replies with PROBE messages on
-   the same bidirectional stream containing the current measured
-   bitrate.
+   the same bidirectional stream containing the current estimated
+   bitrate and smoothed RTT.
 
    If the publisher does not support PROBE (e.g., congestion controller
    is not exposed), it MUST reset the stream.
+
+5.1.5.  Goaway
+
+   Either endpoint can open a Goaway Stream (0x5) to initiate a graceful
+   session shutdown.
+
+   The sender sends a GOAWAY message containing an optional new session
+   URI.  If the URI is non-empty, the peer SHOULD establish a new
+   session at the provided URI and migrate any active subscriptions.
+   The peer MUST NOT open new streams on the current session after
+   receiving a GOAWAY.
+
+   The sender closes the stream (FIN) when it is ready to terminate the
+   session.  The peer SHOULD close all streams and the session after
+   migrating or when it no longer needs the session.
 
 6.  Delivery
 
@@ -552,13 +572,13 @@ Table of Contents
    types MUST NOT be treated as fatal; this enables extension
    negotiation via stream probing.
 
-7.3.  ANNOUNCE_PLEASE
+7.3.  ANNOUNCE_INTEREST
 
-   A subscriber sends an ANNOUNCE_PLEASE message to indicate it wants to
-   receive an ANNOUNCE message for any broadcasts with a path that
+   A subscriber sends an ANNOUNCE_INTEREST message to indicate it wants
+   to receive an ANNOUNCE message for any broadcasts with a path that
    starts with the requested prefix.
 
-   ANNOUNCE_PLEASE Message {
+   ANNOUNCE_INTEREST Message {
      Message Length (i)
      Broadcast Path Prefix (s),
    }
@@ -749,14 +769,40 @@ Table of Contents
    PROBE Message {
      Message Length (i)
      Bitrate (i)
+     RTT (i)
    }
 
    *Bitrate*: When sent by the subscriber (stream opener): the target
    bitrate in bits per second that the publisher should pad up to.  When
-   sent by the publisher (responder): the current measured bitrate in
-   bits per second.
+   sent by the publisher (responder): the current estimated bitrate in
+   bits per second.  A value of 0 means unknown.
 
-7.11.  GROUP
+   *RTT*: The smoothed round-trip time in milliseconds, as defined in
+   [RFC9002].  A value of 0 means unknown.
+
+      NOTE: RTT is included in the PROBE message because not all QUIC
+      implementations and browser WebTransport APIs expose RTT
+      statistics directly.  This field may be deprecated once RTT is
+      universally available via the underlying transport API.
+
+7.11.  GOAWAY
+
+   A GOAWAY message is sent to initiate a graceful session shutdown with
+   an optional redirect.
+
+   GOAWAY Message {
+     Message Length (i)
+     New Session URI (s)
+   }
+
+   *New Session URI*: A URI for the peer to reconnect to.  An empty
+   string indicates no redirect; the peer should simply close the
+   session.  A recipient MUST validate the URI against local policy
+   before reconnecting, including verifying the scheme, authority, and
+   port are permitted.  If validation fails, the recipient MUST close
+   the session without reconnecting.
+
+7.12.  GROUP
 
    The GROUP message contains information about a Group, as well as a
    reference to the subscription being served.
@@ -774,7 +820,7 @@ Table of Contents
    increase by 1 for each new group.  A subscriber MUST handle gaps,
    potentially caused by congestion.
 
-7.12.  FRAME
+7.13.  FRAME
 
    The FRAME message is a payload within a group.
 
@@ -789,7 +835,15 @@ Table of Contents
 
 8.  Appendix A: Changelog
 
-8.1.  moq-lite-03
+8.1.  moq-lite-04
+
+   *  Added GOAWAY stream for graceful session shutdown and migration.
+
+   *  Renamed ANNOUNCE_PLEASE to ANNOUNCE_INTEREST.
+
+   *  Added RTT to PROBE message.  Bitrate and RTT use 0 for unknown.
+
+8.2.  moq-lite-03
 
    *  Version negotiated via ALPN (moq-lite-xx) instead of SETUP
       messages.
@@ -823,13 +877,13 @@ Table of Contents
 
    *  SUBSCRIBE_OK may be sent multiple times.
 
-8.2.  moq-lite-02
+8.3.  moq-lite-02
 
    *  Added SessionCompat stream.
 
    *  Editorial stuff.
 
-8.3.  moq-lite-01
+8.4.  moq-lite-01
 
    *  Added Message Length (i) to all messages.
 
@@ -866,8 +920,6 @@ Table of Contents
    *  No paused subscriptions (forward=0)
 
 9.1.  Deleted Messages
-
-   *  GOAWAY
 
    *  MAX_SUBSCRIBE_ID
 
@@ -917,7 +969,7 @@ Table of Contents
 
 9.2.  Renamed Messages
 
-   *  SUBSCRIBE_NAMESPACE -> ANNOUNCE_PLEASE
+   *  SUBSCRIBE_NAMESPACE -> ANNOUNCE_INTEREST
 
    *  SUBGROUP_HEADER -> GROUP
 
@@ -977,6 +1029,10 @@ Table of Contents
    [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
+
+   [RFC9002]  Iyengar, J., Ed. and I. Swett, Ed., "QUIC Loss Detection
+              and Congestion Control", RFC 9002, DOI 10.17487/RFC9002,
+              May 2021, <https://www.rfc-editor.org/rfc/rfc9002>.
 
 Acknowledgments
 
