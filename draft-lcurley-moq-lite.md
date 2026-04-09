@@ -589,6 +589,8 @@ A value of 0 means unknown.
 The smoothed round-trip time in milliseconds, as defined in {{!RFC9002}}.
 A value of 0 means unknown.
 
+> NOTE: RTT is included in the PROBE message because not all QUIC implementations and browser WebTransport APIs expose RTT statistics directly. This field may be deprecated once RTT is universally available via the underlying transport API.
+
 ## GOAWAY
 A GOAWAY message is sent to initiate a graceful session shutdown with an optional redirect.
 
