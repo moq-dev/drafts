@@ -2045,6 +2045,11 @@ A value of 0 means unknown.<a href="#section-7.10-3" class="pilcrow">¶</a></p>
 <p id="section-7.10-4"><strong>RTT</strong>:
 The smoothed round-trip time in milliseconds, as defined in <span>[<a href="#RFC9002" class="cite xref">RFC9002</a>]</span>.
 A value of 0 means unknown.<a href="#section-7.10-4" class="pilcrow">¶</a></p>
+<ul class="normal ulEmpty">
+<li class="normal ulEmpty" id="section-7.10-5.1">
+            <p id="section-7.10-5.1.1">NOTE: RTT is included in the PROBE message because not all QUIC implementations and browser WebTransport APIs expose RTT statistics directly. This field may be deprecated once RTT is universally available via the underlying transport API.<a href="#section-7.10-5.1.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
 </section>
 </div>
 <div id="goaway-1">
