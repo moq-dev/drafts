@@ -18,6 +18,7 @@ author:
 
 normative:
   moqt: I-D.ietf-moq-transport
+  RFC9002:
 
 informative:
 
@@ -601,6 +602,8 @@ GOAWAY Message {
 **New Session URI**:
 A URI for the peer to reconnect to.
 An empty string indicates no redirect; the peer should simply close the session.
+A recipient MUST validate the URI against local policy before reconnecting, including verifying the scheme, authority, and port are permitted.
+If validation fails, the recipient MUST close the session without reconnecting.
 
 ## GROUP
 The GROUP message contains information about a Group, as well as a reference to the subscription being served.
