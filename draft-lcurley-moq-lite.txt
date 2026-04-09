@@ -168,10 +168,10 @@ Table of Contents
 
    *  *Broadcast*: A collection of Tracks from a single publisher.
 
-   *  *Track*: An series of Groups, each of which can be delivered and
+   *  *Track*: A series of Groups, each of which can be delivered and
       decoded _out-of-order_.
 
-   *  *Group*: An series of Frames, each of which must be delivered and
+   *  *Group*: A series of Frames, each of which must be delivered and
       decoded _in-order_.
 
    *  *Frame*: A sized payload of bytes within a Group.
@@ -266,7 +266,7 @@ Table of Contents
 4.  Flow
 
    This section outlines the flow of messages within a moq-lite session.
-   See the section for Messages section for the specific encoding.
+   See the Messages section for the specific encoding.
 
 4.1.  Connection
 
@@ -515,7 +515,7 @@ Table of Contents
    exists, a group is considered expired if the time between its arrival
    and the latest group's arrival exceeds Max Latency.  The arrival time
    is when the first byte of a group is received (subscriber) or queued
-   (publisher).  An expired group SHOULD BE reset at the QUIC level to
+   (publisher).  An expired group SHOULD be reset at the QUIC level to
    avoid consuming flow control.
 
 6.3.  Unidirectional Streams
@@ -581,10 +581,15 @@ Table of Contents
    ANNOUNCE_INTEREST Message {
      Message Length (i)
      Broadcast Path Prefix (s),
+     Exclude Hop (i),
    }
 
    *Broadcast Path Prefix*: Indicate interest for any broadcasts with a
    path that starts with this prefix.
+
+   *Exclude Hop*: If non-zero, the publisher SHOULD skip ANNOUNCE
+   messages for broadcasts whose Hop ID entries contain this value.
+   This is used by relays to avoid routing loops in a cluster.
 
    The publisher MUST respond with ANNOUNCE messages for any matching
    and active broadcasts, followed by ANNOUNCE messages for any future
@@ -605,7 +610,8 @@ Table of Contents
      Message Length (i)
      Announce Status (i),
      Broadcast Path Suffix (s),
-     Hops (i),
+     Hop Count (i),
+     Hop ID (i) ...,
    }
 
    *Announce Status*: A flag indicating the announce status.
@@ -617,9 +623,22 @@ Table of Contents
    *Broadcast Path Suffix*: This is combined with the broadcast path
    prefix to form the full broadcast path.
 
-   *Hops*: The number of hops from the origin publisher.  This is used
-   as a tiebreaker when there are multiple paths to the same broadcast.
-   A relay SHOULD increment this value when forwarding an announcement.
+   *Hop Count*: The number of Hop ID entries that follow.  A value of 0
+   means no Hop ID entries are present, indicating a fully unknown path
+   (e.g. the announcement originated locally or was received from a peer
+   that does not support hop tracking).  A receiver MUST close the
+   stream with a PROTOCOL_VIOLATION if the Hop Count does not match the
+   number of subsequent Hop ID entries.
+
+   *Hop ID*: A unique identifier for each relay in the path from the
+   origin publisher.  Each relay MUST append its own Hop ID and
+   increment the Hop Count when forwarding an announcement, even if no
+   prior Hop ID entries are present (e.g. when receiving from an older
+   protocol version).  The Hop Count is used as a tiebreaker when there
+   are multiple paths to the same broadcast.  A Hop ID value of 0
+   indicates an unknown or bridged relay hop (e.g. when bridging from an
+   older protocol version that does not assign Hop IDs); the Hop Count
+   still reflects the total number of entries including unknown hops.
 
 7.5.  SUBSCRIBE
 
@@ -836,6 +855,11 @@ Table of Contents
 8.  Appendix A: Changelog
 
 8.1.  moq-lite-04
+
+   *  ANNOUNCE Hops count replaced with explicit Hop ID list for loop
+      detection.
+
+   *  Added Exclude Hop to ANNOUNCE_PLEASE for relay loop avoidance.
 
    *  Added GOAWAY stream for graceful session shutdown and migration.
 
