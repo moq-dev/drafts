@@ -1563,7 +1563,7 @@ There's a 1-byte STREAM_TYPE at the beginning of each stream.<a href="#section-5
           <h4 id="name-announce">
 <a href="#section-5.1.1" class="section-number selfRef">5.1.1. </a><a href="#name-announce" class="section-name selfRef">Announce</a>
           </h4>
-<p id="section-5.1.1-1">A subscriber can open a Announce Stream to discover broadcasts matching a prefix.<a href="#section-5.1.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.1.1-1">A subscriber can open an Announce Stream to discover broadcasts matching a prefix.<a href="#section-5.1.1-1" class="pilcrow">¶</a></p>
 <p id="section-5.1.1-2">The subscriber creates the stream with a ANNOUNCE_INTEREST message.
 The publisher replies with ANNOUNCE messages for any matching broadcasts and any future changes.
 Each ANNOUNCE message contains one of the following statuses:<a href="#section-5.1.1-2" class="pilcrow">¶</a></p>
@@ -2140,16 +2140,16 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
         </h3>
 <ul class="normal">
 <li class="normal" id="section-8.1-1.1">
-            <p id="section-8.1-1.1.1">ANNOUNCE <code>Hops</code> count replaced with explicit <code>Hop ID</code> list for loop detection.<a href="#section-8.1-1.1.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.1.1">Renamed ANNOUNCE_PLEASE to ANNOUNCE_INTEREST.<a href="#section-8.1-1.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.2">
-            <p id="section-8.1-1.2.1">Added <code>Exclude Hop</code> to ANNOUNCE_PLEASE for relay loop avoidance.<a href="#section-8.1-1.2.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.2.1">ANNOUNCE <code>Hops</code> count replaced with explicit <code>Hop ID</code> list for loop detection.<a href="#section-8.1-1.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.3">
-            <p id="section-8.1-1.3.1">Added GOAWAY stream for graceful session shutdown and migration.<a href="#section-8.1-1.3.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.3.1">Added <code>Exclude Hop</code> to ANNOUNCE_INTEREST for relay loop avoidance.<a href="#section-8.1-1.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.4">
-            <p id="section-8.1-1.4.1">Renamed ANNOUNCE_PLEASE to ANNOUNCE_INTEREST.<a href="#section-8.1-1.4.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.4.1">Added GOAWAY stream for graceful session shutdown and migration.<a href="#section-8.1-1.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.5">
             <p id="section-8.1-1.5.1">Added RTT to PROBE message. Bitrate and RTT use 0 for unknown.<a href="#section-8.1-1.5.1" class="pilcrow">¶</a></p>
