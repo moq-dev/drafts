@@ -1044,11 +1044,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">moql</td>
-<td class="right">March 2026</td>
+<td class="right">April 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Curley</td>
-<td class="center">Expires 2 October 2026</td>
+<td class="center">Expires 11 October 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1061,12 +1061,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-lcurley-moq-lite-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-03-31" class="published">31 March 2026</time>
+<time datetime="2026-04-09" class="published">9 April 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-10-02">2 October 2026</time></dd>
+<dd class="expires"><time datetime="2026-10-11">11 October 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1112,7 +1112,7 @@ While primarily designed for media, the transport is payload agnostic and can be
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 2 October 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 11 October 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1199,6 +1199,9 @@ While primarily designed for media, the transport is payload agnostic and can be
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1.2.4">
                     <p id="section-toc.1-1.5.2.1.2.4.1"><a href="#section-5.1.4" class="auto internal xref">5.1.4</a>.  <a href="#name-probe" class="internal xref">Probe</a></p>
 </li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1.2.5">
+                    <p id="section-toc.1-1.5.2.1.2.5.1"><a href="#section-5.1.5" class="auto internal xref">5.1.5</a>.  <a href="#name-goaway" class="internal xref">Goaway</a></p>
+</li>
                 </ul>
 </li>
             </ul>
@@ -1240,7 +1243,7 @@ While primarily designed for media, the transport is payload agnostic and can be
                 <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-stream_type" class="internal xref">STREAM_TYPE</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3">
-                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-announce_please" class="internal xref">ANNOUNCE_PLEASE</a></p>
+                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-announce_interest" class="internal xref">ANNOUNCE_INTEREST</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.4">
                 <p id="section-toc.1-1.7.2.4.1"><a href="#section-7.4" class="auto internal xref">7.4</a>.  <a href="#name-announce-2" class="internal xref">ANNOUNCE</a></p>
@@ -1264,10 +1267,13 @@ While primarily designed for media, the transport is payload agnostic and can be
                 <p id="section-toc.1-1.7.2.10.1"><a href="#section-7.10" class="auto internal xref">7.10</a>. <a href="#name-probe-2" class="internal xref">PROBE</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.11">
-                <p id="section-toc.1-1.7.2.11.1"><a href="#section-7.11" class="auto internal xref">7.11</a>. <a href="#name-group-3" class="internal xref">GROUP</a></p>
+                <p id="section-toc.1-1.7.2.11.1"><a href="#section-7.11" class="auto internal xref">7.11</a>. <a href="#name-goaway-2" class="internal xref">GOAWAY</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.12">
-                <p id="section-toc.1-1.7.2.12.1"><a href="#section-7.12" class="auto internal xref">7.12</a>. <a href="#name-frame-2" class="internal xref">FRAME</a></p>
+                <p id="section-toc.1-1.7.2.12.1"><a href="#section-7.12" class="auto internal xref">7.12</a>. <a href="#name-group-3" class="internal xref">GROUP</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.13">
+                <p id="section-toc.1-1.7.2.13.1"><a href="#section-7.13" class="auto internal xref">7.13</a>. <a href="#name-frame-2" class="internal xref">FRAME</a></p>
 </li>
             </ul>
 </li>
@@ -1407,7 +1413,7 @@ Any broadcasts and subscriptions are transparently proxied by the CDN behind the
 <p id="section-3.2-1">A Broadcast is a collection of Tracks from a single publisher.
 This corresponds to a MoqTransport's "track namespace".<a href="#section-3.2-1" class="pilcrow">¶</a></p>
 <p id="section-3.2-2">A publisher may produce multiple broadcasts, each of which is advertised via an ANNOUNCE message.
-The subscriber uses the ANNOUNCE_PLEASE message to discover available broadcasts.
+The subscriber uses the ANNOUNCE_INTEREST message to discover available broadcasts.
 These announcements are live and can change over time, allowing for dynamic origin discovery.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
 <p id="section-3.2-3">A broadcast consists of any number of Tracks.
 The contents, relationships, and encoding of tracks are determined by the application.<a href="#section-3.2-3" class="pilcrow">¶</a></p>
@@ -1545,6 +1551,11 @@ There's a 1-byte STREAM_TYPE at the beginning of each stream.<a href="#section-5
               <td class="text-left" rowspan="1" colspan="1">Probe</td>
               <td class="text-left" rowspan="1" colspan="1">Subscriber</td>
             </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0x5</td>
+              <td class="text-left" rowspan="1" colspan="1">Goaway</td>
+              <td class="text-left" rowspan="1" colspan="1">Either</td>
+            </tr>
           </tbody>
         </table>
 <div id="announce">
@@ -1553,7 +1564,7 @@ There's a 1-byte STREAM_TYPE at the beginning of each stream.<a href="#section-5
 <a href="#section-5.1.1" class="section-number selfRef">5.1.1. </a><a href="#name-announce" class="section-name selfRef">Announce</a>
           </h4>
 <p id="section-5.1.1-1">A subscriber can open a Announce Stream to discover broadcasts matching a prefix.<a href="#section-5.1.1-1" class="pilcrow">¶</a></p>
-<p id="section-5.1.1-2">The subscriber creates the stream with a ANNOUNCE_PLEASE message.
+<p id="section-5.1.1-2">The subscriber creates the stream with a ANNOUNCE_INTEREST message.
 The publisher replies with ANNOUNCE messages for any matching broadcasts and any future changes.
 Each ANNOUNCE message contains one of the following statuses:<a href="#section-5.1.1-2" class="pilcrow">¶</a></p>
 <ul class="normal">
@@ -1607,8 +1618,21 @@ The publisher FINs the stream after the last frame, or resets the stream on erro
 <p id="section-5.1.4-2">The subscriber sends a PROBE message with a target bitrate on the bidirectional stream.
 The subscriber <span class="bcp14">MAY</span> send additional PROBE messages on the same stream to update the target bitrate; the publisher <span class="bcp14">MUST</span> treat each PROBE as a new target to attempt.
 The publisher <span class="bcp14">SHOULD</span> pad the connection to achieve the most recent target bitrate.
-The publisher periodically replies with PROBE messages on the same bidirectional stream containing the current measured bitrate.<a href="#section-5.1.4-2" class="pilcrow">¶</a></p>
+The publisher periodically replies with PROBE messages on the same bidirectional stream containing the current estimated bitrate and smoothed RTT.<a href="#section-5.1.4-2" class="pilcrow">¶</a></p>
 <p id="section-5.1.4-3">If the publisher does not support PROBE (e.g., congestion controller is not exposed), it <span class="bcp14">MUST</span> reset the stream.<a href="#section-5.1.4-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="goaway">
+<section id="section-5.1.5">
+          <h4 id="name-goaway">
+<a href="#section-5.1.5" class="section-number selfRef">5.1.5. </a><a href="#name-goaway" class="section-name selfRef">Goaway</a>
+          </h4>
+<p id="section-5.1.5-1">Either endpoint can open a Goaway Stream (0x5) to initiate a graceful session shutdown.<a href="#section-5.1.5-1" class="pilcrow">¶</a></p>
+<p id="section-5.1.5-2">The sender sends a GOAWAY message containing an optional new session URI.
+If the URI is non-empty, the peer <span class="bcp14">SHOULD</span> establish a new session at the provided URI and migrate any active subscriptions.
+The peer <span class="bcp14">MUST NOT</span> open new streams on the current session after receiving a GOAWAY.<a href="#section-5.1.5-2" class="pilcrow">¶</a></p>
+<p id="section-5.1.5-3">The sender closes the stream (FIN) when it is ready to terminate the session.
+The peer <span class="bcp14">SHOULD</span> close all streams and the session after migrating or when it no longer needs the session.<a href="#section-5.1.5-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1781,15 +1805,15 @@ A receiver <span class="bcp14">MUST</span> reset the stream if it receives an un
 Unknown stream types <span class="bcp14">MUST NOT</span> be treated as fatal; this enables extension negotiation via stream probing.<a href="#section-7.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="announceplease">
+<div id="announceinterest">
 <section id="section-7.3">
-        <h3 id="name-announce_please">
-<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-announce_please" class="section-name selfRef">ANNOUNCE_PLEASE</a>
+        <h3 id="name-announce_interest">
+<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-announce_interest" class="section-name selfRef">ANNOUNCE_INTEREST</a>
         </h3>
-<p id="section-7.3-1">A subscriber sends an ANNOUNCE_PLEASE message to indicate it wants to receive an ANNOUNCE message for any broadcasts with a path that starts with the requested prefix.<a href="#section-7.3-1" class="pilcrow">¶</a></p>
+<p id="section-7.3-1">A subscriber sends an ANNOUNCE_INTEREST message to indicate it wants to receive an ANNOUNCE message for any broadcasts with a path that starts with the requested prefix.<a href="#section-7.3-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-7.3-2">
 <pre>
-ANNOUNCE_PLEASE Message {
+ANNOUNCE_INTEREST Message {
   Message Length (i)
   Broadcast Path Prefix (s),
   Exclude Hop (i),
@@ -2020,55 +2044,86 @@ The publisher FINs the stream after the last frame, or resets on error.<a href="
 PROBE Message {
   Message Length (i)
   Bitrate (i)
+  RTT (i)
 }
 </pre><a href="#section-7.10-2" class="pilcrow">¶</a>
 </div>
 <p id="section-7.10-3"><strong>Bitrate</strong>:
 When sent by the subscriber (stream opener): the target bitrate in bits per second that the publisher should pad up to.
-When sent by the publisher (responder): the current measured bitrate in bits per second.<a href="#section-7.10-3" class="pilcrow">¶</a></p>
+When sent by the publisher (responder): the current estimated bitrate in bits per second.
+A value of 0 means unknown.<a href="#section-7.10-3" class="pilcrow">¶</a></p>
+<p id="section-7.10-4"><strong>RTT</strong>:
+The smoothed round-trip time in milliseconds, as defined in <span>[<a href="#RFC9002" class="cite xref">RFC9002</a>]</span>.
+A value of 0 means unknown.<a href="#section-7.10-4" class="pilcrow">¶</a></p>
+<ul class="normal ulEmpty">
+<li class="normal ulEmpty" id="section-7.10-5.1">
+            <p id="section-7.10-5.1.1">NOTE: RTT is included in the PROBE message because not all QUIC implementations and browser WebTransport APIs expose RTT statistics directly. This field may be deprecated once RTT is universally available via the underlying transport API.<a href="#section-7.10-5.1.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+</section>
+</div>
+<div id="goaway-1">
+<section id="section-7.11">
+        <h3 id="name-goaway-2">
+<a href="#section-7.11" class="section-number selfRef">7.11. </a><a href="#name-goaway-2" class="section-name selfRef">GOAWAY</a>
+        </h3>
+<p id="section-7.11-1">A GOAWAY message is sent to initiate a graceful session shutdown with an optional redirect.<a href="#section-7.11-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.11-2">
+<pre>
+GOAWAY Message {
+  Message Length (i)
+  New Session URI (s)
+}
+</pre><a href="#section-7.11-2" class="pilcrow">¶</a>
+</div>
+<p id="section-7.11-3"><strong>New Session URI</strong>:
+A URI for the peer to reconnect to.
+An empty string indicates no redirect; the peer should simply close the session.
+A recipient <span class="bcp14">MUST</span> validate the URI against local policy before reconnecting, including verifying the scheme, authority, and port are permitted.
+If validation fails, the recipient <span class="bcp14">MUST</span> close the session without reconnecting.<a href="#section-7.11-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="group-2">
-<section id="section-7.11">
+<section id="section-7.12">
         <h3 id="name-group-3">
-<a href="#section-7.11" class="section-number selfRef">7.11. </a><a href="#name-group-3" class="section-name selfRef">GROUP</a>
+<a href="#section-7.12" class="section-number selfRef">7.12. </a><a href="#name-group-3" class="section-name selfRef">GROUP</a>
         </h3>
-<p id="section-7.11-1">The GROUP message contains information about a Group, as well as a reference to the subscription being served.<a href="#section-7.11-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.11-2">
+<p id="section-7.12-1">The GROUP message contains information about a Group, as well as a reference to the subscription being served.<a href="#section-7.12-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.12-2">
 <pre>
 GROUP Message {
   Message Length (i)
   Subscribe ID (i)
   Group Sequence (i)
 }
-</pre><a href="#section-7.11-2" class="pilcrow">¶</a>
+</pre><a href="#section-7.12-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.11-3"><strong>Subscribe ID</strong>:
+<p id="section-7.12-3"><strong>Subscribe ID</strong>:
 The corresponding Subscribe ID.
-This ID is used to distinguish between multiple subscriptions for the same track.<a href="#section-7.11-3" class="pilcrow">¶</a></p>
-<p id="section-7.11-4"><strong>Group Sequence</strong>:
+This ID is used to distinguish between multiple subscriptions for the same track.<a href="#section-7.12-3" class="pilcrow">¶</a></p>
+<p id="section-7.12-4"><strong>Group Sequence</strong>:
 The sequence number of the group.
 This <span class="bcp14">SHOULD</span> increase by 1 for each new group.
-A subscriber <span class="bcp14">MUST</span> handle gaps, potentially caused by congestion.<a href="#section-7.11-4" class="pilcrow">¶</a></p>
+A subscriber <span class="bcp14">MUST</span> handle gaps, potentially caused by congestion.<a href="#section-7.12-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="frame-1">
-<section id="section-7.12">
+<section id="section-7.13">
         <h3 id="name-frame-2">
-<a href="#section-7.12" class="section-number selfRef">7.12. </a><a href="#name-frame-2" class="section-name selfRef">FRAME</a>
+<a href="#section-7.13" class="section-number selfRef">7.13. </a><a href="#name-frame-2" class="section-name selfRef">FRAME</a>
         </h3>
-<p id="section-7.12-1">The FRAME message is a payload within a group.<a href="#section-7.12-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.12-2">
+<p id="section-7.13-1">The FRAME message is a payload within a group.<a href="#section-7.13-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.13-2">
 <pre>
 FRAME Message {
   Message Length (i)
   Payload (b)
 }
-</pre><a href="#section-7.12-2" class="pilcrow">¶</a>
+</pre><a href="#section-7.13-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.12-3"><strong>Payload</strong>:
+<p id="section-7.13-3"><strong>Payload</strong>:
 An application specific payload.
-A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify the contents unless otherwise negotiated.<a href="#section-7.12-3" class="pilcrow">¶</a></p>
+A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify the contents unless otherwise negotiated.<a href="#section-7.13-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2089,6 +2144,15 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
 </li>
           <li class="normal" id="section-8.1-1.2">
             <p id="section-8.1-1.2.1">Added <code>Exclude Hop</code> to ANNOUNCE_PLEASE for relay loop avoidance.<a href="#section-8.1-1.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-1.3">
+            <p id="section-8.1-1.3.1">Added GOAWAY stream for graceful session shutdown and migration.<a href="#section-8.1-1.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-1.4">
+            <p id="section-8.1-1.4.1">Renamed ANNOUNCE_PLEASE to ANNOUNCE_INTEREST.<a href="#section-8.1-1.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-1.5">
+            <p id="section-8.1-1.5.1">Added RTT to PROBE message. Bitrate and RTT use 0 for unknown.<a href="#section-8.1-1.5.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -2224,76 +2288,73 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
         </h3>
 <ul class="normal">
 <li class="normal" id="section-9.1-1.1">
-            <p id="section-9.1-1.1.1">GOAWAY<a href="#section-9.1-1.1.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.1.1">MAX_SUBSCRIBE_ID<a href="#section-9.1-1.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.2">
-            <p id="section-9.1-1.2.1">MAX_SUBSCRIBE_ID<a href="#section-9.1-1.2.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.2.1">REQUESTS_BLOCKED<a href="#section-9.1-1.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.3">
-            <p id="section-9.1-1.3.1">REQUESTS_BLOCKED<a href="#section-9.1-1.3.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.3.1">SUBSCRIBE_ERROR<a href="#section-9.1-1.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.4">
-            <p id="section-9.1-1.4.1">SUBSCRIBE_ERROR<a href="#section-9.1-1.4.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.4.1">UNSUBSCRIBE<a href="#section-9.1-1.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.5">
-            <p id="section-9.1-1.5.1">UNSUBSCRIBE<a href="#section-9.1-1.5.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.5.1">PUBLISH_DONE<a href="#section-9.1-1.5.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.6">
-            <p id="section-9.1-1.6.1">PUBLISH_DONE<a href="#section-9.1-1.6.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.6.1">PUBLISH<a href="#section-9.1-1.6.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.7">
-            <p id="section-9.1-1.7.1">PUBLISH<a href="#section-9.1-1.7.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.7.1">PUBLISH_OK<a href="#section-9.1-1.7.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.8">
-            <p id="section-9.1-1.8.1">PUBLISH_OK<a href="#section-9.1-1.8.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.8.1">PUBLISH_ERROR<a href="#section-9.1-1.8.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.9">
-            <p id="section-9.1-1.9.1">PUBLISH_ERROR<a href="#section-9.1-1.9.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.9.1">FETCH_OK<a href="#section-9.1-1.9.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.10">
-            <p id="section-9.1-1.10.1">FETCH_OK<a href="#section-9.1-1.10.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.10.1">FETCH_ERROR<a href="#section-9.1-1.10.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.11">
-            <p id="section-9.1-1.11.1">FETCH_ERROR<a href="#section-9.1-1.11.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.11.1">FETCH_CANCEL<a href="#section-9.1-1.11.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.12">
-            <p id="section-9.1-1.12.1">FETCH_CANCEL<a href="#section-9.1-1.12.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.12.1">FETCH_HEADER<a href="#section-9.1-1.12.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.13">
-            <p id="section-9.1-1.13.1">FETCH_HEADER<a href="#section-9.1-1.13.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.13.1">TRACK_STATUS<a href="#section-9.1-1.13.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.14">
-            <p id="section-9.1-1.14.1">TRACK_STATUS<a href="#section-9.1-1.14.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.14.1">TRACK_STATUS_OK<a href="#section-9.1-1.14.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.15">
-            <p id="section-9.1-1.15.1">TRACK_STATUS_OK<a href="#section-9.1-1.15.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.15.1">TRACK_STATUS_ERROR<a href="#section-9.1-1.15.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.16">
-            <p id="section-9.1-1.16.1">TRACK_STATUS_ERROR<a href="#section-9.1-1.16.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.16.1">PUBLISH_NAMESPACE<a href="#section-9.1-1.16.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.17">
-            <p id="section-9.1-1.17.1">PUBLISH_NAMESPACE<a href="#section-9.1-1.17.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.17.1">PUBLISH_NAMESPACE_OK<a href="#section-9.1-1.17.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.18">
-            <p id="section-9.1-1.18.1">PUBLISH_NAMESPACE_OK<a href="#section-9.1-1.18.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.18.1">PUBLISH_NAMESPACE_ERROR<a href="#section-9.1-1.18.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.19">
-            <p id="section-9.1-1.19.1">PUBLISH_NAMESPACE_ERROR<a href="#section-9.1-1.19.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.19.1">PUBLISH_NAMESPACE_CANCEL<a href="#section-9.1-1.19.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.20">
-            <p id="section-9.1-1.20.1">PUBLISH_NAMESPACE_CANCEL<a href="#section-9.1-1.20.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.20.1">SUBSCRIBE_NAMESPACE_OK<a href="#section-9.1-1.20.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.21">
-            <p id="section-9.1-1.21.1">SUBSCRIBE_NAMESPACE_OK<a href="#section-9.1-1.21.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.21.1">SUBSCRIBE_NAMESPACE_ERROR<a href="#section-9.1-1.21.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.22">
-            <p id="section-9.1-1.22.1">SUBSCRIBE_NAMESPACE_ERROR<a href="#section-9.1-1.22.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.22.1">UNSUBSCRIBE_NAMESPACE<a href="#section-9.1-1.22.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-1.23">
-            <p id="section-9.1-1.23.1">UNSUBSCRIBE_NAMESPACE<a href="#section-9.1-1.23.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-9.1-1.24">
-            <p id="section-9.1-1.24.1">OBJECT_DATAGRAM<a href="#section-9.1-1.24.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-1.23.1">OBJECT_DATAGRAM<a href="#section-9.1-1.23.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -2305,7 +2366,7 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
         </h3>
 <ul class="normal">
 <li class="normal" id="section-9.2-1.1">
-            <p id="section-9.2-1.1.1">SUBSCRIBE_NAMESPACE -&gt; ANNOUNCE_PLEASE<a href="#section-9.2-1.1.1" class="pilcrow">¶</a></p>
+            <p id="section-9.2-1.1.1">SUBSCRIBE_NAMESPACE -&gt; ANNOUNCE_INTEREST<a href="#section-9.2-1.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.2-1.2">
             <p id="section-9.2-1.2.1">SUBGROUP_HEADER -&gt; GROUP<a href="#section-9.2-1.2.1" class="pilcrow">¶</a></p>
@@ -2398,8 +2459,12 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
 <span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC8174">[RFC8174]</dt>
-    <dd>
+      <dd>
 <span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9002">[RFC9002]</dt>
+    <dd>
+<span class="refAuthor">Iyengar, J., Ed.</span> and <span class="refAuthor">I. Swett, Ed.</span>, <span class="refTitle">"QUIC Loss Detection and Congestion Control"</span>, <span class="seriesInfo">RFC 9002</span>, <span class="seriesInfo">DOI 10.17487/RFC9002</span>, <time datetime="2021-05" class="refDate">May 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9002">https://www.rfc-editor.org/rfc/rfc9002</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 </dl>
 </section>
