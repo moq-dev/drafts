@@ -225,7 +225,7 @@ A subscriber opens a Probe Stream (0x4) to measure the available bitrate of the 
 The subscriber sends a PROBE message with a target bitrate on the bidirectional stream.
 The subscriber MAY send additional PROBE messages on the same stream to update the target bitrate; the publisher MUST treat each PROBE as a new target to attempt.
 The publisher SHOULD pad the connection to achieve the most recent target bitrate.
-The publisher periodically replies with PROBE messages on the same bidirectional stream containing the current measured bitrate.
+The publisher periodically replies with PROBE messages on the same bidirectional stream containing the current estimated bitrate and smoothed RTT.
 
 If the publisher does not support PROBE (e.g., congestion controller is not exposed), it MUST reset the stream.
 
@@ -575,12 +575,18 @@ PROBE is used to measure the available bitrate of the connection.
 PROBE Message {
   Message Length (i)
   Bitrate (i)
+  RTT (i)
 }
 ~~~
 
 **Bitrate**:
 When sent by the subscriber (stream opener): the target bitrate in bits per second that the publisher should pad up to.
-When sent by the publisher (responder): the current measured bitrate in bits per second.
+When sent by the publisher (responder): the current estimated bitrate in bits per second.
+A value of 0 means unknown.
+
+**RTT**:
+The smoothed round-trip time in milliseconds, as defined in {{!RFC9002}}.
+A value of 0 means unknown.
 
 ## GOAWAY
 A GOAWAY message is sent to initiate a graceful session shutdown with an optional redirect.
@@ -637,6 +643,7 @@ A generic library or relay MUST NOT inspect or modify the contents unless otherw
 ## moq-lite-04
 - Added GOAWAY stream for graceful session shutdown and migration.
 - Renamed ANNOUNCE_PLEASE to ANNOUNCE_INTEREST.
+- Added RTT to PROBE message. Bitrate and RTT use 0 for unknown.
 
 ## moq-lite-03
 - Version negotiated via ALPN (`moq-lite-xx`) instead of SETUP messages.
