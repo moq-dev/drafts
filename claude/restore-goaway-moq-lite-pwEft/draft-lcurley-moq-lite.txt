@@ -397,8 +397,8 @@ Table of Contents
    publisher MUST treat each PROBE as a new target to attempt.  The
    publisher SHOULD pad the connection to achieve the most recent target
    bitrate.  The publisher periodically replies with PROBE messages on
-   the same bidirectional stream containing the current measured
-   bitrate.
+   the same bidirectional stream containing the current estimated
+   bitrate and smoothed RTT.
 
    If the publisher does not support PROBE (e.g., congestion controller
    is not exposed), it MUST reset the stream.
@@ -769,12 +769,16 @@ Table of Contents
    PROBE Message {
      Message Length (i)
      Bitrate (i)
+     RTT (i)
    }
 
    *Bitrate*: When sent by the subscriber (stream opener): the target
    bitrate in bits per second that the publisher should pad up to.  When
-   sent by the publisher (responder): the current measured bitrate in
-   bits per second.
+   sent by the publisher (responder): the current estimated bitrate in
+   bits per second.  A value of 0 means unknown.
+
+   *RTT*: The smoothed round-trip time in milliseconds, as defined in
+   [RFC9002].  A value of 0 means unknown.
 
 7.11.  GOAWAY
 
@@ -828,6 +832,8 @@ Table of Contents
    *  Added GOAWAY stream for graceful session shutdown and migration.
 
    *  Renamed ANNOUNCE_PLEASE to ANNOUNCE_INTEREST.
+
+   *  Added RTT to PROBE message.  Bitrate and RTT use 0 for unknown.
 
 8.2.  moq-lite-03
 
@@ -1015,6 +1021,10 @@ Table of Contents
    [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
+
+   [RFC9002]  Iyengar, J., Ed. and I. Swett, Ed., "QUIC Loss Detection
+              and Congestion Control", RFC 9002, DOI 10.17487/RFC9002,
+              May 2021, <https://www.rfc-editor.org/rfc/rfc9002>.
 
 Acknowledgments
 
