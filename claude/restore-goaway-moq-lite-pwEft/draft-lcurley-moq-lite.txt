@@ -792,7 +792,10 @@ Table of Contents
 
    *New Session URI*: A URI for the peer to reconnect to.  An empty
    string indicates no redirect; the peer should simply close the
-   session.
+   session.  A recipient MUST validate the URI against local policy
+   before reconnecting, including verifying the scheme, authority, and
+   port are permitted.  If validation fails, the recipient MUST close
+   the session without reconnecting.
 
 7.12.  GROUP
 

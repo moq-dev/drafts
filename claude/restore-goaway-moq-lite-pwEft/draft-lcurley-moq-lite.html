@@ -2063,7 +2063,9 @@ GOAWAY Message {
 </div>
 <p id="section-7.11-3"><strong>New Session URI</strong>:
 A URI for the peer to reconnect to.
-An empty string indicates no redirect; the peer should simply close the session.<a href="#section-7.11-3" class="pilcrow">¶</a></p>
+An empty string indicates no redirect; the peer should simply close the session.
+A recipient <span class="bcp14">MUST</span> validate the URI against local policy before reconnecting, including verifying the scheme, authority, and port are permitted.
+If validation fails, the recipient <span class="bcp14">MUST</span> close the session without reconnecting.<a href="#section-7.11-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="group-2">
