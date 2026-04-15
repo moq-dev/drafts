@@ -81,7 +81,7 @@ For bare QUIC, this is negotiated as an ALPN token during the QUIC handshake.
 For WebTransport over HTTP/3, the QUIC ALPN remains `h3` and the moq-lite version is advertised via the `WT-Available-Protocols` and `WT-Protocol` CONNECT headers.
 
 The session is active immediately after the QUIC/WebTransport connection is established.
-Extensions are negotiated via stream probing: an endpoint opens a stream with an unknown type and the peer resets it if unsupported.
+Both peers MUST immediately open a [Setup Stream](#setup) to exchange session parameters; additional extensions are negotiated via stream probing: an endpoint opens a stream with an unknown type and the peer resets it if unsupported.
 
 While moq-lite is a point-to-point protocol, it's intended to work end-to-end via relays.
 Each client establishes a session with a CDN edge server, ideally the closest one.
@@ -329,6 +329,21 @@ Unidirectional streams are used for data transmission.
 |-------:|:---------|-------------|
 |    0x0 | Group    | Publisher   |
 | ------ | -------- | ----------- |
+|    0x1 | Setup    | Either      |
+| ------ | -------- | ----------- |
+
+### Setup
+Both peers MUST open a Setup Stream (0x1) immediately after the session is established.
+Each peer opens its own unidirectional Setup Stream, so two Setup Streams exist per session (one in each direction).
+
+The Setup Stream carries a SETUP message containing session-level parameters as ID + Length + Value tuples.
+The stream MUST remain open for the lifetime of the session.
+Additional parameters MAY be appended to the stream at any time to update or add parameters; later parameters with the same ID override earlier ones.
+
+An endpoint MUST skip unknown parameter IDs rather than treating them as errors, using the Length field to advance past the unknown value.
+This allows parameters to be added in future versions without breaking compatibility.
+
+If either peer's Setup Stream is reset or closed (FIN) before the session ends, the session MUST be terminated.
 
 ### Group
 A publisher creates Group Streams in response to a Subscribe Stream.
@@ -365,6 +380,50 @@ STREAM_TYPE {
 The stream ID depends on if it's a bidirectional or unidirectional stream, as indicated in the Streams section.
 A receiver MUST reset the stream if it receives an unknown stream type.
 Unknown stream types MUST NOT be treated as fatal; this enables extension negotiation via stream probing.
+
+
+## SETUP
+The SETUP message is sent on the [Setup Stream](#setup) and carries session-level parameters.
+A peer MAY append additional parameters to the stream at any time; there is no terminator.
+
+~~~
+SETUP Parameter {
+  Parameter ID (i),
+  Parameter Length (i),
+  Parameter Value (..),
+}
+
+SETUP Stream {
+  SETUP Parameter (..) ...,
+}
+~~~
+
+**Parameter ID**:
+A variable-length integer identifying the parameter. See the table below for registered IDs.
+
+**Parameter Length**:
+The length of the Parameter Value in bytes, encoded as a variable-length integer.
+This does not include the length of the Parameter ID or Parameter Length fields themselves.
+
+**Parameter Value**:
+The value of the parameter. The encoding depends on the Parameter ID.
+A receiver MUST skip unknown Parameter IDs using the Parameter Length to advance past the value.
+
+The following parameters are defined:
+
+|---------|---------|----------|-----------|
+|      ID | Name    | Type     | Sender    |
+|--------:|:--------|:---------|:----------|
+|    0x0  | Path    | string   | Client    |
+| ------- | ------- | -------- | --------- |
+
+### Path
+The Path parameter is a UTF-8 string set by the client when native QUIC (not WebTransport) is used.
+It corresponds to the `:path` pseudo-header that would otherwise be present in an HTTP/3 CONNECT request, allowing a server to route the session to a specific resource.
+
+The client MAY include the Path parameter when using bare QUIC (negotiated via ALPN).
+The client MUST NOT include the Path parameter when using WebTransport, since WebTransport already carries the path in the CONNECT request.
+The server MUST ignore the Path parameter if sent.
 
 
 ## ANNOUNCE_INTEREST
@@ -656,6 +715,11 @@ A generic library or relay MUST NOT inspect or modify the contents unless otherw
 
 
 # Appendix A: Changelog
+
+## moq-lite-05
+- Added Setup Stream (unidirectional, 0x1) opened by both peers for session parameter exchange.
+- Added SETUP message with ID + Length + Value parameters; unknown IDs are skipped for forward compatibility.
+- Added `Path` parameter for native QUIC sessions (equivalent to the HTTP/3 `:path` pseudo-header).
 
 ## moq-lite-04
 - Renamed ANNOUNCE_PLEASE to ANNOUNCE_INTEREST.
