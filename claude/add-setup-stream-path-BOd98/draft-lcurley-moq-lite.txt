@@ -3,9 +3,9 @@
 
 
 moq                                                            L. Curley
-Internet-Draft                                             13 March 2026
+Internet-Draft                                             15 April 2026
 Intended status: Informational                                          
-Expires: 14 September 2026
+Expires: 17 October 2026
 
 
                          Media over QUIC - Lite
@@ -46,7 +46,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 14 September 2026.
+   This Internet-Draft will expire on 17 October 2026.
 
 Copyright Notice
 
@@ -82,30 +82,37 @@ Table of Contents
        5.1.2.  Subscribe
        5.1.3.  Fetch
        5.1.4.  Probe
+       5.1.5.  Goaway
    6.  Delivery
      6.1.  Prioritization
        6.1.1.  Priority
        6.1.2.  Ordered
      6.2.  Expiration
      6.3.  Unidirectional Streams
-       6.3.1.  Group
+       6.3.1.  Setup
+       6.3.2.  Group
    7.  Encoding
      7.1.  Message Length
      7.2.  STREAM_TYPE
-     7.3.  ANNOUNCE_PLEASE
-     7.4.  ANNOUNCE
-     7.5.  SUBSCRIBE
-     7.6.  SUBSCRIBE_UPDATE
-     7.7.  SUBSCRIBE_OK
-     7.8.  SUBSCRIBE_DROP
-     7.9.  FETCH
-     7.10. PROBE
-     7.11. GROUP
-     7.12. FRAME
+     7.3.  SETUP
+       7.3.1.  Path
+     7.4.  ANNOUNCE_INTEREST
+     7.5.  ANNOUNCE
+     7.6.  SUBSCRIBE
+     7.7.  SUBSCRIBE_UPDATE
+     7.8.  SUBSCRIBE_OK
+     7.9.  SUBSCRIBE_DROP
+     7.10. FETCH
+     7.11. PROBE
+     7.12. GOAWAY
+     7.13. GROUP
+     7.14. FRAME
    8.  Appendix A: Changelog
-     8.1.  moq-lite-03
-     8.2.  moq-lite-02
-     8.3.  moq-lite-01
+     8.1.  moq-lite-05
+     8.2.  moq-lite-04
+     8.3.  moq-lite-03
+     8.4.  moq-lite-02
+     8.5.  moq-lite-01
    9.  Appendix B: Upstream Differences
      9.1.  Deleted Messages
      9.2.  Renamed Messages
@@ -165,10 +172,10 @@ Table of Contents
 
    *  *Broadcast*: A collection of Tracks from a single publisher.
 
-   *  *Track*: An series of Groups, each of which can be delivered and
+   *  *Track*: A series of Groups, each of which can be delivered and
       decoded _out-of-order_.
 
-   *  *Group*: An series of Frames, each of which must be delivered and
+   *  *Group*: A series of Frames, each of which must be delivered and
       decoded _in-order_.
 
    *  *Frame*: A sized payload of bytes within a Group.
@@ -190,9 +197,10 @@ Table of Contents
    WT-Available-Protocols and WT-Protocol CONNECT headers.
 
    The session is active immediately after the QUIC/WebTransport
-   connection is established.  Extensions are negotiated via stream
-   probing: an endpoint opens a stream with an unknown type and the peer
-   resets it if unsupported.
+   connection is established.  Both peers MUST immediately open a Setup
+   Stream (Section 6.3.1) to exchange session parameters; additional
+   extensions are negotiated via stream probing: an endpoint opens a
+   stream with an unknown type and the peer resets it if unsupported.
 
    While moq-lite is a point-to-point protocol, it's intended to work
    end-to-end via relays.  Each client establishes a session with a CDN
@@ -206,7 +214,7 @@ Table of Contents
 
    A publisher may produce multiple broadcasts, each of which is
    advertised via an ANNOUNCE message.  The subscriber uses the
-   ANNOUNCE_PLEASE message to discover available broadcasts.  These
+   ANNOUNCE_INTEREST message to discover available broadcasts.  These
    announcements are live and can change over time, allowing for dynamic
    origin discovery.
 
@@ -263,7 +271,7 @@ Table of Contents
 4.  Flow
 
    This section outlines the flow of messages within a moq-lite session.
-   See the section for Messages section for the specific encoding.
+   See the Messages section for the specific encoding.
 
 4.1.  Connection
 
@@ -320,15 +328,17 @@ Table of Contents
                      +-----+-----------+------------+
                      | 0x4 | Probe     | Subscriber |
                      +-----+-----------+------------+
+                     | 0x5 | Goaway    | Either     |
+                     +-----+-----------+------------+
 
                                  Table 1
 
 5.1.1.  Announce
 
-   A subscriber can open a Announce Stream to discover broadcasts
+   A subscriber can open an Announce Stream to discover broadcasts
    matching a prefix.
 
-   The subscriber creates the stream with a ANNOUNCE_PLEASE message.
+   The subscriber creates the stream with a ANNOUNCE_INTEREST message.
    The publisher replies with ANNOUNCE messages for any matching
    broadcasts and any future changes.  Each ANNOUNCE message contains
    one of the following statuses:
@@ -392,11 +402,26 @@ Table of Contents
    publisher MUST treat each PROBE as a new target to attempt.  The
    publisher SHOULD pad the connection to achieve the most recent target
    bitrate.  The publisher periodically replies with PROBE messages on
-   the same bidirectional stream containing the current measured
-   bitrate.
+   the same bidirectional stream containing the current estimated
+   bitrate and smoothed RTT.
 
    If the publisher does not support PROBE (e.g., congestion controller
    is not exposed), it MUST reset the stream.
+
+5.1.5.  Goaway
+
+   Either endpoint can open a Goaway Stream (0x5) to initiate a graceful
+   session shutdown.
+
+   The sender sends a GOAWAY message containing an optional new session
+   URI.  If the URI is non-empty, the peer SHOULD establish a new
+   session at the provided URI and migrate any active subscriptions.
+   The peer MUST NOT open new streams on the current session after
+   receiving a GOAWAY.
+
+   The sender closes the stream (FIN) when it is ready to terminate the
+   session.  The peer SHOULD close all streams and the session after
+   migrating or when it no longer needs the session.
 
 6.  Delivery
 
@@ -495,7 +520,7 @@ Table of Contents
    exists, a group is considered expired if the time between its arrival
    and the latest group's arrival exceeds Max Latency.  The arrival time
    is when the first byte of a group is received (subscriber) or queued
-   (publisher).  An expired group SHOULD BE reset at the QUIC level to
+   (publisher).  An expired group SHOULD be reset at the QUIC level to
    avoid consuming flow control.
 
 6.3.  Unidirectional Streams
@@ -507,10 +532,33 @@ Table of Contents
                        +=====+========+===========+
                        | 0x0 | Group  | Publisher |
                        +-----+--------+-----------+
+                       | 0x1 | Setup  | Either    |
+                       +-----+--------+-----------+
 
                                  Table 2
 
-6.3.1.  Group
+6.3.1.  Setup
+
+   Both peers MUST open a Setup Stream (0x1) immediately after the
+   session is established.  Each peer opens its own unidirectional Setup
+   Stream, so two Setup Streams exist per session (one in each
+   direction).
+
+   The Setup Stream carries a SETUP message containing session-level
+   parameters as ID + Length + Value tuples.  The stream MUST remain
+   open for the lifetime of the session.  Additional parameters MAY be
+   appended to the stream at any time to update or add parameters; later
+   parameters with the same ID override earlier ones.
+
+   An endpoint MUST skip unknown parameter IDs rather than treating them
+   as errors, using the Length field to advance past the unknown value.
+   This allows parameters to be added in future versions without
+   breaking compatibility.
+
+   If either peer's Setup Stream is reset or closed (FIN) before the
+   session ends, the session MUST be terminated.
+
+6.3.2.  Group
 
    A publisher creates Group Streams in response to a Subscribe Stream.
 
@@ -552,26 +600,81 @@ Table of Contents
    types MUST NOT be treated as fatal; this enables extension
    negotiation via stream probing.
 
-7.3.  ANNOUNCE_PLEASE
+7.3.  SETUP
 
-   A subscriber sends an ANNOUNCE_PLEASE message to indicate it wants to
-   receive an ANNOUNCE message for any broadcasts with a path that
+   The SETUP message is sent on the Setup Stream (Section 6.3.1) and
+   carries session-level parameters.  A peer MAY append additional
+   parameters to the stream at any time; there is no terminator.
+
+   SETUP Parameter {
+     Parameter ID (i),
+     Parameter Length (i),
+     Parameter Value (..),
+   }
+
+   SETUP Stream {
+     SETUP Parameter (..) ...,
+   }
+
+   *Parameter ID*: A variable-length integer identifying the parameter.
+   See the table below for registered IDs.
+
+   *Parameter Length*: The length of the Parameter Value in bytes,
+   encoded as a variable-length integer.  This does not include the
+   length of the Parameter ID or Parameter Length fields themselves.
+
+   *Parameter Value*: The value of the parameter.  The encoding depends
+   on the Parameter ID.  A receiver MUST skip unknown Parameter IDs
+   using the Parameter Length to advance past the value.
+
+   The following parameters are defined:
+
+                     +=====+======+========+========+
+                     |  ID | Name | Type   | Sender |
+                     +=====+======+========+========+
+                     | 0x0 | Path | string | Client |
+                     +-----+------+--------+--------+
+
+                                 Table 3
+
+7.3.1.  Path
+
+   The Path parameter is a UTF-8 string set by the client when native
+   QUIC (not WebTransport) is used.  It corresponds to the :path pseudo-
+   header that would otherwise be present in an HTTP/3 CONNECT request,
+   allowing a server to route the session to a specific resource.
+
+   The client MAY include the Path parameter when using bare QUIC
+   (negotiated via ALPN).  The client MUST NOT include the Path
+   parameter when using WebTransport, since WebTransport already carries
+   the path in the CONNECT request.  The server MUST ignore the Path
+   parameter if sent.
+
+7.4.  ANNOUNCE_INTEREST
+
+   A subscriber sends an ANNOUNCE_INTEREST message to indicate it wants
+   to receive an ANNOUNCE message for any broadcasts with a path that
    starts with the requested prefix.
 
-   ANNOUNCE_PLEASE Message {
+   ANNOUNCE_INTEREST Message {
      Message Length (i)
      Broadcast Path Prefix (s),
+     Exclude Hop (i),
    }
 
    *Broadcast Path Prefix*: Indicate interest for any broadcasts with a
    path that starts with this prefix.
+
+   *Exclude Hop*: If non-zero, the publisher SHOULD skip ANNOUNCE
+   messages for broadcasts whose Hop ID entries contain this value.
+   This is used by relays to avoid routing loops in a cluster.
 
    The publisher MUST respond with ANNOUNCE messages for any matching
    and active broadcasts, followed by ANNOUNCE messages for any future
    updates.  Implementations SHOULD consider reasonable limits on the
    number of matching broadcasts to prevent resource exhaustion.
 
-7.4.  ANNOUNCE
+7.5.  ANNOUNCE
 
    A publisher sends an ANNOUNCE message to advertise a change in
    broadcast availability.  Only the suffix is encoded on the wire, as
@@ -585,7 +688,8 @@ Table of Contents
      Message Length (i)
      Announce Status (i),
      Broadcast Path Suffix (s),
-     Hops (i),
+     Hop Count (i),
+     Hop ID (i) ...,
    }
 
    *Announce Status*: A flag indicating the announce status.
@@ -597,11 +701,24 @@ Table of Contents
    *Broadcast Path Suffix*: This is combined with the broadcast path
    prefix to form the full broadcast path.
 
-   *Hops*: The number of hops from the origin publisher.  This is used
-   as a tiebreaker when there are multiple paths to the same broadcast.
-   A relay SHOULD increment this value when forwarding an announcement.
+   *Hop Count*: The number of Hop ID entries that follow.  A value of 0
+   means no Hop ID entries are present, indicating a fully unknown path
+   (e.g. the announcement originated locally or was received from a peer
+   that does not support hop tracking).  A receiver MUST close the
+   stream with a PROTOCOL_VIOLATION if the Hop Count does not match the
+   number of subsequent Hop ID entries.
 
-7.5.  SUBSCRIBE
+   *Hop ID*: A unique identifier for each relay in the path from the
+   origin publisher.  Each relay MUST append its own Hop ID and
+   increment the Hop Count when forwarding an announcement, even if no
+   prior Hop ID entries are present (e.g. when receiving from an older
+   protocol version).  The Hop Count is used as a tiebreaker when there
+   are multiple paths to the same broadcast.  A Hop ID value of 0
+   indicates an unknown or bridged relay hop (e.g. when bridging from an
+   older protocol version that does not assign Hop IDs); the Hop Count
+   still reflects the total number of entries including unknown hops.
+
+7.6.  SUBSCRIBE
 
    SUBSCRIBE is sent by a subscriber to start a subscription.
 
@@ -645,7 +762,7 @@ Table of Contents
    means unbounded (default).  A non-zero value is the absolute group
    sequence + 1.
 
-7.6.  SUBSCRIBE_UPDATE
+7.7.  SUBSCRIBE_UPDATE
 
    A subscriber can modify a subscription with a SUBSCRIBE_UPDATE
    message.  A subscriber MAY send multiple SUBSCRIBE_UPDATE messages to
@@ -663,7 +780,7 @@ Table of Contents
 
    See Section 5.1.2 for information about each field.
 
-7.7.  SUBSCRIBE_OK
+7.8.  SUBSCRIBE_OK
 
    A SUBSCRIBE_OK message is sent in response to a SUBSCRIBE.  The
    publisher MAY send multiple SUBSCRIBE_OK messages to update the
@@ -693,7 +810,7 @@ Table of Contents
 
    See Section 5.1.2 for information about the other fields.
 
-7.8.  SUBSCRIBE_DROP
+7.9.  SUBSCRIBE_DROP
 
    A SUBSCRIBE_DROP message is sent by the publisher on the Subscribe
    Stream when groups cannot be served.
@@ -717,7 +834,7 @@ Table of Contents
    *Error Code*: An application-specific error code.  A value of 0
    indicates no error; the groups are simply unavailable.
 
-7.9.  FETCH
+7.10.  FETCH
 
    FETCH is sent by a subscriber to request a single group from a track.
 
@@ -742,21 +859,47 @@ Table of Contents
    The publisher responds with FRAME messages on the same stream.  The
    publisher FINs the stream after the last frame, or resets on error.
 
-7.10.  PROBE
+7.11.  PROBE
 
    PROBE is used to measure the available bitrate of the connection.
 
    PROBE Message {
      Message Length (i)
      Bitrate (i)
+     RTT (i)
    }
 
    *Bitrate*: When sent by the subscriber (stream opener): the target
    bitrate in bits per second that the publisher should pad up to.  When
-   sent by the publisher (responder): the current measured bitrate in
-   bits per second.
+   sent by the publisher (responder): the current estimated bitrate in
+   bits per second.  A value of 0 means unknown.
 
-7.11.  GROUP
+   *RTT*: The smoothed round-trip time in milliseconds, as defined in
+   [RFC9002].  A value of 0 means unknown.
+
+      NOTE: RTT is included in the PROBE message because not all QUIC
+      implementations and browser WebTransport APIs expose RTT
+      statistics directly.  This field may be deprecated once RTT is
+      universally available via the underlying transport API.
+
+7.12.  GOAWAY
+
+   A GOAWAY message is sent to initiate a graceful session shutdown with
+   an optional redirect.
+
+   GOAWAY Message {
+     Message Length (i)
+     New Session URI (s)
+   }
+
+   *New Session URI*: A URI for the peer to reconnect to.  An empty
+   string indicates no redirect; the peer should simply close the
+   session.  A recipient MUST validate the URI against local policy
+   before reconnecting, including verifying the scheme, authority, and
+   port are permitted.  If validation fails, the recipient MUST close
+   the session without reconnecting.
+
+7.13.  GROUP
 
    The GROUP message contains information about a Group, as well as a
    reference to the subscription being served.
@@ -774,7 +917,7 @@ Table of Contents
    increase by 1 for each new group.  A subscriber MUST handle gaps,
    potentially caused by congestion.
 
-7.12.  FRAME
+7.14.  FRAME
 
    The FRAME message is a payload within a group.
 
@@ -789,7 +932,31 @@ Table of Contents
 
 8.  Appendix A: Changelog
 
-8.1.  moq-lite-03
+8.1.  moq-lite-05
+
+   *  Added Setup Stream (unidirectional, 0x1) opened by both peers for
+      session parameter exchange.
+
+   *  Added SETUP message with ID + Length + Value parameters; unknown
+      IDs are skipped for forward compatibility.
+
+   *  Added Path parameter for native QUIC sessions (equivalent to the
+      HTTP/3 :path pseudo-header).
+
+8.2.  moq-lite-04
+
+   *  Renamed ANNOUNCE_PLEASE to ANNOUNCE_INTEREST.
+
+   *  ANNOUNCE Hops count replaced with explicit Hop ID list for loop
+      detection.
+
+   *  Added Exclude Hop to ANNOUNCE_INTEREST for relay loop avoidance.
+
+   *  Added GOAWAY stream for graceful session shutdown and migration.
+
+   *  Added RTT to PROBE message.  Bitrate and RTT use 0 for unknown.
+
+8.3.  moq-lite-03
 
    *  Version negotiated via ALPN (moq-lite-xx) instead of SETUP
       messages.
@@ -823,13 +990,13 @@ Table of Contents
 
    *  SUBSCRIBE_OK may be sent multiple times.
 
-8.2.  moq-lite-02
+8.4.  moq-lite-02
 
    *  Added SessionCompat stream.
 
    *  Editorial stuff.
 
-8.3.  moq-lite-01
+8.5.  moq-lite-01
 
    *  Added Message Length (i) to all messages.
 
@@ -866,8 +1033,6 @@ Table of Contents
    *  No paused subscriptions (forward=0)
 
 9.1.  Deleted Messages
-
-   *  GOAWAY
 
    *  MAX_SUBSCRIBE_ID
 
@@ -917,7 +1082,7 @@ Table of Contents
 
 9.2.  Renamed Messages
 
-   *  SUBSCRIBE_NAMESPACE -> ANNOUNCE_PLEASE
+   *  SUBSCRIBE_NAMESPACE -> ANNOUNCE_INTEREST
 
    *  SUBGROUP_HEADER -> GROUP
 
@@ -977,6 +1142,10 @@ Table of Contents
    [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
+
+   [RFC9002]  Iyengar, J., Ed. and I. Swett, Ed., "QUIC Loss Detection
+              and Congestion Control", RFC 9002, DOI 10.17487/RFC9002,
+              May 2021, <https://www.rfc-editor.org/rfc/rfc9002>.
 
 Acknowledgments
 
