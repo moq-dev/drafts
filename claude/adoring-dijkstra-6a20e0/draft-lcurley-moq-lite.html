@@ -1745,7 +1745,10 @@ Once a newer group exists, a group is considered expired if the time between its
 <p id="section-6.2-5">If the Track's negotiated <code>Timescale</code> is non-zero, the time delta is computed from per-frame timestamps (see <a href="#frame" class="auto internal xref">Section 3.5</a>).
 Otherwise the delta is computed from wall-clock arrival time: the first byte of a group received (subscriber) or queued (publisher).
 Timestamp-based expiration is preferred because it remains consistent across relays and is unaffected by buffering or jitter.<a href="#section-6.2-5" class="pilcrow">¶</a></p>
-<p id="section-6.2-6">An expired group <span class="bcp14">SHOULD</span> be reset at the QUIC level to avoid consuming flow control.<a href="#section-6.2-6" class="pilcrow">¶</a></p>
+<p id="section-6.2-6">A group that contains zero frames has no timestamp.
+For expiration purposes its effective time is the wall-clock arrival/queue time of the group itself, regardless of the Track's <code>Timescale</code>.
+This avoids stalling expiration on tracks that intentionally emit empty groups as keep-alives or gap markers.<a href="#section-6.2-6" class="pilcrow">¶</a></p>
+<p id="section-6.2-7">An expired group <span class="bcp14">SHOULD</span> be reset at the QUIC level to avoid consuming flow control.<a href="#section-6.2-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="unidirectional-streams">
@@ -1818,7 +1821,8 @@ The absolute sequence number of the group carried by this datagram.
 Each datagram represents a complete group containing exactly one frame.<a href="#section-6.4-7" class="pilcrow">¶</a></p>
 <p id="section-6.4-8"><strong>Timestamp</strong>:
 The absolute timestamp of the single frame in the group, expressed in the Track's negotiated <code>Timescale</code>.
-A value of 0 means unspecified.<a href="#section-6.4-8" class="pilcrow">¶</a></p>
+This field is only meaningful when the Track's <code>Timescale</code> is non-zero; in that case any varint value (including 0) is a valid absolute timestamp.
+If the Track's <code>Timescale</code> is 0 (unspecified), the publisher <span class="bcp14">MUST</span> encode this field as <code>0</code> and the subscriber <span class="bcp14">MUST</span> ignore it.<a href="#section-6.4-8" class="pilcrow">¶</a></p>
 <p id="section-6.4-9"><strong>Payload</strong>:
 The frame payload, extending to the end of the datagram.
 The total datagram body (including Subscribe ID, Group Sequence, and Timestamp) <span class="bcp14">MUST NOT</span> exceed 1200 bytes.
@@ -1896,7 +1900,8 @@ Implementations <span class="bcp14">SHOULD</span> consider reasonable limits on 
 <p id="section-7.4-1">A publisher sends an ANNOUNCE message to advertise a change in broadcast availability.
 Only the suffix is encoded on the wire, as the full path can be constructed by prepending the requested prefix.<a href="#section-7.4-1" class="pilcrow">¶</a></p>
 <p id="section-7.4-2">The status is relative to all prior ANNOUNCE messages on the same stream.
-A publisher <span class="bcp14">MUST</span> ONLY alternate between status values (from active to ended or vice versa).<a href="#section-7.4-2" class="pilcrow">¶</a></p>
+A publisher <span class="bcp14">MUST</span> alternate between unavailable (<code>ended</code>) and available (<code>active</code> or <code>restart</code>) states.
+A <code>restart</code> <span class="bcp14">MAY</span> follow an <code>active</code> or another <code>restart</code> to replace the prior advertisement atomically; see <code>Announce Status</code> below for the exact semantics.<a href="#section-7.4-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-7.4-3">
 <pre>
 ANNOUNCE Message {
@@ -2200,7 +2205,7 @@ The first frame of a group is encoded as a delta from <code>0</code>, i.e. the z
 The result is expressed in the Track's negotiated <code>Timescale</code> (see <span><a href="#subscribe-ok" class="internal xref">SUBSCRIBE_OK</a> (<a href="#subscribe-ok" class="auto internal xref">Section 7.7</a>)</span>).
 If the Track's <code>Timescale</code> is 0 (unspecified), the publisher <span class="bcp14">SHOULD</span> encode <code>0</code> and the subscriber <span class="bcp14">MUST</span> ignore the value.<a href="#section-7.13-3" class="pilcrow">¶</a></p>
 <p id="section-7.13-4"><strong>Payload</strong>:
-An application specific payload.
+An application-specific payload.
 A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify the contents unless otherwise negotiated.<a href="#section-7.13-4" class="pilcrow">¶</a></p>
 </section>
 </div>
