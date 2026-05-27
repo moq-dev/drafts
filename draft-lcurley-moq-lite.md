@@ -335,6 +335,10 @@ If the Track's negotiated `Timescale` is non-zero, the time delta is computed fr
 Otherwise the delta is computed from wall-clock arrival time: the first byte of a group received (subscriber) or queued (publisher).
 Timestamp-based expiration is preferred because it remains consistent across relays and is unaffected by buffering or jitter.
 
+A group that contains zero frames has no timestamp.
+For expiration purposes its effective time is the wall-clock arrival/queue time of the group itself, regardless of the Track's `Timescale`.
+This avoids stalling expiration on tracks that intentionally emit empty groups as keep-alives or gap markers.
+
 An expired group SHOULD be reset at the QUIC level to avoid consuming flow control.
 
 ## Unidirectional Streams
@@ -389,7 +393,8 @@ Each datagram represents a complete group containing exactly one frame.
 
 **Timestamp**:
 The absolute timestamp of the single frame in the group, expressed in the Track's negotiated `Timescale`.
-A value of 0 means unspecified.
+This field is only meaningful when the Track's `Timescale` is non-zero; in that case any varint value (including 0) is a valid absolute timestamp.
+If the Track's `Timescale` is 0 (unspecified), the publisher MUST encode this field as `0` and the subscriber MUST ignore it.
 
 **Payload**:
 The frame payload, extending to the end of the datagram.
@@ -452,7 +457,8 @@ A publisher sends an ANNOUNCE message to advertise a change in broadcast availab
 Only the suffix is encoded on the wire, as the full path can be constructed by prepending the requested prefix.
 
 The status is relative to all prior ANNOUNCE messages on the same stream.
-A publisher MUST ONLY alternate between status values (from active to ended or vice versa).
+A publisher MUST alternate between unavailable (`ended`) and available (`active` or `restart`) states.
+A `restart` MAY follow an `active` or another `restart` to replace the prior advertisement atomically; see `Announce Status` below for the exact semantics.
 
 ~~~
 ANNOUNCE Message {
@@ -727,7 +733,7 @@ The result is expressed in the Track's negotiated `Timescale` (see [SUBSCRIBE_OK
 If the Track's `Timescale` is 0 (unspecified), the publisher SHOULD encode `0` and the subscriber MUST ignore the value.
 
 **Payload**:
-An application specific payload.
+An application-specific payload.
 A generic library or relay MUST NOT inspect or modify the contents unless otherwise negotiated.
 
 
