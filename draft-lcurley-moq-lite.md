@@ -119,17 +119,25 @@ The combination of these preferences enables the most important content to arriv
 A Group is an ordered stream of Frames within a Track.
 
 Each group consists of an append-only list of Frames.
-A Group is served by a dedicated QUIC stream which is closed on completion, reset by the publisher, or cancelled by the subscriber.
+A Group is normally served by a dedicated QUIC stream which is closed on completion, reset by the publisher, or cancelled by the subscriber.
 This ensures that all Frames within a Group arrive reliably and in order.
 
 In contrast, Groups may arrive out of order due to network congestion and prioritization.
 The application SHOULD process or buffer groups out of order to avoid blocking on flow control.
+
+A Group MAY also be transmitted as a single QUIC datagram (see [Datagrams](#datagrams)) when the entire group fits in one datagram and reliability is not required.
+A datagram-delivered group contains exactly one Frame and is not retransmitted on loss.
+The same subscription MAY receive groups via both streams and datagrams; the application MUST be prepared to deduplicate by group sequence.
 
 ## Frame
 A Frame is a payload of bytes within a Group.
 
 A frame is used to represent a chunk of data with an upfront size.
 The contents are opaque to the moq-lite layer.
+
+Each frame carries a presentation timestamp expressed in the parent Track's `Timescale` (units per second, negotiated in SUBSCRIBE_OK).
+The timestamp is the source-of-truth for media time and is used by the moq-lite layer for [expiration](#expiration) decisions instead of wall-clock arrival time.
+A Track with a `Timescale` of 0 (unspecified) carries no meaningful timestamps and falls back to wall-clock arrival time for expiration.
 
 # Flow
 This section outlines the flow of messages within a moq-lite session.
@@ -191,9 +199,13 @@ Each ANNOUNCE message contains one of the following statuses:
 
 - `active`: a matching broadcast is available.
 - `ended`: a previously `active` broadcast is no longer available.
+- `restart`: a previously `active` broadcast has been atomically restarted, replacing the prior advertisement with new hop information.
 
-Each broadcast starts as `ended` and MUST alternate between `active` and `ended`.
-The subscriber MUST reset the stream if it receives a duplicate status, such as two `active` statuses in a row or an `ended` without `active`.
+Each broadcast starts as `ended` and MUST alternate between `active`/`restart` and `ended`.
+A `restart` status is equivalent to an `ended` immediately followed by an `active`, but signals to the subscriber that the broadcast was never unavailable.
+This is used when only the origin or hop path changes (e.g. a relay failover or upstream restart) without interrupting the broadcast.
+
+The subscriber MUST reset the stream if it receives an invalid sequence, such as two `active` statuses in a row, a `restart` without a prior `active`, or an `ended` without a prior `active`/`restart`.
 When the stream is closed, the subscriber MUST assume that all broadcasts are now `ended`.
 
 Path prefix matching and equality is done on a byte-by-byte basis.
@@ -317,8 +329,12 @@ An implementation MAY use the minimum of both when determining when to expire a 
 
 Group age is computed relative to the latest group by sequence number.
 A group is never expired until at least the next group (by sequence number) has been received or queued.
-Once a newer group exists, a group is considered expired if the time between its arrival and the latest group's arrival exceeds `Max Latency`.
-The arrival time is when the first byte of a group is received (subscriber) or queued (publisher).
+Once a newer group exists, a group is considered expired if the time between its first frame and the latest group's first frame exceeds `Max Latency`.
+
+If the Track's negotiated `Timescale` is non-zero, the time delta is computed from per-frame timestamps (see [Frame](#frame)).
+Otherwise the delta is computed from wall-clock arrival time: the first byte of a group received (subscriber) or queued (publisher).
+Timestamp-based expiration is preferred because it remains consistent across relays and is unaffected by buffering or jitter.
+
 An expired group SHOULD be reset at the QUIC level to avoid consuming flow control.
 
 ## Unidirectional Streams
@@ -340,6 +356,47 @@ A frame MAY contain an empty payload, potentially indicating a gap in the group.
 Both the publisher and subscriber MAY reset the stream at any time.
 This is not a fatal error and the session remains active.
 The subscriber MAY cache the error and potentially retry later.
+
+## Datagrams
+QUIC datagrams provide unreliable, unordered delivery for latency-sensitive content that does not need retransmission.
+
+A publisher MAY transmit any Group as a single QUIC datagram in addition to (or instead of) opening a Group Stream.
+Datagrams are not cached: a publisher SHOULD only send a datagram if the congestion controller can transmit it immediately.
+A subscriber receiving the same group via both a stream and a datagram MUST deduplicate by group sequence.
+
+There is no separate subscription for datagram delivery; datagrams are routed to existing subscriptions via the Subscribe ID.
+The publisher decides which groups to send as datagrams based on application hints, group size, and network conditions.
+A subscriber that does not wish to receive datagrams can ignore them; well-behaved publishers SHOULD avoid sending datagrams when streams suffice.
+
+Each datagram body has the following encoding (note: there is no message length prefix; the QUIC datagram boundary delimits the payload):
+
+~~~
+DATAGRAM Body {
+  Subscribe ID (i)
+  Group Sequence (i)
+  Timestamp (i)
+  Payload (b)
+}
+~~~
+
+**Subscribe ID**:
+The Subscribe ID of an active subscription on the same session.
+A subscriber receiving a datagram with an unknown Subscribe ID MUST silently drop it.
+
+**Group Sequence**:
+The absolute sequence number of the group carried by this datagram.
+Each datagram represents a complete group containing exactly one frame.
+
+**Timestamp**:
+The absolute timestamp of the single frame in the group, expressed in the Track's negotiated `Timescale`.
+A value of 0 means unspecified.
+
+**Payload**:
+The frame payload, extending to the end of the datagram.
+The total datagram body (including Subscribe ID, Group Sequence, and Timestamp) MUST NOT exceed 1200 bytes.
+This limit ensures the datagram fits within the minimum QUIC path MTU without IP-layer fragmentation.
+Payloads that would not fit MUST be sent as a Group Stream instead.
+A receiver MUST silently drop any datagram that exceeds this limit.
 
 
 
@@ -412,6 +469,10 @@ A flag indicating the announce status.
 
 - `ended` (0): A path is no longer available.
 - `active` (1): A path is now available.
+- `restart` (2): An atomic re-announcement of a path that is already `active`.
+  The previous `active` announcement is implicitly ended and replaced by this one in a single message.
+  The Hop ID list MAY differ from the prior announcement (e.g. after a relay failover).
+  A `restart` status MUST NOT be sent unless the path is currently `active`; otherwise the receiver MUST treat it as a protocol violation.
 
 **Broadcast Path Suffix**:
 This is combined with the broadcast path prefix to form the full broadcast path.
@@ -494,7 +555,7 @@ SUBSCRIBE_UPDATE Message {
 See [SUBSCRIBE](#subscribe) for information about each field.
 
 
-## SUBSCRIBE_OK
+## SUBSCRIBE_OK {#subscribe-ok}
 A SUBSCRIBE_OK message is sent in response to a SUBSCRIBE.
 The publisher MAY send multiple SUBSCRIBE_OK messages to update the subscription.
 The first message on the response stream MUST be a SUBSCRIBE_OK; a SUBSCRIBE_DROP MUST NOT precede it.
@@ -508,6 +569,7 @@ SUBSCRIBE_OK Message {
   Publisher Max Latency (i)
   Start Group (i)
   End Group (i)
+  Publisher Timescale (i)
 }
 ~~~
 
@@ -523,6 +585,12 @@ A non-zero value is the absolute group sequence + 1.
 The resolved absolute end group sequence (inclusive).
 A value of 0 means unbounded.
 A non-zero value is the absolute group sequence + 1.
+
+**Publisher Timescale**:
+The number of timestamp units per second for frame timestamps on this Track.
+A value of 0 means unspecified; the subscriber MUST treat per-frame timestamps as opaque and fall back to wall-clock arrival time for [expiration](#expiration).
+A non-zero value is fixed for the lifetime of the subscription and MUST NOT change in subsequent SUBSCRIBE_OK messages; a change in timescale requires a new subscription.
+Common values include `1000` (milliseconds), `1000000` (microseconds), `48000` (audio sample rate), and `90000` (RTP video clock).
 
 See [SUBSCRIBE](#subscribe) for information about the other fields.
 
@@ -645,10 +713,18 @@ The FRAME message is a payload within a group.
 
 ~~~
 FRAME Message {
+  Timestamp Delta (i)
   Message Length (i)
   Payload (b)
 }
 ~~~
+
+**Timestamp Delta**:
+A signed delta from the previous frame's timestamp, encoded as a zigzag-mapped variable-length integer.
+The zigzag mapping is: `unsigned = (signed << 1) ^ (signed >> 63)`, decoded as `signed = (unsigned >> 1) ^ -(unsigned & 1)`.
+The first frame of a group is encoded as a delta from `0`, i.e. the zigzag encoding of the absolute timestamp.
+The result is expressed in the Track's negotiated `Timescale` (see [SUBSCRIBE_OK](#subscribe-ok)).
+If the Track's `Timescale` is 0 (unspecified), the publisher SHOULD encode `0` and the subscriber MUST ignore the value.
 
 **Payload**:
 An application specific payload.
@@ -656,6 +732,13 @@ A generic library or relay MUST NOT inspect or modify the contents unless otherw
 
 
 # Appendix A: Changelog
+
+## moq-lite-05
+- Added `restart` status to ANNOUNCE for atomic re-announcement (UNANNOUNCE+ANNOUNCE) when origin or hop path changes without interrupting the broadcast.
+- Added `Publisher Timescale` to SUBSCRIBE_OK for per-track timestamp negotiation.
+- Added `Timestamp Delta` (zigzag varint) to FRAME, encoding a signed delta from the previous frame's timestamp in the Track's timescale.
+- Timestamp-based expiration replaces wall-clock arrival time when a Track timescale is negotiated.
+- Added QUIC datagram delivery for groups, sharing Subscribe IDs with existing subscriptions (no separate control stream).
 
 ## moq-lite-04
 - Renamed ANNOUNCE_PLEASE to ANNOUNCE_INTEREST.
@@ -700,7 +783,6 @@ A quick comparison of moq-lite and moq-transport-14:
 - No subgroups
 - No group/object ID gaps
 - No object properties
-- No datagrams
 - No paused subscriptions (forward=0)
 
 ## Deleted Messages
