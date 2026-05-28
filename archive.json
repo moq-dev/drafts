@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-04-12T01:50:43.542478+00:00",
+  "timestamp": "2026-05-28T02:26:06.192883+00:00",
   "repo": "moq-dev/drafts",
   "labels": [
     {
@@ -1192,6 +1192,239 @@
           "createdAt": "2026-04-09T05:08:27Z",
           "updatedAt": "2026-04-09T05:08:27Z",
           "comments": []
+        }
+      ]
+    },
+    {
+      "number": 23,
+      "id": "PR_kwDOLz_x-M7f-oTk",
+      "title": "moq-lite-05: REANNOUNCE, timestamps, and datagrams",
+      "url": "https://github.com/moq-dev/drafts/pull/23",
+      "state": "OPEN",
+      "author": "kixelated",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "## Summary\n\nThree additions for moq-lite-05:\n\n### 1. REANNOUNCE (atomic re-announcement)\nA new `restart` (2) value for `Announce Status` on the existing ANNOUNCE message. Semantically equivalent to `ended` immediately followed by `active` for the same path, but signals that the broadcast was never actually unavailable \u2014 useful when only the origin or hop path changes (relay failover, upstream restart). The Hop ID list may differ from the prior announcement.\n\nAlternation rules updated: a broadcast cycles `ended` \u2194 (`active`|`restart`). A `restart` without a prior `active` is a protocol violation.\n\n### 2. Timestamps and per-track timescale\nBased on [moq-dev/moq#1439](https://github.com/moq-dev/moq/pull/1439).\n\n- `Publisher Timescale (i)` added to SUBSCRIBE_OK. Units per second; `0` means unspecified. Fixed for the lifetime of the subscription.\n- `Timestamp Delta (i)` prepended to every FRAME \u2014 zigzag-encoded signed delta from the previous frame's timestamp (first frame deltas from `0`).\n- Expiration is now timestamp-based when timescale is non-zero, falling back to wall-clock arrival time otherwise. This keeps expiration consistent across relays and unaffected by buffering/jitter.\n\n### 3. QUIC datagram delivery\nBased on [moq-dev/moq#1374](https://github.com/moq-dev/moq/pull/1374), but with a different shape per discussion: no separate DATAGRAMS control stream. A publisher MAY send any group as one QUIC datagram routed via the existing Subscribe ID, so datagrams and streams coexist on a single subscription.\n\nDatagram body: `Subscribe ID (i) | Group Sequence (i) | Timestamp (i) | Payload (b)`. Each datagram is a complete group with exactly one frame; not cached, not retransmitted. Total body capped at 1200 bytes to fit within the minimum QUIC path MTU without IP fragmentation \u2014 oversize payloads must be sent as a Group Stream instead. Subscribers must deduplicate by group sequence when receiving both delivery paths.\n\n## Open design choices worth a second look\n\n- Status name `restart` vs `reannounce` \u2014 happy to rename.\n- Datagram includes an absolute `Timestamp` (PR 1374 omits it) so timestamp-based expiration also works for datagram-only groups.\n- No separate DATAGRAMS control stream / no per-subscription opt-out. Could add a SUBSCRIBE flag if subscribers need to refuse datagrams.\n\n## Test plan\n\n- [x] `make draft-lcurley-moq-lite.txt` builds cleanly.\n- [ ] Cross-check wire formats against the moq-dev Rust implementation once Lite05 lands there.\n- [ ] Working group review of the `restart` naming and the datagram-MTU cap.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+      "createdAt": "2026-05-27T20:17:33Z",
+      "updatedAt": "2026-05-27T20:22:42Z",
+      "baseRepository": "moq-dev/drafts",
+      "baseRefName": "main",
+      "baseRefOid": "6cedca9fc74078bd57383a6ac16fa037277c6fa6",
+      "headRepository": "moq-dev/drafts",
+      "headRefName": "claude/adoring-dijkstra-6a20e0",
+      "headRefOid": "3c92e4bb200225876c35091daa1493ff7b47027d",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "body": "<!-- This is an auto-generated comment: summarize by coderabbit.ai -->\n<!-- review_stack_entry_start -->\n\n[![Review Change Stack](https://storage.googleapis.com/coderabbit_public_assets/review-stack-in-coderabbit-ui.svg)](https://app.coderabbit.ai/change-stack/moq-dev/drafts/pull/23?utm_source=github_walkthrough&utm_medium=github&utm_campaign=change_stack)\n\n<!-- review_stack_entry_end -->\n<!-- This is an auto-generated comment: rate limited by coderabbit.ai -->\n\n> [!WARNING]\n> ## Review limit reached\n> \n> `@kixelated`, we couldn't start this review because you've reached your PR review rate limit.\n> \n> More reviews will be available in 55 minutes and 26 seconds. [Learn how PR review limits work](https://docs.coderabbit.ai/management/plans#fair-usage-limits-policy).\n> \n> Your organization has run out of usage credits. Purchase more in the [billing tab](https://app.coderabbit.ai/settings/subscription?tab=usage&tenantId=43a3cc7a-9a22-46cb-854d-dec79a791215).\n> \n> <details>\n> <summary>\u231b How to resolve this issue?</summary>\n> \n> After more reviews become available, a review can be triggered using the `@coderabbitai review` command as a PR comment. Alternatively, push new commits to this PR.\n> \n> We recommend that you space out your commits to avoid hitting the rate limit.\n> \n> </details>\n> \n> \n> <details>\n> <summary>\ud83d\udea6 How do rate limits work?</summary>\n> \n> CodeRabbit enforces hourly rate limits for each developer per organization.\n> \n> Our paid plans include higher PR review limits than trial, open-source, and free plans. In all cases, reviews become available again over time. During sustained high-volume PR review activity, CodeRabbit may temporarily slow when the next review becomes available.\n> \n> Please see our [Fair Usage Limits Policy](https://docs.coderabbit.ai/management/plans#fair-usage-limits-policy) for further information.\n> \n> </details>\n> \n> <details>\n> <summary>\u2139\ufe0f Review info</summary>\n> \n> <details>\n> <summary>\u2699\ufe0f Run configuration</summary>\n> \n> **Configuration used**: Organization UI\n> \n> **Review profile**: CHILL\n> \n> **Plan**: Pro\n> \n> **Run ID**: `75806512-1a6d-4836-be16-9e45f9a6158a`\n> \n> </details>\n> \n> <details>\n> <summary>\ud83d\udce5 Commits</summary>\n> \n> Reviewing files that changed from the base of the PR and between 8353c2d90674765e9809491382862cf5565506d7 and 3c92e4bb200225876c35091daa1493ff7b47027d.\n> \n> </details>\n> \n> <details>\n> <summary>\ud83d\udcd2 Files selected for processing (1)</summary>\n> \n> * `draft-lcurley-moq-lite.md`\n> \n> </details>\n> \n> </details>\n\n<!-- end of auto-generated comment: rate limited by coderabbit.ai -->\n\n<!-- walkthrough_start -->\n\n## Walkthrough\n\nThis draft updates moq-lite's protocol semantics and wire format by introducing explicit per-frame timestamp support with Timescale-based expiration, adding datagram delivery as an alternative to stream-based group transport, and extending ANNOUNCE messaging with an atomic `restart` status. The Group and Frame model now allows groups to be delivered either over dedicated QUIC streams or as single unreliable QUIC datagrams with subscriber-side deduplication. Frames carry Timestamp Delta fields (zigzag varint relative to prior frame timestamp); when Timescale is 0 (unspecified), timestamps are treated as opaque and wall-clock timing is used for expiration instead. The SUBSCRIBE_OK message gains a Publisher Timescale field that remains fixed for the subscription lifetime. Appendix entries are updated to reflect these new features.\n\n<!-- walkthrough_end -->\n<!-- pre_merge_checks_walkthrough_start -->\n\n<details>\n<summary>\ud83d\udea5 Pre-merge checks | \u2705 5</summary>\n\n<details>\n<summary>\u2705 Passed checks (5 passed)</summary>\n\n|         Check name         | Status   | Explanation                                                                                                                                                 |\n| :------------------------: | :------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------- |\n|         Title check        | \u2705 Passed | The title clearly and specifically identifies the three main changes: REANNOUNCE (renamed from RESTART), timestamps, and datagrams support for moq-lite-05. |\n|      Description check     | \u2705 Passed | The description is directly related to the changeset, providing clear explanations of the three protocol additions and their rationale.                     |\n|     Docstring Coverage     | \u2705 Passed | No functions found in the changed files to evaluate docstring coverage. Skipping docstring coverage check.                                                  |\n|     Linked Issues check    | \u2705 Passed | Check skipped because no linked issues were found for this pull request.                                                                                    |\n| Out of Scope Changes check | \u2705 Passed | Check skipped because no linked issues were found for this pull request.                                                                                    |\n\n</details>\n\n<sub>\u270f\ufe0f Tip: You can configure your own custom pre-merge checks in the settings.</sub>\n\n</details>\n\n<!-- pre_merge_checks_walkthrough_end -->\n<!-- finishing_touch_checkbox_start -->\n\n<details>\n<summary>\u2728 Finishing Touches</summary>\n\n<details>\n<summary>\u2728 Simplify code</summary>\n\n- [ ] <!-- {\"checkboxId\": \"f120d606-b0e2-4b7d-8316-181794555b43\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Create PR with simplified code\n- [ ] <!-- {\"checkboxId\": \"9a4e3077-58f6-4eba-b7ee-62e936ea00ea\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Commit simplified code in branch `claude/adoring-dijkstra-6a20e0`\n\n</details>\n\n</details>\n\n<!-- finishing_touch_checkbox_end -->\n<!-- tips_start -->\n\n---\n\nThanks for using [CodeRabbit](https://coderabbit.ai?utm_source=oss&utm_medium=github&utm_campaign=moq-dev/drafts&utm_content=23)! It's free for OSS, and your support helps us grow. If you like it, consider giving us a shout-out.\n\n<details>\n<summary>\u2764\ufe0f Share</summary>\n\n- [X](https://twitter.com/intent/tweet?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A&url=https%3A//coderabbit.ai)\n- [Mastodon](https://mastodon.social/share?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A%20https%3A%2F%2Fcoderabbit.ai)\n- [Reddit](https://www.reddit.com/submit?title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&text=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code.%20Check%20it%20out%3A%20https%3A//coderabbit.ai)\n- [LinkedIn](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcoderabbit.ai&mini=true&title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&summary=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code)\n\n</details>\n\n\n<sub>Comment `@coderabbitai help` to get the list of available commands and usage tips.</sub>\n\n<!-- tips_end -->\n<!-- internal state start -->\n\n\n<!-- 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 -->\n\n<!-- internal state end -->",
+          "createdAt": "2026-05-27T20:19:51Z",
+          "updatedAt": "2026-05-27T20:22:15Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABBNEFRA",
+          "commit": {
+            "abbreviatedOid": "8353c2d"
+          },
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "**Actionable comments posted: 4**\n\n<details>\n<summary>\ud83e\udd16 Prompt for all review comments with AI agents</summary>\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nInline comments:\nIn `@draft-lcurley-moq-lite.md`:\n- Line 730: Replace the phrase \"An application specific payload.\" with the\nhyphenated compound adjective \"An application-specific payload.\" \u2014 locate the\nexact sentence in draft-lcurley-moq-lite.md (the line containing \"An application\nspecific payload.\") and update it to use the hyphenated form for consistency and\nreadability.\n- Around line 390-393: The spec currently treats datagram field Timestamp=0 as\n\u201cunspecified,\u201d which prevents representing a true absolute timestamp of value 0\nfor Tracks with non\u2011zero Timescale; update the Timestamp definition (the\ndatagram/field named \"Timestamp\" in the Track description) so that \u201cunspecified\u201d\nis not conflated with the numeric zero\u2014either make unspecified conditional on\nTimescale=0 (i.e., if Timescale==0 then Timestamp MUST be 0 to mean unspecified)\nor add an explicit validity flag/parameter (e.g., a TimestampValid bit)\nalongside Timestamp to indicate whether the numeric value is meaningful; change\nthe prose and any examples to reflect the new rule and ensure all references to\nTimestamp and Timescale in the document use the new semantics.\n- Around line 472-476: Update the ANNOUNCE state-machine alternation rule so it\nexplicitly allows the `restart` status alongside `active` and `ended`: modify\nthe sentence that currently requires publishers to \u201cMUST ONLY alternate ...\nactive to ended or vice versa\u201d to mention `restart` (e.g., allow transitions\nbetween `active`, `ended`, and `restart` or state that `restart` may replace an\n`active` announcement atomically). Ensure references to `restart`, `active`, and\n`ended` in the ANNOUNCE section and any normative MUST language are updated so\nthe rules are consistent with the `restart` definition in the `restart` (2)\nparagraph.\n- Around line 332-336: The expiration definition is ambiguous for Groups that\ncontain zero FRAME messages; update the text around the Group/Frame/Max Latency\nexplanation so that when a Group has no FRAMEs its \u201cfirst frame\u201d timestamp is\ntreated as the group arrival/queue time (subscriber arrival or publisher queue\ntime) for the purpose of computing the delta used by Track (respecting Track\nnegotiation of Timescale), i.e., if Timescale is non-zero but the group is\nempty, fall back to arrival/queue time; ensure the new normative sentence\nreferences Group, Frame, Max Latency, Track and Timescale and clarifies this\nfallback rather than leaving it undefined or exempting empty groups.\n```\n\n</details>\n\n<details>\n<summary>\ud83e\ude84 Autofix (Beta)</summary>\n\nFix all unresolved CodeRabbit comments on this PR:\n\n- [ ] <!-- {\"checkboxId\": \"4b0d0e0a-96d7-4f10-b296-3a18ea78f0b9\"} --> Push a commit to this branch (recommended)\n- [ ] <!-- {\"checkboxId\": \"ff5b1114-7d8c-49e6-8ac1-43f82af23a33\"} --> Create a new PR with the fixes\n\n</details>\n\n---\n\n<details>\n<summary>\u2139\ufe0f Review info</summary>\n\n<details>\n<summary>\u2699\ufe0f Run configuration</summary>\n\n**Configuration used**: Organization UI\n\n**Review profile**: CHILL\n\n**Plan**: Pro\n\n**Run ID**: `15a5e7d0-a2bf-456f-9add-608867a569c8`\n\n</details>\n\n<details>\n<summary>\ud83d\udce5 Commits</summary>\n\nReviewing files that changed from the base of the PR and between 6cedca9fc74078bd57383a6ac16fa037277c6fa6 and 8353c2d90674765e9809491382862cf5565506d7.\n\n</details>\n\n<details>\n<summary>\ud83d\udcd2 Files selected for processing (1)</summary>\n\n* `draft-lcurley-moq-lite.md`\n\n</details>\n\n</details>\n\n<!-- This is an auto-generated comment by CodeRabbit for review status -->",
+          "createdAt": "2026-05-27T20:19:55Z",
+          "updatedAt": "2026-05-27T20:19:57Z",
+          "comments": [
+            {
+              "originalPosition": 54,
+              "body": "_\u26a0\ufe0f Potential issue_ | _\ud83d\udfe0 Major_ | _\u26a1 Quick win_\n\n**Define expiration behavior for zero-frame groups.**\n\nExpiration now uses \u201ctime between its first frame and the latest group's first frame\u201d, but a Group MAY contain zero FRAME messages (Line 353), so this can be undefined. Add normative fallback behavior for empty groups (e.g., use group arrival/queue time or exempt until non-empty successor).\n\n<details>\n<summary>\ud83e\udd16 Prompt for AI Agents</summary>\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn `@draft-lcurley-moq-lite.md` around lines 332 - 336, The expiration definition\nis ambiguous for Groups that contain zero FRAME messages; update the text around\nthe Group/Frame/Max Latency explanation so that when a Group has no FRAMEs its\n\u201cfirst frame\u201d timestamp is treated as the group arrival/queue time (subscriber\narrival or publisher queue time) for the purpose of computing the delta used by\nTrack (respecting Track negotiation of Timescale), i.e., if Timescale is\nnon-zero but the group is empty, fall back to arrival/queue time; ensure the new\nnormative sentence references Group, Frame, Max Latency, Track and Timescale and\nclarifies this fallback rather than leaving it undefined or exempting empty\ngroups.\n```\n\n</details>\n\n<!-- fingerprinting:phantom:triton:hawk -->\n\n<!-- This is an auto-generated reply by CodeRabbit -->\n\n\u2705 Confirmed as addressed by @kixelated\n\n<!-- This is an auto-generated comment by CodeRabbit -->",
+              "createdAt": "2026-05-27T20:19:55Z",
+              "updatedAt": "2026-05-27T20:22:39Z"
+            },
+            {
+              "originalPosition": 96,
+              "body": "_\u26a0\ufe0f Potential issue_ | _\ud83d\udfe0 Major_ | _\u26a1 Quick win_\n\n**Avoid overloading datagram `Timestamp=0` as \u201cunspecified.\u201d**\n\nUsing `0` as \u201cunspecified\u201d makes it impossible to represent a legitimate absolute timestamp of 0 for tracks with non-zero timescale. Consider making \u201cunspecified\u201d conditional on `Timescale=0` only, or add an explicit flag/parameter for timestamp validity.\n\n<details>\n<summary>\ud83e\udd16 Prompt for AI Agents</summary>\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn `@draft-lcurley-moq-lite.md` around lines 390 - 393, The spec currently treats\ndatagram field Timestamp=0 as \u201cunspecified,\u201d which prevents representing a true\nabsolute timestamp of value 0 for Tracks with non\u2011zero Timescale; update the\nTimestamp definition (the datagram/field named \"Timestamp\" in the Track\ndescription) so that \u201cunspecified\u201d is not conflated with the numeric zero\u2014either\nmake unspecified conditional on Timescale=0 (i.e., if Timescale==0 then\nTimestamp MUST be 0 to mean unspecified) or add an explicit validity\nflag/parameter (e.g., a TimestampValid bit) alongside Timestamp to indicate\nwhether the numeric value is meaningful; change the prose and any examples to\nreflect the new rule and ensure all references to Timestamp and Timescale in the\ndocument use the new semantics.\n```\n\n</details>\n\n<!-- fingerprinting:phantom:triton:hawk -->\n\n<!-- This is an auto-generated reply by CodeRabbit -->\n\n\u2705 Confirmed as addressed by @kixelated\n\n<!-- This is an auto-generated comment by CodeRabbit -->",
+              "createdAt": "2026-05-27T20:19:55Z",
+              "updatedAt": "2026-05-27T20:22:41Z"
+            },
+            {
+              "originalPosition": 115,
+              "body": "_\u26a0\ufe0f Potential issue_ | _\ud83d\udfe0 Major_ | _\u26a1 Quick win_\n\n**Resolve ANNOUNCE state-machine contradiction with existing alternation rule.**\n\n`restart` is now valid, but the ANNOUNCE section still states publishers \u201cMUST ONLY alternate ... active to ended or vice versa\u201d (Line 455), which conflicts with this new state. Please update the rule in that section to include `restart` explicitly to avoid incompatible implementations.\n\n<details>\n<summary>\ud83e\udd16 Prompt for AI Agents</summary>\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn `@draft-lcurley-moq-lite.md` around lines 472 - 476, Update the ANNOUNCE\nstate-machine alternation rule so it explicitly allows the `restart` status\nalongside `active` and `ended`: modify the sentence that currently requires\npublishers to \u201cMUST ONLY alternate ... active to ended or vice versa\u201d to mention\n`restart` (e.g., allow transitions between `active`, `ended`, and `restart` or\nstate that `restart` may replace an `active` announcement atomically). Ensure\nreferences to `restart`, `active`, and `ended` in the ANNOUNCE section and any\nnormative MUST language are updated so the rules are consistent with the\n`restart` definition in the `restart` (2) paragraph.\n```\n\n</details>\n\n<!-- fingerprinting:phantom:triton:hawk -->\n\n<!-- This is an auto-generated reply by CodeRabbit -->\n\n\u2705 Confirmed as addressed by @kixelated\n\n<!-- This is an auto-generated comment by CodeRabbit -->",
+              "createdAt": "2026-05-27T20:19:55Z",
+              "updatedAt": "2026-05-27T20:22:41Z"
+            },
+            {
+              "originalPosition": 166,
+              "body": "_\u26a0\ufe0f Potential issue_ | _\ud83d\udfe1 Minor_ | _\u26a1 Quick win_\n\n**Hyphenate \u201capplication-specific\u201d.**\n\nUse the compound adjective form here for consistency and readability.\n\n<details>\n<summary>\ud83e\uddf0 Tools</summary>\n\n<details>\n<summary>\ud83e\ude9b LanguageTool</summary>\n\n[grammar] ~730-~730: Use a hyphen to join words.\nContext: ... the value.  **Payload**: An application specific payload. A generic library or r...\n\n(QB_NEW_EN_HYPHEN)\n\n</details>\n\n</details>\n\n<details>\n<summary>\ud83e\udd16 Prompt for AI Agents</summary>\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn `@draft-lcurley-moq-lite.md` at line 730, Replace the phrase \"An application\nspecific payload.\" with the hyphenated compound adjective \"An\napplication-specific payload.\" \u2014 locate the exact sentence in\ndraft-lcurley-moq-lite.md (the line containing \"An application specific\npayload.\") and update it to use the hyphenated form for consistency and\nreadability.\n```\n\n</details>\n\n<!-- fingerprinting:phantom:triton:hawk -->\n\n<!-- This is an auto-generated reply by CodeRabbit -->\n\n\u2705 Confirmed as addressed by @kixelated\n\n<!-- This is an auto-generated comment by CodeRabbit -->",
+              "createdAt": "2026-05-27T20:19:55Z",
+              "updatedAt": "2026-05-27T20:22:38Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABBNE3cg",
+          "commit": {
+            "abbreviatedOid": "3c92e4b"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-27T20:22:13Z",
+          "updatedAt": "2026-05-27T20:22:13Z",
+          "comments": [
+            {
+              "originalPosition": 54,
+              "body": "Addressed in 3c92e4b: empty groups now fall back to wall-clock arrival/queue time regardless of Timescale, so keep-alive or gap-marker groups don't stall expiration.",
+              "createdAt": "2026-05-27T20:22:13Z",
+              "updatedAt": "2026-05-27T20:22:13Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABBNE4Zw",
+          "commit": {
+            "abbreviatedOid": "3c92e4b"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-27T20:22:15Z",
+          "updatedAt": "2026-05-27T20:22:15Z",
+          "comments": [
+            {
+              "originalPosition": 96,
+              "body": "Addressed in 3c92e4b: datagram Timestamp is now only treated as unspecified when the Track's Timescale is 0; with a non-zero Timescale, 0 is a valid absolute timestamp.",
+              "createdAt": "2026-05-27T20:22:15Z",
+              "updatedAt": "2026-05-27T20:22:15Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABBNE5gA",
+          "commit": {
+            "abbreviatedOid": "3c92e4b"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-27T20:22:17Z",
+          "updatedAt": "2026-05-27T20:22:17Z",
+          "comments": [
+            {
+              "originalPosition": 115,
+              "body": "Addressed in 3c92e4b: alternation rule now states the publisher alternates between unavailable (`ended`) and available (`active` or `restart`), and a `restart` MAY follow an `active` or another `restart`.",
+              "createdAt": "2026-05-27T20:22:17Z",
+              "updatedAt": "2026-05-27T20:22:17Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABBNE6KQ",
+          "commit": {
+            "abbreviatedOid": "3c92e4b"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-27T20:22:19Z",
+          "updatedAt": "2026-05-27T20:22:19Z",
+          "comments": [
+            {
+              "originalPosition": 166,
+              "body": "Fixed in 3c92e4b.",
+              "createdAt": "2026-05-27T20:22:19Z",
+              "updatedAt": "2026-05-27T20:22:19Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABBNFBwQ",
+          "commit": {
+            "abbreviatedOid": "3c92e4b"
+          },
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-27T20:22:39Z",
+          "updatedAt": "2026-05-27T20:22:39Z",
+          "comments": [
+            {
+              "originalPosition": 166,
+              "body": "`@kixelated`, thanks for the fix!\n\n<!-- <review_comment_addressed> -->\n\n---\n\n<!-- This is an auto-generated comment: tweet message by coderabbit.ai -->\n\nIf you found this review helpful, would you consider giving us a shout-out on [X](https://twitter.com/intent/tweet?related=CodeRabbitAI&text=Quick%20win%3A%20hyphenate%20%22application-specific%22%20(use%20the%20compound%20adjective)%20to%20improve%20consistency%20and%20readability%20in%20docs%20%E2%80%94%20small%20fix%2C%20big%20clarity.%20Try%20%40coderabbitai!%20%F0%9F%9B%A0%EF%B8%8F%E2%9C%A8&url=https%3A%2F%2Fgithub.com%2Fmoq-dev%2Fdrafts%2Fpull%2F23%23discussion_r3313609789)?\n\nThank you for using CodeRabbit!\n\n<!-- end of auto-generated comment: tweet message by coderabbit.ai -->\n\n\n\n<!-- This is an auto-generated reply by CodeRabbit -->",
+              "createdAt": "2026-05-27T20:22:39Z",
+              "updatedAt": "2026-05-27T20:22:39Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABBNFCBg",
+          "commit": {
+            "abbreviatedOid": "3c92e4b"
+          },
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-27T20:22:40Z",
+          "updatedAt": "2026-05-27T20:22:40Z",
+          "comments": [
+            {
+              "originalPosition": 54,
+              "body": "`@kixelated`, confirmed \u2014 the new paragraph in the `Expiration` section cleanly handles zero-frame groups by falling back to wall-clock arrival/queue time regardless of `Timescale`, and the rationale (keep-alives / gap markers) makes the intent clear. Looks good!\n\n<!-- <review_comment_addressed> -->\n\n---\n\n<!-- This is an auto-generated comment: tweet message by coderabbit.ai -->\n\nIf you found this review helpful, would you consider giving us a shout-out on [X](https://twitter.com/intent/tweet?related=CodeRabbitAI&text=Review%3A%20clarified%20expiration%20for%20zero-frame%20groups%E2%80%94use%20group%20arrival%2Fqueue%20time%20as%20the%20%22first%20frame%22%20so%20Track%2FTimescale%20latency%20works%20and%20keep-alive%2Fgap%20groups%20don't%20stall.%20Try%20%40coderabbitai%20%F0%9F%9A%80&url=https%3A%2F%2Fgithub.com%2Fmoq-dev%2Fdrafts%2Fpull%2F23%23discussion_r3313609760)?\n\nThank you for using CodeRabbit!\n\n<!-- end of auto-generated comment: tweet message by coderabbit.ai -->\n\n\n\n<!-- This is an auto-generated reply by CodeRabbit -->",
+              "createdAt": "2026-05-27T20:22:40Z",
+              "updatedAt": "2026-05-27T20:22:40Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABBNFCrw",
+          "commit": {
+            "abbreviatedOid": "3c92e4b"
+          },
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-27T20:22:42Z",
+          "updatedAt": "2026-05-27T20:22:42Z",
+          "comments": [
+            {
+              "originalPosition": 115,
+              "body": "`@kixelated`, confirmed \u2014 the file now correctly states the publisher alternates between unavailable (`ended`) and available (`active` or `restart`), and that a `restart` MAY follow an `active` or another `restart`. The subscriber validation rules are consistent with this. Thanks for the fix!\n\n<!-- <review_comment_addressed> -->\n\n---\n\n<!-- This is an auto-generated comment: tweet message by coderabbit.ai -->\n\nIf you found this review helpful, would you consider giving us a shout-out on [X](https://twitter.com/intent/tweet?related=CodeRabbitAI&text=Fixed%20ANNOUNCE%20state-machine%20contradiction%3A%20alternation%20rule%20updated%20to%20allow%20restart%20alongside%20active%2Fended%20(prevents%20incompatible%20implementations).%20Smart%20review%20%E2%80%94%20try%20%40coderabbitai%20%F0%9F%9A%80%E2%9C%85&url=https%3A%2F%2Fgithub.com%2Fmoq-dev%2Fdrafts%2Fpull%2F23%23discussion_r3313609780)?\n\nThank you for using CodeRabbit!\n\n<!-- end of auto-generated comment: tweet message by coderabbit.ai -->\n\n\n\n<!-- This is an auto-generated reply by CodeRabbit -->",
+              "createdAt": "2026-05-27T20:22:42Z",
+              "updatedAt": "2026-05-27T20:22:42Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABBNFCxw",
+          "commit": {
+            "abbreviatedOid": "3c92e4b"
+          },
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-27T20:22:42Z",
+          "updatedAt": "2026-05-27T20:22:42Z",
+          "comments": [
+            {
+              "originalPosition": 96,
+              "body": "`@kixelated`, confirmed \u2014 the updated prose in the file correctly resolves the ambiguity: when `Timescale` is non-zero any varint (including `0`) is a valid absolute timestamp, and the \"must be `0` / must be ignored\" rule applies only when `Timescale` is `0`. Thanks for the quick fix!\n\n<!-- <review_comment_addressed> -->\n\n---\n\n<!-- This is an auto-generated comment: tweet message by coderabbit.ai -->\n\nIf you found this review helpful, would you consider giving us a shout-out on [X](https://twitter.com/intent/tweet?related=CodeRabbitAI&text=Spec%20fix%3A%20Timestamp%3D0%20no%20longer%20overloaded%20%E2%80%94%20%22unspecified%22%20only%20when%20Track%20Timescale%3D0%2C%20so%200%20is%20a%20valid%20absolute%20timestamp%20for%20non-zero%20timescales.%20Great%20catch%20by%20%40coderabbitai%20%F0%9F%9A%80&url=https%3A%2F%2Fgithub.com%2Fmoq-dev%2Fdrafts%2Fpull%2F23%23discussion_r3313609775)?\n\nThank you for using CodeRabbit!\n\n<!-- end of auto-generated comment: tweet message by coderabbit.ai -->\n\n\n\n<!-- This is an auto-generated reply by CodeRabbit -->",
+              "createdAt": "2026-05-27T20:22:42Z",
+              "updatedAt": "2026-05-27T20:22:42Z"
+            }
+          ]
         }
       ]
     }
