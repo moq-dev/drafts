@@ -1455,7 +1455,7 @@ A subscription starts at a configurable Group (defaulting to the latest) and con
 <p id="section-3.3-4">The subscriber and publisher both indicate their delivery preference:
 - <code>Priority</code> indicates if Track A should be transmitted instead of Track B.
 - <code>Ordered</code> indicates if the Groups within a Track should be transmitted in order.
-- <code>Max Latency</code> indicates the maximum duration before a Group is abandoned.<a href="#section-3.3-4" class="pilcrow">¶</a></p>
+- <code>Stale</code> (subscriber) indicates the maximum age before a non-latest Group is dropped from live delivery; <code>Cache</code> (publisher) indicates the minimum retention guarantee for FETCH and reconnects.<a href="#section-3.3-4" class="pilcrow">¶</a></p>
 <p id="section-3.3-5">The combination of these preferences enables the most important content to arrive during network degradation while still respecting encoding dependencies.<a href="#section-3.3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1857,16 +1857,17 @@ An application <span class="bcp14">MUST</span> support gaps and out-of-order del
         <h3 id="name-expiration">
 <a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-expiration" class="section-name selfRef">Expiration</a>
         </h3>
-<p id="section-6.2-1">The Publisher and Subscriber both transmit a <code>Max Latency</code> value, indicating the maximum duration before a group is expired.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+<p id="section-6.2-1">Expiration governs when an older group is dropped from a live subscription's Group Stream(s).
+It is distinct from the publisher's retention guarantee (see <code>Publisher Cache</code> in <span><a href="#subscribe-ok" class="internal xref">SUBSCRIBE_OK</a> (<a href="#subscribe-ok" class="auto internal xref">Section 7.8</a>)</span>), which controls whether older groups remain available for FETCH or future subscriptions.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
 <p id="section-6.2-2">It is not crucial to aggressively expire groups thanks to <a href="#prioritization" class="auto internal xref">Section 6.1</a>.
 However, a lower priority group will still consume RAM, bandwidth, and potentially flow control.
 It is <span class="bcp14">RECOMMENDED</span> that an application set conservative limits and only resort to expiration when data is absolutely no longer needed.<a href="#section-6.2-2" class="pilcrow">¶</a></p>
-<p id="section-6.2-3">A subscriber <span class="bcp14">SHOULD</span> expire groups based on the <code>Subscriber Max Latency</code> in SUBSCRIBE/SUBSCRIBE_UPDATE.
-A publisher <span class="bcp14">SHOULD</span> expire groups based on the <code>Publisher Max Latency</code> in SUBSCRIBE_OK.
-An implementation <span class="bcp14">MAY</span> use the minimum of both when determining when to expire a group.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
+<p id="section-6.2-3">The publisher <span class="bcp14">SHOULD</span> reset Group Streams for non-latest groups whose age relative to the latest group exceeds the <code>Subscriber Stale</code> value in SUBSCRIBE/SUBSCRIBE_UPDATE.
+The subscriber <span class="bcp14">MAY</span> also locally drop such groups for its own resource accounting.
+Expiration only removes the group from the live subscription's stream; if the group's age is still within <code>Publisher Cache</code>, the publisher <span class="bcp14">SHOULD</span> retain it for FETCH or new subscriptions.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
 <p id="section-6.2-4">Group age is computed relative to the latest group by sequence number.
 A group is never expired until at least the next group (by sequence number) has been received or queued.
-Once a newer group exists, a group is considered expired if the time between its first frame and the latest group's first frame exceeds <code>Max Latency</code>.<a href="#section-6.2-4" class="pilcrow">¶</a></p>
+Once a newer group exists, a group is considered expired if the time between its first frame and the latest group's first frame exceeds <code>Subscriber Stale</code>.<a href="#section-6.2-4" class="pilcrow">¶</a></p>
 <p id="section-6.2-5">If the Track's negotiated <code>Timescale</code> is non-zero, the time delta is computed from per-frame timestamps (see <a href="#frame" class="auto internal xref">Section 3.5</a>).
 Otherwise the delta is computed from wall-clock arrival time: the first byte of a group received (subscriber) or queued (publisher).
 Timestamp-based expiration is preferred because it remains consistent across relays and is unaffected by buffering or jitter.<a href="#section-6.2-5" class="pilcrow">¶</a></p>
@@ -2112,7 +2113,7 @@ SUBSCRIBE Message {
   Track Name (s)
   Subscriber Priority (8)
   Subscriber Ordered (8)
-  Subscriber Max Latency (i)
+  Subscriber Stale (i)
   Start Group (i)
   End Group (i)
 }
@@ -2129,9 +2130,12 @@ See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> sec
 A single byte representing whether groups are transmitted in ascending (0x1) or descending (0x0) order.
 The publisher <span class="bcp14">SHOULD</span> transmit <em>older</em> groups first during congestion if true.
 See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> section for more information.<a href="#section-7.6-5" class="pilcrow">¶</a></p>
-<p id="section-7.6-6"><strong>Subscriber Max Latency</strong>:
-This value is encoded in milliseconds and represents the maximum age of a group relative to the latest group.
-The publisher <span class="bcp14">SHOULD</span> reset old group streams when the difference in arrival time between the group and the latest group exceeds this duration.
+<p id="section-7.6-6"><strong>Subscriber Stale</strong>:
+The subscriber's preference, in milliseconds, for how long a non-latest group may remain in flight before being considered stale and dropped from live delivery.
+The publisher <span class="bcp14">SHOULD</span> reset (at the QUIC level) Group Streams for groups whose age relative to the latest group exceeds this duration.
+Applies only to non-latest groups; the latest group is never dropped on staleness grounds.
+A value of <code>0</code> means the subscriber wants only the latest group in live delivery (older groups are immediately stale once a newer group arrives).
+This is a delivery-time preference, not a retention rule: the publisher's cache (see <code>Publisher Cache</code> in <span><a href="#subscribe-ok" class="internal xref">SUBSCRIBE_OK</a> (<a href="#subscribe-ok" class="auto internal xref">Section 7.8</a>)</span>) may still hold these groups for FETCH or future subscriptions.
 See the <a href="#expiration" class="auto internal xref">Section 6.2</a> section for more information.<a href="#section-7.6-6" class="pilcrow">¶</a></p>
 <p id="section-7.6-7"><strong>Start Group</strong>:
 The first group to deliver.
@@ -2157,7 +2161,7 @@ SUBSCRIBE_UPDATE Message {
   Message Length (i)
   Subscriber Priority (8)
   Subscriber Ordered (8)
-  Subscriber Max Latency (i)
+  Subscriber Stale (i)
   Start Group (i)
   End Group (i)
 }
@@ -2181,11 +2185,10 @@ SUBSCRIBE_OK Message {
   Message Length (i)
   Publisher Priority (8)
   Publisher Ordered (8)
-  Publisher Max Latency (i)
+  Publisher Cache (i)
   Start Group (i)
   End Group (i)
   Publisher Timescale (i)
-  Publisher Cache (i)
   Publisher Compression (i)
 }
 </pre><a href="#section-7.8-2" class="pilcrow">¶</a>
@@ -2207,33 +2210,41 @@ When <code>Publisher Timescale</code> is 0, the per-frame <code>Timestamp Delta<
 A non-zero value is fixed for the lifetime of the subscription and <span class="bcp14">MUST NOT</span> change in subsequent SUBSCRIBE_OK messages; a change in timescale requires a new subscription.
 Common values include <code>1000</code> (milliseconds), <code>1000000</code> (microseconds), <code>48000</code> (audio sample rate), and <code>90000</code> (RTP video clock).<a href="#section-7.8-6" class="pilcrow">¶</a></p>
 <p id="section-7.8-7"><strong>Publisher Cache</strong>:
-The maximum age, in milliseconds, of the oldest group the publisher is willing to retain for late-arriving or reconnecting subscribers.
-Analogous to HTTP <code>Cache-Control: max-age</code>.
-A value of <code>0</code> means no historical retention beyond what is required for in-flight delivery; only live groups are available.
-A non-zero value indicates that the publisher will keep groups for at least this many milliseconds past their arrival, allowing a subscriber to issue a SUBSCRIBE or FETCH with an older <code>Start Group</code> and still receive the data.
-The unit is milliseconds (independent of <code>Publisher Timescale</code>) for consistency with <code>Publisher Max Latency</code> and to avoid coupling cache retention to media time when timescale is unspecified.
-The value <span class="bcp14">MAY</span> change in subsequent SUBSCRIBE_OK messages to reflect changing publisher policy; the subscriber <span class="bcp14">SHOULD</span> use the most recent value.<a href="#section-7.8-7" class="pilcrow">¶</a></p>
-<p id="section-7.8-8"><strong>Publisher Compression</strong>:
-The compression algorithm applied to every Frame <code>Payload</code> on this Track.<a href="#section-7.8-8" class="pilcrow">¶</a></p>
+The minimum age, in milliseconds, the publisher guarantees to retain a group past the arrival of a newer group.
+Applies only to non-latest groups; the latest group is always retained.
+Analogous to HTTP <code>Cache-Control: max-age</code> as a lower bound:<a href="#section-7.8-7" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-7.8-9.1">
-            <p id="section-7.8-9.1.1"><code>none</code> (0): payloads are transmitted verbatim (default).<a href="#section-7.8-9.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-7.8-8.1">
+            <p id="section-7.8-8.1.1">A subscriber <span class="bcp14">MAY</span> issue a SUBSCRIBE or FETCH with an older <code>Start Group</code> and expect the publisher to still have it, as long as the group's age does not exceed <code>Publisher Cache</code>.<a href="#section-7.8-8.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-7.8-9.2">
-            <p id="section-7.8-9.2.1"><code>deflate</code> (1): payloads are compressed with raw DEFLATE as defined in <span>[<a href="#RFC1951" class="cite xref">RFC1951</a>]</span>, with no zlib or gzip framing.<a href="#section-7.8-9.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-7.8-8.2">
+            <p id="section-7.8-8.2.1">The publisher <span class="bcp14">MAY</span> retain groups longer than <code>Publisher Cache</code> (a best-effort cache beyond the guarantee); subscribers <span class="bcp14">MUST NOT</span> assume older groups are unavailable.<a href="#section-7.8-8.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-7.8-10">Compression is applied per-frame: each Frame <code>Payload</code> is an independent compressed stream with no shared dictionary or state between frames.
+<p id="section-7.8-9">A value of <code>0</code> means no retention guarantee beyond live delivery; older groups <span class="bcp14">MAY</span> still be available but the publisher makes no promise.
+The unit is milliseconds (independent of <code>Publisher Timescale</code>) so cache retention is decoupled from media time when timescale is unspecified.
+The value <span class="bcp14">MAY</span> change in subsequent SUBSCRIBE_OK messages to reflect changing publisher policy; the subscriber <span class="bcp14">SHOULD</span> use the most recent value.<a href="#section-7.8-9" class="pilcrow">¶</a></p>
+<p id="section-7.8-10"><strong>Publisher Compression</strong>:
+The compression algorithm applied to every Frame <code>Payload</code> on this Track.<a href="#section-7.8-10" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-7.8-11.1">
+            <p id="section-7.8-11.1.1"><code>none</code> (0): payloads are transmitted verbatim (default).<a href="#section-7.8-11.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-7.8-11.2">
+            <p id="section-7.8-11.2.1"><code>deflate</code> (1): payloads are compressed with raw DEFLATE as defined in <span>[<a href="#RFC1951" class="cite xref">RFC1951</a>]</span>, with no zlib or gzip framing.<a href="#section-7.8-11.2.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-7.8-12">Compression is applied per-frame: each Frame <code>Payload</code> is an independent compressed stream with no shared dictionary or state between frames.
 This keeps frames independently decodable and avoids head-of-line decoding within a group.
 The Frame <code>Message Length</code> describes the compressed (on-wire) size.
-An empty payload (size 0) <span class="bcp14">MUST NOT</span> be compressed and remains empty on the wire.<a href="#section-7.8-10" class="pilcrow">¶</a></p>
-<p id="section-7.8-11">The publisher <span class="bcp14">SHOULD</span> only enable compression for payload types that benefit from it (e.g. JSON, text, uncompressed binary structures).
+An empty payload (size 0) <span class="bcp14">MUST NOT</span> be compressed and remains empty on the wire.<a href="#section-7.8-12" class="pilcrow">¶</a></p>
+<p id="section-7.8-13">The publisher <span class="bcp14">SHOULD</span> only enable compression for payload types that benefit from it (e.g. JSON, text, uncompressed binary structures).
 Already-compressed media (e.g. H.264, Opus, AV1) gains nothing and <span class="bcp14">SHOULD</span> use <code>none</code>.
 The value is fixed for the lifetime of the subscription and <span class="bcp14">MUST NOT</span> change in subsequent SUBSCRIBE_OK messages; a change in compression requires a new subscription.
-A subscriber that does not recognize the value <span class="bcp14">MUST</span> close the subscription with a protocol violation.<a href="#section-7.8-11" class="pilcrow">¶</a></p>
-<p id="section-7.8-12">A relay <span class="bcp14">MAY</span> transcode payloads between compression algorithms (including bridging different protocol versions, e.g. a moq-lite-05 publisher to a moq-lite-04 subscriber) provided the decompressed bytes are identical to what the publisher produced.
-A relay <span class="bcp14">SHOULD NOT</span> compress an originally-uncompressed payload unless there is a strong content signal that compression is beneficial (e.g. the track name ends in <code>.json</code>), because the relay cannot otherwise predict whether compression will help or hurt.<a href="#section-7.8-12" class="pilcrow">¶</a></p>
-<p id="section-7.8-13">See <a href="#subscribe" class="auto internal xref">Section 5.1.2</a> for information about the other fields.<a href="#section-7.8-13" class="pilcrow">¶</a></p>
+A subscriber that does not recognize the value <span class="bcp14">MUST</span> close the subscription with a protocol violation.<a href="#section-7.8-13" class="pilcrow">¶</a></p>
+<p id="section-7.8-14">A relay <span class="bcp14">MAY</span> transcode payloads between compression algorithms (including bridging different protocol versions, e.g. a moq-lite-05 publisher to a moq-lite-04 subscriber) provided the decompressed bytes are identical to what the publisher produced.
+A relay <span class="bcp14">SHOULD NOT</span> compress an originally-uncompressed payload unless there is a strong content signal that compression is beneficial (e.g. the track name ends in <code>.json</code>), because the relay cannot otherwise predict whether compression will help or hurt.<a href="#section-7.8-14" class="pilcrow">¶</a></p>
+<p id="section-7.8-15">See <a href="#subscribe" class="auto internal xref">Section 5.1.2</a> for information about the other fields.<a href="#section-7.8-15" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="subscribedrop">
@@ -2448,19 +2459,22 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
             <p id="section-8.1-1.5.1">Added <code>Timestamp</code> and <code>Duration</code> to the QUIC datagram body (absolute, present only when timescale is non-zero).<a href="#section-8.1-1.5.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.6">
-            <p id="section-8.1-1.6.1">Added <code>Publisher Cache</code> to SUBSCRIBE_OK, expressing maximum group retention for late or reconnecting subscribers (milliseconds, similar to HTTP <code>Cache-Control: max-age</code>).<a href="#section-8.1-1.6.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.6.1">Renamed <code>Publisher Max Latency</code> to <code>Publisher Cache</code> in SUBSCRIBE_OK, now defined as a minimum retention guarantee (similar to HTTP <code>Cache-Control: max-age</code>). Groups may live longer than <code>Publisher Cache</code> and remain FETCH-able.<a href="#section-8.1-1.6.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.7">
-            <p id="section-8.1-1.7.1">Timestamp-based expiration replaces wall-clock arrival time when a Track timescale is negotiated.<a href="#section-8.1-1.7.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.7.1">Renamed <code>Subscriber Max Latency</code> to <code>Subscriber Stale</code> in SUBSCRIBE/SUBSCRIBE_UPDATE. It is the subscriber's delivery-time preference for dropping non-latest stale groups, separate from the publisher's retention guarantee.<a href="#section-8.1-1.7.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.8">
-            <p id="section-8.1-1.8.1">Added QUIC datagram delivery for groups, sharing Subscribe IDs with existing subscriptions (no separate control stream).<a href="#section-8.1-1.8.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.8.1">Timestamp-based expiration replaces wall-clock arrival time when a Track timescale is negotiated.<a href="#section-8.1-1.8.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.9">
-            <p id="section-8.1-1.9.1">Added <code>Publisher Compression</code> to SUBSCRIBE_OK for per-frame payload compression (<code>none</code> or <code>deflate</code>).<a href="#section-8.1-1.9.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.9.1">Added QUIC datagram delivery for groups, sharing Subscribe IDs with existing subscriptions (no separate control stream).<a href="#section-8.1-1.9.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.10">
-            <p id="section-8.1-1.10.1">Added Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span> transport bindings for TCP/TLS and WebSocket, for environments where UDP is unavailable. The WebSocket binding uses the WebSocket message framing in place of the Qmux Record <code>Size</code> field.<a href="#section-8.1-1.10.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.10.1">Added <code>Publisher Compression</code> to SUBSCRIBE_OK for per-frame payload compression (<code>none</code> or <code>deflate</code>).<a href="#section-8.1-1.10.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-1.11">
+            <p id="section-8.1-1.11.1">Added Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span> transport bindings for TCP/TLS and WebSocket, for environments where UDP is unavailable. The WebSocket binding uses the WebSocket message framing in place of the Qmux Record <code>Size</code> field.<a href="#section-8.1-1.11.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -2526,7 +2540,7 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
             <p id="section-8.3-1.10.1">Added <code>Hops</code> to ANNOUNCE.<a href="#section-8.3-1.10.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.3-1.11">
-            <p id="section-8.3-1.11.1">Added <code>Subscriber Max Latency</code> and <code>Subscriber Ordered</code> to SUBSCRIBE and SUBSCRIBE_UPDATE.<a href="#section-8.3-1.11.1" class="pilcrow">¶</a></p>
+            <p id="section-8.3-1.11.1">Added <code>Subscriber Stale</code> and <code>Subscriber Ordered</code> to SUBSCRIBE and SUBSCRIBE_UPDATE.<a href="#section-8.3-1.11.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.3-1.12">
             <p id="section-8.3-1.12.1">Added <code>Publisher Priority</code>, <code>Publisher Max Latency</code>, and <code>Publisher Ordered</code> to SUBSCRIBE_OK.<a href="#section-8.3-1.12.1" class="pilcrow">¶</a></p>
