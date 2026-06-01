@@ -18,6 +18,9 @@ author:
 
 normative:
   moqt: I-D.ietf-moq-transport
+  qmux: I-D.ietf-quic-qmux
+  RFC1951:
+  RFC6455:
   RFC9002:
 
 informative:
@@ -80,6 +83,9 @@ The moq-lite version identifier is `moq-lite-xx` where `xx` is the two-digit dra
 For bare QUIC, this is negotiated as an ALPN token during the QUIC handshake.
 For WebTransport over HTTP/3, the QUIC ALPN remains `h3` and the moq-lite version is advertised via the `WT-Available-Protocols` and `WT-Protocol` CONNECT headers.
 
+When UDP is unavailable, moq-lite-05 MAY also run over reliable byte-stream transports via Qmux [qmux].
+Qmux provides a length-delimited polyfill for QUIC streams on top of TCP/TLS or WebSocket; see [Transports](#transports) for the specific bindings and ALPN negotiation.
+
 The session is active immediately after the QUIC/WebTransport connection is established.
 Extensions are negotiated via stream probing: an endpoint opens a stream with an unknown type and the peer resets it if unsupported.
 
@@ -135,20 +141,76 @@ A Frame is a payload of bytes within a Group.
 A frame is used to represent a chunk of data with an upfront size.
 The contents are opaque to the moq-lite layer.
 
-Each frame carries a presentation timestamp expressed in the parent Track's `Timescale` (units per second, negotiated in SUBSCRIBE_OK).
+Each frame carries a presentation timestamp expressed in the parent Track's `Timescale` (units per second, negotiated in SUBSCRIBE_OK), and a duration in the same scale.
 The timestamp is the source-of-truth for media time and is used by the moq-lite layer for [expiration](#expiration) decisions instead of wall-clock arrival time.
-A Track with a `Timescale` of 0 (unspecified) carries no meaningful timestamps and falls back to wall-clock arrival time for expiration.
+The duration is a hint for the application layer (e.g. presentation scheduling) and is not used by moq-lite itself; a duration of `0` means unknown and the frame is presented until the next frame begins.
+A Track with a `Timescale` of 0 (unspecified) carries no meaningful timestamps or durations and falls back to wall-clock arrival time for expiration.
 
 # Flow
 This section outlines the flow of messages within a moq-lite session.
 See the Messages section for the specific encoding.
 
 ## Connection
-moq-lite runs on top of WebTransport.
+moq-lite runs on top of any transport that provides ordered, multiplexed, bidirectional streams.
+The primary transports are bare QUIC and WebTransport over HTTP/3.
 WebTransport is a layer on top of QUIC and HTTP/3, required for web support.
 The API is nearly identical to QUIC with the exception of stream IDs.
 
-How the WebTransport connection is authenticated is out-of-scope for this draft.
+When UDP is unavailable, moq-lite-05 also runs over Qmux [qmux], a length-delimited polyfill that maps QUIC streams onto a reliable byte-stream transport.
+See [Transports](#transports) for the supported bindings.
+
+How the underlying connection is authenticated is out-of-scope for this draft.
+
+## Transports {#transports}
+moq-lite-05 defines four transport bindings.
+All four carry the same control and data streams defined elsewhere in this document; they differ only in how QUIC streams are multiplexed onto the underlying connection.
+
+|----|---------------------|------------------|----------------------|
+|    | Transport           | ALPN / Identifier | Record framing      |
+|---:|:--------------------|:------------------|:--------------------|
+| 1  | QUIC                | `moq-lite-05`     | Native QUIC streams |
+| 2  | WebTransport / H3   | `moq-lite-05` (CONNECT header) | Native WebTransport streams |
+| 3  | Qmux over TCP/TLS   | `moq-lite-05` (ALPN over TLS)  | Qmux Record [qmux]  |
+| 4  | Qmux over WebSocket | `moq-lite-05` (Sec-WebSocket-Protocol) | WebSocket message |
+
+For bindings 1 and 2, moq-lite uses the underlying QUIC/WebTransport stream APIs directly.
+QUIC datagrams (see [Datagrams](#datagrams)) are supported by bindings 1 and 2 only.
+Bindings 3 and 4 are reliable byte-stream transports and have no datagram channel; a publisher MUST NOT emit datagrams on those bindings and MUST fall back to Group Streams.
+
+### Qmux over TCP/TLS
+A client opens a TCP connection, performs a TLS handshake, and negotiates the ALPN token `moq-lite-05`.
+Each direction of the TLS byte stream then carries Qmux Records as defined in [qmux], which encapsulate QUIC STREAM frames.
+The Qmux Record's `Size` field length-delimits each record on the byte stream:
+
+~~~
+QMux Record {
+  Size (i),
+  Frames (..)
+}
+~~~
+
+All other moq-lite semantics (stream types, message encoding, flow control, etc.) are identical to native QUIC.
+
+### Qmux over WebSocket
+Qmux as published does not define a WebSocket binding due to IETF working-group charter scope.
+This section specifies how moq-lite-05 maps Qmux onto WebSocket [RFC6455]; the mapping is straightforward because both layers provide length-delimited messages over a reliable byte stream.
+
+A client opens a WebSocket connection with the `Sec-WebSocket-Protocol` header set to `moq-lite-05`.
+Each WebSocket binary message carries exactly one Qmux Record's `Frames` payload — that is, one or more QUIC frames concatenated.
+The WebSocket message length replaces the Qmux Record `Size` field: the WebSocket framing layer already self-delimits each record, so the `Size` varint MUST NOT be transmitted and MUST NOT be expected by the receiver.
+
+In other words, a Qmux-over-WebSocket record is:
+
+~~~
+WebSocket Binary Message {
+  Frames (..)
+}
+~~~
+
+Text messages MUST NOT be used and MUST be treated as a protocol violation.
+All other Qmux semantics (in-order STREAM frame delivery, stream IDs, etc.) apply unchanged.
+
+WebSocket ping/pong frames are handled by the WebSocket layer and are independent of moq-lite.
 
 ## Termination
 QUIC bidirectional streams have an independent send and receive direction.
@@ -193,23 +255,31 @@ There's a 1-byte STREAM_TYPE at the beginning of each stream.
 ### Announce
 A subscriber can open an Announce Stream to discover broadcasts matching a prefix.
 
-The subscriber creates the stream with a ANNOUNCE_INTEREST message.
-The publisher replies with ANNOUNCE messages for any matching broadcasts and any future changes.
+The subscriber creates the stream with an ANNOUNCE_INTEREST message.
+The publisher replies with a single ANNOUNCE_OK message followed by ANNOUNCE messages for any matching broadcasts and any future changes.
+
+ANNOUNCE_OK carries metadata that applies to every ANNOUNCE on this stream and is sent exactly once at the start of the response:
+
+- The publisher's own `Hop ID`, which is the implicit trailing entry of every ANNOUNCE's Hop ID list. Hoisting it out of every ANNOUNCE saves bytes since it is identical for every announcement on the session.
+- The number of `active` ANNOUNCE messages (`Active Count`) the publisher will send immediately as the initial set. The subscriber MAY buffer until all `Active Count` initial announcements arrive before reporting them to the application, avoiding a trickle. Any ANNOUNCE messages beyond `Active Count` are live updates and SHOULD be reported to the application as they arrive.
+
 Each ANNOUNCE message contains one of the following statuses:
 
 - `active`: a matching broadcast is available.
 - `ended`: a previously `active` broadcast is no longer available.
-- `restart`: a previously `active` broadcast has been atomically restarted, replacing the prior advertisement with new hop information.
 
-Each broadcast starts as `ended` and MUST alternate between `active`/`restart` and `ended`.
-A `restart` status is equivalent to an `ended` immediately followed by an `active`, but signals to the subscriber that the broadcast was never unavailable.
-This is used when only the origin or hop path changes (e.g. a relay failover or upstream restart) without interrupting the broadcast.
+Each broadcast starts as `ended`.
+An `active` announcement makes the broadcast available; a subsequent `ended` makes it unavailable again.
 
-The subscriber MUST reset the stream if it receives an invalid sequence, such as two `active` statuses in a row, a `restart` without a prior `active`, or an `ended` without a prior `active`/`restart`.
+A publisher SHOULD advertise only the best path it knows for each broadcast.
+If the best path changes (e.g. a relay failover or upstream restart), the publisher MAY send another `active` for that broadcast: the new announcement atomically replaces the prior one (equivalent to UNANNOUNCE+ANNOUNCE).
+A publisher MUST NOT keep multiple `active` advertisements for the same broadcast on the same stream — each broadcast has at most one current advertisement at a time.
+
+The subscriber MUST reset the stream if it receives an `ended` for a broadcast that is not currently `active`, or any ANNOUNCE before ANNOUNCE_OK.
 When the stream is closed, the subscriber MUST assume that all broadcasts are now `ended`.
 
 Path prefix matching and equality is done on a byte-by-byte basis.
-There MAY be multiple Announce Streams, potentially containing overlapping prefixes, that get their own ANNOUNCE messages.
+There MAY be multiple Announce Streams, potentially containing overlapping prefixes, that get their own ANNOUNCE_OK + ANNOUNCE messages.
 
 ### Subscribe
 A subscriber opens Subscribe Streams to request a Track.
@@ -378,10 +448,14 @@ Each datagram body has the following encoding (note: there is no message length 
 DATAGRAM Body {
   Subscribe ID (i)
   Group Sequence (i)
-  Timestamp (i)
+  [Timestamp (i)]
+  [Duration (i)]
   Payload (b)
 }
 ~~~
+
+`Timestamp` and `Duration` are present only when the Track's `Publisher Timescale` (see [SUBSCRIBE_OK](#subscribe-ok)) is non-zero.
+When `Publisher Timescale` is 0, both fields are omitted from the wire and the datagram body consists of just `Subscribe ID`, `Group Sequence`, and `Payload`.
 
 **Subscribe ID**:
 The Subscribe ID of an active subscription on the same session.
@@ -393,12 +467,16 @@ Each datagram represents a complete group containing exactly one frame.
 
 **Timestamp**:
 The absolute timestamp of the single frame in the group, expressed in the Track's negotiated `Timescale`.
-This field is only meaningful when the Track's `Timescale` is non-zero; in that case any varint value (including 0) is a valid absolute timestamp.
-If the Track's `Timescale` is 0 (unspecified), the publisher MUST encode this field as `0` and the subscriber MUST ignore it.
+Any varint value (including 0) is a valid absolute timestamp.
+
+**Duration**:
+The absolute duration of the frame, expressed in the Track's negotiated `Timescale`.
+A value of `0` means the duration is unknown; the frame is presented until the next frame begins (or indefinitely, since a datagram-delivered group contains exactly one frame, until the application supersedes it).
 
 **Payload**:
 The frame payload, extending to the end of the datagram.
-The total datagram body (including Subscribe ID, Group Sequence, and Timestamp) MUST NOT exceed 1200 bytes.
+If the Track's `Publisher Compression` is non-zero, the payload is compressed using the negotiated algorithm (see [SUBSCRIBE_OK](#subscribe-ok)).
+The total datagram body (including all header fields above and the compressed payload if applicable) MUST NOT exceed 1200 bytes.
 This limit ensures the datagram fits within the minimum QUIC path MTU without IP-layer fragmentation.
 Payloads that would not fit MUST be sent as a Group Stream instead.
 A receiver MUST silently drop any datagram that exceeds this limit.
@@ -444,21 +522,46 @@ ANNOUNCE_INTEREST Message {
 Indicate interest for any broadcasts with a path that starts with this prefix.
 
 **Exclude Hop**:
-If non-zero, the publisher SHOULD skip ANNOUNCE messages for broadcasts whose Hop ID entries contain this value.
+If non-zero, the publisher SHOULD skip ANNOUNCE messages for broadcasts whose Hop ID entries (including the publisher's own `Hop ID` from ANNOUNCE_OK) contain this value.
 This is used by relays to avoid routing loops in a cluster.
 
-The publisher MUST respond with ANNOUNCE messages for any matching and active broadcasts, followed by ANNOUNCE messages for any future updates.
+The publisher MUST respond with an ANNOUNCE_OK message followed by ANNOUNCE messages for any matching and active broadcasts, followed by ANNOUNCE messages for any future updates.
 Implementations SHOULD consider reasonable limits on the number of matching broadcasts to prevent resource exhaustion.
 
+
+## ANNOUNCE_OK
+A publisher sends an ANNOUNCE_OK message exactly once, as the first message on the response side of an Announce Stream.
+It carries metadata that is constant for the lifetime of the stream and applies to every ANNOUNCE that follows.
+
+~~~
+ANNOUNCE_OK Message {
+  Message Length (i)
+  Hop ID (i)
+  Active Count (i)
+}
+~~~
+
+**Hop ID**:
+The publisher's own Hop ID.
+This is treated as the implicit trailing entry of every ANNOUNCE's Hop ID list on this stream; ANNOUNCE messages MUST NOT repeat this value as the last entry of their `Hop ID` list.
+A value of 0 indicates the publisher does not assign Hop IDs (e.g. when bridging from an older protocol version).
+Receivers reconstruct the full path as `ANNOUNCE.Hop IDs ++ [ANNOUNCE_OK.Hop ID]`.
+
+**Active Count**:
+The number of `active` ANNOUNCE messages that the publisher will send immediately as the initial set.
+The subscriber MAY block reporting any announcement to the application until all `Active Count` initial ANNOUNCEs have arrived, then deliver the initial set as a batch.
+Any ANNOUNCE messages beyond `Active Count` are live updates and SHOULD be reported as they arrive.
+A value of `0` is valid and means the publisher is offering no initial active broadcasts; all subsequent ANNOUNCEs (if any) are live updates.
 
 
 ## ANNOUNCE
 A publisher sends an ANNOUNCE message to advertise a change in broadcast availability.
 Only the suffix is encoded on the wire, as the full path can be constructed by prepending the requested prefix.
 
-The status is relative to all prior ANNOUNCE messages on the same stream.
-A publisher MUST alternate between unavailable (`ended`) and available (`active` or `restart`) states.
-A `restart` MAY follow an `active` or another `restart` to replace the prior advertisement atomically; see `Announce Status` below for the exact semantics.
+The status is relative to all prior ANNOUNCE messages for the same path on the same stream.
+A publisher MAY send an `active` for a path that is already `active`: the new announcement atomically replaces the prior one, including any change to the Hop ID list.
+An `ended` MUST follow a corresponding `active`; an `ended` for a path that is not currently `active` is a protocol violation.
+An ANNOUNCE before ANNOUNCE_OK is a protocol violation.
 
 ~~~
 ANNOUNCE Message {
@@ -474,24 +577,21 @@ ANNOUNCE Message {
 A flag indicating the announce status.
 
 - `ended` (0): A path is no longer available.
-- `active` (1): A path is now available.
-- `restart` (2): An atomic re-announcement of a path that is already `active`.
-  The previous `active` announcement is implicitly ended and replaced by this one in a single message.
-  The Hop ID list MAY differ from the prior announcement (e.g. after a relay failover).
-  A `restart` status MUST NOT be sent unless the path is currently `active`; otherwise the receiver MUST treat it as a protocol violation.
+- `active` (1): A path is now available. If the path is already `active`, this announcement atomically replaces the prior one — the Hop ID list MAY differ (e.g. after a relay failover or upstream restart).
 
 **Broadcast Path Suffix**:
 This is combined with the broadcast path prefix to form the full broadcast path.
 
 **Hop Count**:
-The number of Hop ID entries that follow.
-A value of 0 means no Hop ID entries are present, indicating a fully unknown path (e.g. the announcement originated locally or was received from a peer that does not support hop tracking).
+The number of Hop ID entries that follow, NOT including the publisher's own `Hop ID` from ANNOUNCE_OK.
+A value of 0 means no Hop ID entries are present, indicating either that the announcement originated locally on the publisher (the publisher itself is the origin) or that the upstream peer does not support hop tracking.
 A receiver MUST close the stream with a PROTOCOL_VIOLATION if the Hop Count does not match the number of subsequent Hop ID entries.
 
 **Hop ID**:
-A unique identifier for each relay in the path from the origin publisher.
-Each relay MUST append its own Hop ID and increment the Hop Count when forwarding an announcement, even if no prior Hop ID entries are present (e.g. when receiving from an older protocol version).
-The Hop Count is used as a tiebreaker when there are multiple paths to the same broadcast.
+A unique identifier for each relay in the path from the origin publisher, ordered from origin to the upstream of the responding publisher.
+The responding publisher's own Hop ID is NOT included in this list; it is carried once in ANNOUNCE_OK as `Hop ID`.
+When forwarding an announcement received from an upstream peer, a relay MUST append the upstream peer's ANNOUNCE_OK `Hop ID` to this list (since that ID is no longer implicit downstream) and then send its own `Hop ID` in the ANNOUNCE_OK it sends to the downstream subscriber.
+The total path length is `Hop Count + 1` (including the implicit ANNOUNCE_OK `Hop ID`); this total is used as a tiebreaker when there are multiple paths to the same broadcast.
 A Hop ID value of 0 indicates an unknown or bridged relay hop (e.g. when bridging from an older protocol version that does not assign Hop IDs); the Hop Count still reflects the total number of entries including unknown hops.
 
 
@@ -576,6 +676,8 @@ SUBSCRIBE_OK Message {
   Start Group (i)
   End Group (i)
   Publisher Timescale (i)
+  Publisher Cache (i)
+  Publisher Compression (i)
 }
 ~~~
 
@@ -595,8 +697,36 @@ A non-zero value is the absolute group sequence + 1.
 **Publisher Timescale**:
 The number of timestamp units per second for frame timestamps on this Track.
 A value of 0 means unspecified; the subscriber MUST treat per-frame timestamps as opaque and fall back to wall-clock arrival time for [expiration](#expiration).
+When `Publisher Timescale` is 0, the per-frame `Timestamp Delta` and `Duration Delta` fields are omitted from FRAME messages and the `Timestamp` and `Duration` fields are omitted from datagram bodies (see [FRAME](#frame) and [Datagrams](#datagrams)).
 A non-zero value is fixed for the lifetime of the subscription and MUST NOT change in subsequent SUBSCRIBE_OK messages; a change in timescale requires a new subscription.
 Common values include `1000` (milliseconds), `1000000` (microseconds), `48000` (audio sample rate), and `90000` (RTP video clock).
+
+**Publisher Cache**:
+The maximum age, in milliseconds, of the oldest group the publisher is willing to retain for late-arriving or reconnecting subscribers.
+Analogous to HTTP `Cache-Control: max-age`.
+A value of `0` means no historical retention beyond what is required for in-flight delivery; only live groups are available.
+A non-zero value indicates that the publisher will keep groups for at least this many milliseconds past their arrival, allowing a subscriber to issue a SUBSCRIBE or FETCH with an older `Start Group` and still receive the data.
+The unit is milliseconds (independent of `Publisher Timescale`) for consistency with `Publisher Max Latency` and to avoid coupling cache retention to media time when timescale is unspecified.
+The value MAY change in subsequent SUBSCRIBE_OK messages to reflect changing publisher policy; the subscriber SHOULD use the most recent value.
+
+**Publisher Compression**:
+The compression algorithm applied to every Frame `Payload` on this Track.
+
+- `none` (0): payloads are transmitted verbatim (default).
+- `deflate` (1): payloads are compressed with raw DEFLATE as defined in {{!RFC1951}}, with no zlib or gzip framing.
+
+Compression is applied per-frame: each Frame `Payload` is an independent compressed stream with no shared dictionary or state between frames.
+This keeps frames independently decodable and avoids head-of-line decoding within a group.
+The Frame `Message Length` describes the compressed (on-wire) size.
+An empty payload (size 0) MUST NOT be compressed and remains empty on the wire.
+
+The publisher SHOULD only enable compression for payload types that benefit from it (e.g. JSON, text, uncompressed binary structures).
+Already-compressed media (e.g. H.264, Opus, AV1) gains nothing and SHOULD use `none`.
+The value is fixed for the lifetime of the subscription and MUST NOT change in subsequent SUBSCRIBE_OK messages; a change in compression requires a new subscription.
+A subscriber that does not recognize the value MUST close the subscription with a protocol violation.
+
+A relay MAY transcode payloads between compression algorithms (including bridging different protocol versions, e.g. a moq-lite-05 publisher to a moq-lite-04 subscriber) provided the decompressed bytes are identical to what the publisher produced.
+A relay SHOULD NOT compress an originally-uncompressed payload unless there is a strong content signal that compression is beneficial (e.g. the track name ends in `.json`), because the relay cannot otherwise predict whether compression will help or hurt.
 
 See [SUBSCRIBE](#subscribe) for information about the other fields.
 
@@ -719,32 +849,57 @@ The FRAME message is a payload within a group.
 
 ~~~
 FRAME Message {
-  Timestamp Delta (i)
+  [Timestamp Delta (i)]
+  [Duration Delta (i)]
   Message Length (i)
   Payload (b)
 }
 ~~~
 
+`Timestamp Delta` and `Duration Delta` are present only when the Track's `Publisher Timescale` (see [SUBSCRIBE_OK](#subscribe-ok)) is non-zero.
+When `Publisher Timescale` is 0, both fields are omitted from the wire and the FRAME consists of just `Message Length` and `Payload`.
+
 **Timestamp Delta**:
-A signed delta from the previous frame's timestamp, encoded as a zigzag-mapped variable-length integer.
-The zigzag mapping is: `unsigned = (signed << 1) ^ (signed >> 63)`, decoded as `signed = (unsigned >> 1) ^ -(unsigned & 1)`.
-The first frame of a group is encoded as a delta from `0`, i.e. the zigzag encoding of the absolute timestamp.
-The result is expressed in the Track's negotiated `Timescale` (see [SUBSCRIBE_OK](#subscribe-ok)).
-If the Track's `Timescale` is 0 (unspecified), the publisher SHOULD encode `0` and the subscriber MUST ignore the value.
+A signed delta from the previous frame's timestamp, in the Track's negotiated `Timescale`.
+Encoded as a zigzag-mapped variable-length integer:
+
+- Encode: `unsigned = (signed << 1) ^ (signed >> 63)` (arithmetic right shift).
+- Decode: `signed = (unsigned >> 1) ^ -(unsigned & 1)`.
+
+Zigzag interleaves non-negative and negative values (`0 → 0, -1 → 1, 1 → 2, -2 → 3, 2 → 4, ...`) so small magnitudes of either sign fit in a 1-byte varint and there is exactly one wire encoding for zero.
+The first frame of a group is delta-encoded from `0`, so its `Timestamp Delta` is the zigzag encoding of the absolute timestamp.
+
+**Duration Delta**:
+A signed delta from the previous frame's duration, in the Track's negotiated `Timescale`, encoded using the same zigzag mapping as `Timestamp Delta`.
+A wire value of `0` means the duration is unchanged from the previous frame; this is the common case for constant-rate media and fits in one byte.
+The first frame of a group is delta-encoded from a prior duration of `0`.
+
+The resolved duration value carries the following semantics for the application:
+
+- A resolved duration of `0` means the duration is unknown; the frame is presented until the next frame in the group begins (or until the group ends, if it is the last frame).
+- A non-zero resolved duration is the explicit presentation duration in the Track's `Timescale`.
+
+The duration is an application-level hint and is not used by the moq-lite layer for delivery decisions.
 
 **Payload**:
 An application-specific payload.
-A generic library or relay MUST NOT inspect or modify the contents unless otherwise negotiated.
+If the Track's `Publisher Compression` is non-zero, the payload is compressed using the negotiated algorithm (see [SUBSCRIBE_OK](#subscribe-ok)) and the `Message Length` describes the compressed size.
+A generic library or relay MUST NOT inspect or modify the decompressed contents unless otherwise negotiated; recompression that preserves the decompressed bytes exactly is allowed (see [SUBSCRIBE_OK](#subscribe-ok)).
 
 
 # Appendix A: Changelog
 
 ## moq-lite-05
-- Added `restart` status to ANNOUNCE for atomic re-announcement (UNANNOUNCE+ANNOUNCE) when origin or hop path changes without interrupting the broadcast.
-- Added `Publisher Timescale` to SUBSCRIBE_OK for per-track timestamp negotiation.
-- Added `Timestamp Delta` (zigzag varint) to FRAME, encoding a signed delta from the previous frame's timestamp in the Track's timescale.
+- Allowed a duplicate `active` ANNOUNCE to atomically replace the prior advertisement (equivalent to UNANNOUNCE+ANNOUNCE). Used when only the origin or hop path changes (e.g. relay failover) without interrupting the broadcast. No new wire enum value — the existing `active` status carries the new metadata.
+- Added ANNOUNCE_OK message, sent once at the head of the Announce Stream response. Carries the publisher's `Hop ID` (hoisted out of every ANNOUNCE's Hop ID list) and an `Active Count` so subscribers can batch the initial set instead of reporting each ANNOUNCE as it trickles in.
+- Added `Publisher Timescale` to SUBSCRIBE_OK for per-track timestamp negotiation. When `Publisher Timescale` is 0, the per-frame timestamp/duration fields are omitted entirely from FRAME and datagram bodies.
+- Added `Timestamp Delta` and `Duration Delta` to FRAME, both zigzag-encoded signed varints (present only when timescale is non-zero). `Duration Delta = 0` is the common "unchanged" case and fits in one byte; a resolved duration of `0` means "until the next frame".
+- Added `Timestamp` and `Duration` to the QUIC datagram body (absolute, present only when timescale is non-zero).
+- Added `Publisher Cache` to SUBSCRIBE_OK, expressing maximum group retention for late or reconnecting subscribers (milliseconds, similar to HTTP `Cache-Control: max-age`).
 - Timestamp-based expiration replaces wall-clock arrival time when a Track timescale is negotiated.
 - Added QUIC datagram delivery for groups, sharing Subscribe IDs with existing subscriptions (no separate control stream).
+- Added `Publisher Compression` to SUBSCRIBE_OK for per-frame payload compression (`none` or `deflate`).
+- Added Qmux [qmux] transport bindings for TCP/TLS and WebSocket, for environments where UDP is unavailable. The WebSocket binding uses the WebSocket message framing in place of the Qmux Record `Size` field.
 
 ## moq-lite-04
 - Renamed ANNOUNCE_PLEASE to ANNOUNCE_INTEREST.
