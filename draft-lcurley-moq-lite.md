@@ -794,7 +794,8 @@ The sequence number of the group to fetch.
 The index of the first frame to return, counting from `0` for the first frame in the group.
 The publisher skips all frames before this index and begins the response at this frame, allowing a subscriber to resume partway through a group.
 A value of `0` returns the entire group.
-If `Frame Start` is greater than or equal to the number of frames currently in the group, the publisher returns no FRAME messages (FINing the stream once the group is complete).
+If the group is still in progress and frame `Frame Start` has not yet been produced, the publisher waits and delivers it (and any later frames) as they arrive, just like a live subscription; it does not return early.
+Only once the group is complete is the out-of-range case resolved: if `Frame Start` is greater than or equal to the group's final frame count, the publisher returns no FRAME messages and FINs the stream.
 
 The returned FRAME messages are otherwise unchanged: when the Track's `Publisher Timescale` is non-zero, the first returned frame's `Timestamp Delta` is delta-encoded from `0` (i.e. its absolute timestamp), not from the timestamp of the skipped frame (see [FRAME](#frame)).
 
