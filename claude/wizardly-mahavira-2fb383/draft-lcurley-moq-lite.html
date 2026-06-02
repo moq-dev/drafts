@@ -2114,8 +2114,8 @@ SUBSCRIBE Message {
   Subscriber Priority (8)
   Subscriber Ordered (8)
   Subscriber Stale (i)
-  Start Group (i)
-  End Group (i)
+  Group Start (i)
+  Group End (i)
 }
 </pre><a href="#section-7.6-2" class="pilcrow">¶</a>
 </div>
@@ -2137,11 +2137,11 @@ Applies only to non-latest groups; the latest group is never dropped on stalenes
 A value of <code>0</code> means the subscriber wants only the latest group in live delivery (older groups are immediately stale once a newer group arrives).
 This is a delivery-time preference, not a retention rule: the publisher's cache (see <code>Publisher Cache</code> in <span><a href="#subscribe-ok" class="internal xref">SUBSCRIBE_OK</a> (<a href="#subscribe-ok" class="auto internal xref">Section 7.8</a>)</span>) may still hold these groups for FETCH or future subscriptions.
 See the <a href="#expiration" class="auto internal xref">Section 6.2</a> section for more information.<a href="#section-7.6-6" class="pilcrow">¶</a></p>
-<p id="section-7.6-7"><strong>Start Group</strong>:
+<p id="section-7.6-7"><strong>Group Start</strong>:
 The first group to deliver.
 A value of 0 means the latest group (default).
 A non-zero value is the absolute group sequence + 1.<a href="#section-7.6-7" class="pilcrow">¶</a></p>
-<p id="section-7.6-8"><strong>End Group</strong>:
+<p id="section-7.6-8"><strong>Group End</strong>:
 The last group to deliver (inclusive).
 A value of 0 means unbounded (default).
 A non-zero value is the absolute group sequence + 1.<a href="#section-7.6-8" class="pilcrow">¶</a></p>
@@ -2162,8 +2162,8 @@ SUBSCRIBE_UPDATE Message {
   Subscriber Priority (8)
   Subscriber Ordered (8)
   Subscriber Stale (i)
-  Start Group (i)
-  End Group (i)
+  Group Start (i)
+  Group End (i)
 }
 </pre><a href="#section-7.7-2" class="pilcrow">¶</a>
 </div>
@@ -2186,8 +2186,8 @@ SUBSCRIBE_OK Message {
   Publisher Priority (8)
   Publisher Ordered (8)
   Publisher Cache (i)
-  Start Group (i)
-  End Group (i)
+  Group Start (i)
+  Group End (i)
   Publisher Timescale (i)
   Publisher Compression (i)
 }
@@ -2195,11 +2195,11 @@ SUBSCRIBE_OK Message {
 </div>
 <p id="section-7.8-3"><strong>Type</strong>:
 Set to 0x0 to indicate a SUBSCRIBE_OK message.<a href="#section-7.8-3" class="pilcrow">¶</a></p>
-<p id="section-7.8-4"><strong>Start Group</strong>:
+<p id="section-7.8-4"><strong>Group Start</strong>:
 The resolved absolute start group sequence.
 A value of 0 means the start group is not yet known; the publisher <span class="bcp14">MUST</span> send a subsequent SUBSCRIBE_OK with a resolved value.
 A non-zero value is the absolute group sequence + 1.<a href="#section-7.8-4" class="pilcrow">¶</a></p>
-<p id="section-7.8-5"><strong>End Group</strong>:
+<p id="section-7.8-5"><strong>Group End</strong>:
 The resolved absolute end group sequence (inclusive).
 A value of 0 means unbounded.
 A non-zero value is the absolute group sequence + 1.<a href="#section-7.8-5" class="pilcrow">¶</a></p>
@@ -2215,7 +2215,7 @@ Applies only to non-latest groups; the latest group is always retained.
 Analogous to HTTP <code>Cache-Control: max-age</code> as a lower bound:<a href="#section-7.8-7" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-7.8-8.1">
-            <p id="section-7.8-8.1.1">A subscriber <span class="bcp14">MAY</span> issue a SUBSCRIBE or FETCH with an older <code>Start Group</code> and expect the publisher to still have it, as long as the group's age does not exceed <code>Publisher Cache</code>.<a href="#section-7.8-8.1.1" class="pilcrow">¶</a></p>
+            <p id="section-7.8-8.1.1">A subscriber <span class="bcp14">MAY</span> issue a SUBSCRIBE or FETCH with an older <code>Group Start</code> and expect the publisher to still have it, as long as the group's age does not exceed <code>Publisher Cache</code>.<a href="#section-7.8-8.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-7.8-8.2">
             <p id="section-7.8-8.2.1">The publisher <span class="bcp14">MAY</span> retain groups longer than <code>Publisher Cache</code> (a best-effort cache beyond the guarantee); subscribers <span class="bcp14">MUST NOT</span> assume older groups are unavailable.<a href="#section-7.8-8.2.1" class="pilcrow">¶</a></p>
@@ -2258,17 +2258,17 @@ A relay <span class="bcp14">SHOULD NOT</span> compress an originally-uncompresse
 SUBSCRIBE_DROP Message {
   Type (i) = 0x1
   Message Length (i)
-  Start Group (i)
-  End Group (i)
+  Group Start (i)
+  Group End (i)
   Error Code (i)
 }
 </pre><a href="#section-7.9-2" class="pilcrow">¶</a>
 </div>
 <p id="section-7.9-3"><strong>Type</strong>:
 Set to 0x1 to indicate a SUBSCRIBE_DROP message.<a href="#section-7.9-3" class="pilcrow">¶</a></p>
-<p id="section-7.9-4"><strong>Start Group</strong>:
+<p id="section-7.9-4"><strong>Group Start</strong>:
 The first absolute group sequence in the dropped range.<a href="#section-7.9-4" class="pilcrow">¶</a></p>
-<p id="section-7.9-5"><strong>End Group</strong>:
+<p id="section-7.9-5"><strong>Group End</strong>:
 The last absolute group sequence in the dropped range (inclusive).<a href="#section-7.9-5" class="pilcrow">¶</a></p>
 <p id="section-7.9-6"><strong>Error Code</strong>:
 An application-specific error code.
@@ -2289,7 +2289,7 @@ FETCH Message {
   Track Name (s)
   Subscriber Priority (8)
   Group Sequence (i)
-  Start Frame (i)
+  Frame Start (i)
 }
 </pre><a href="#section-7.10-2" class="pilcrow">¶</a>
 </div>
@@ -2302,11 +2302,11 @@ The priority of the fetch within the session, represented as a u8.
 See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> section for more information.<a href="#section-7.10-5" class="pilcrow">¶</a></p>
 <p id="section-7.10-6"><strong>Group Sequence</strong>:
 The sequence number of the group to fetch.<a href="#section-7.10-6" class="pilcrow">¶</a></p>
-<p id="section-7.10-7"><strong>Start Frame</strong>:
+<p id="section-7.10-7"><strong>Frame Start</strong>:
 The index of the first frame to return, counting from <code>0</code> for the first frame in the group.
 The publisher skips all frames before this index and begins the response at this frame, allowing a subscriber to resume partway through a group.
 A value of <code>0</code> returns the entire group.
-If <code>Start Frame</code> is greater than or equal to the number of frames currently in the group, the publisher returns no FRAME messages (FINing the stream once the group is complete).<a href="#section-7.10-7" class="pilcrow">¶</a></p>
+If <code>Frame Start</code> is greater than or equal to the number of frames currently in the group, the publisher returns no FRAME messages (FINing the stream once the group is complete).<a href="#section-7.10-7" class="pilcrow">¶</a></p>
 <p id="section-7.10-8">The returned FRAME messages are otherwise unchanged: when the Track's <code>Publisher Timescale</code> is non-zero, the first returned frame's <code>Timestamp Delta</code> is delta-encoded from <code>0</code> (i.e. its absolute timestamp), not from the timestamp of the skipped frame (see <a href="#frame" class="auto internal xref">Section 3.5</a>).<a href="#section-7.10-8" class="pilcrow">¶</a></p>
 <p id="section-7.10-9">The publisher responds with FRAME messages on the same stream.
 The publisher FINs the stream after the last frame, or resets on error.<a href="#section-7.10-9" class="pilcrow">¶</a></p>
@@ -2451,40 +2451,43 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
         </h3>
 <ul class="normal">
 <li class="normal" id="section-8.1-1.1">
-            <p id="section-8.1-1.1.1">Added <code>Start Frame</code> to FETCH so a subscriber can begin partway through a group instead of always at frame <code>0</code>, allowing resumption of a partially-received group.<a href="#section-8.1-1.1.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.1.1">Added <code>Frame Start</code> to FETCH so a subscriber can begin partway through a group instead of always at frame <code>0</code>, allowing resumption of a partially-received group.<a href="#section-8.1-1.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.2">
-            <p id="section-8.1-1.2.1">Allowed a duplicate <code>active</code> ANNOUNCE to atomically replace the prior advertisement (equivalent to UNANNOUNCE+ANNOUNCE). Used when only the origin or hop path changes (e.g. relay failover) without interrupting the broadcast. No new wire enum value — the existing <code>active</code> status carries the new metadata.<a href="#section-8.1-1.2.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.2.1">Renamed <code>Start Group</code>/<code>End Group</code> to <code>Group Start</code>/<code>Group End</code> in SUBSCRIBE, SUBSCRIBE_UPDATE, SUBSCRIBE_OK, and SUBSCRIBE_DROP for consistency with the entity-first naming used elsewhere (e.g. <code>Group Sequence</code>). Wire format unchanged.<a href="#section-8.1-1.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.3">
-            <p id="section-8.1-1.3.1">Added ANNOUNCE_OK message, sent once at the head of the Announce Stream response. Carries the publisher's <code>Hop ID</code> (hoisted out of every ANNOUNCE's Hop ID list) and an <code>Active Count</code> so subscribers can batch the initial set instead of reporting each ANNOUNCE as it trickles in.<a href="#section-8.1-1.3.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.3.1">Allowed a duplicate <code>active</code> ANNOUNCE to atomically replace the prior advertisement (equivalent to UNANNOUNCE+ANNOUNCE). Used when only the origin or hop path changes (e.g. relay failover) without interrupting the broadcast. No new wire enum value — the existing <code>active</code> status carries the new metadata.<a href="#section-8.1-1.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.4">
-            <p id="section-8.1-1.4.1">Added <code>Publisher Timescale</code> to SUBSCRIBE_OK for per-track timestamp negotiation. When <code>Publisher Timescale</code> is 0, the per-frame timestamp/duration fields are omitted entirely from FRAME and datagram bodies.<a href="#section-8.1-1.4.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.4.1">Added ANNOUNCE_OK message, sent once at the head of the Announce Stream response. Carries the publisher's <code>Hop ID</code> (hoisted out of every ANNOUNCE's Hop ID list) and an <code>Active Count</code> so subscribers can batch the initial set instead of reporting each ANNOUNCE as it trickles in.<a href="#section-8.1-1.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.5">
-            <p id="section-8.1-1.5.1">Added <code>Timestamp Delta</code> and <code>Duration Delta</code> to FRAME, both zigzag-encoded signed varints (present only when timescale is non-zero). <code>Duration Delta = 0</code> is the common "unchanged" case and fits in one byte; a resolved duration of <code>0</code> means "until the next frame".<a href="#section-8.1-1.5.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.5.1">Added <code>Publisher Timescale</code> to SUBSCRIBE_OK for per-track timestamp negotiation. When <code>Publisher Timescale</code> is 0, the per-frame timestamp/duration fields are omitted entirely from FRAME and datagram bodies.<a href="#section-8.1-1.5.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.6">
-            <p id="section-8.1-1.6.1">Added <code>Timestamp</code> and <code>Duration</code> to the QUIC datagram body (absolute, present only when timescale is non-zero).<a href="#section-8.1-1.6.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.6.1">Added <code>Timestamp Delta</code> and <code>Duration Delta</code> to FRAME, both zigzag-encoded signed varints (present only when timescale is non-zero). <code>Duration Delta = 0</code> is the common "unchanged" case and fits in one byte; a resolved duration of <code>0</code> means "until the next frame".<a href="#section-8.1-1.6.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.7">
-            <p id="section-8.1-1.7.1">Renamed <code>Publisher Max Latency</code> to <code>Publisher Cache</code> in SUBSCRIBE_OK, now defined as a minimum retention guarantee (similar to HTTP <code>Cache-Control: max-age</code>). Groups may live longer than <code>Publisher Cache</code> and remain FETCH-able.<a href="#section-8.1-1.7.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.7.1">Added <code>Timestamp</code> and <code>Duration</code> to the QUIC datagram body (absolute, present only when timescale is non-zero).<a href="#section-8.1-1.7.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.8">
-            <p id="section-8.1-1.8.1">Renamed <code>Subscriber Max Latency</code> to <code>Subscriber Stale</code> in SUBSCRIBE/SUBSCRIBE_UPDATE. It is the subscriber's delivery-time preference for dropping non-latest stale groups, separate from the publisher's retention guarantee.<a href="#section-8.1-1.8.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.8.1">Renamed <code>Publisher Max Latency</code> to <code>Publisher Cache</code> in SUBSCRIBE_OK, now defined as a minimum retention guarantee (similar to HTTP <code>Cache-Control: max-age</code>). Groups may live longer than <code>Publisher Cache</code> and remain FETCH-able.<a href="#section-8.1-1.8.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.9">
-            <p id="section-8.1-1.9.1">Timestamp-based expiration replaces wall-clock arrival time when a Track timescale is negotiated.<a href="#section-8.1-1.9.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.9.1">Renamed <code>Subscriber Max Latency</code> to <code>Subscriber Stale</code> in SUBSCRIBE/SUBSCRIBE_UPDATE. It is the subscriber's delivery-time preference for dropping non-latest stale groups, separate from the publisher's retention guarantee.<a href="#section-8.1-1.9.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.10">
-            <p id="section-8.1-1.10.1">Added QUIC datagram delivery for groups, sharing Subscribe IDs with existing subscriptions (no separate control stream).<a href="#section-8.1-1.10.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.10.1">Timestamp-based expiration replaces wall-clock arrival time when a Track timescale is negotiated.<a href="#section-8.1-1.10.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.11">
-            <p id="section-8.1-1.11.1">Added <code>Publisher Compression</code> to SUBSCRIBE_OK for per-frame payload compression (<code>none</code> or <code>deflate</code>).<a href="#section-8.1-1.11.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.11.1">Added QUIC datagram delivery for groups, sharing Subscribe IDs with existing subscriptions (no separate control stream).<a href="#section-8.1-1.11.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.12">
-            <p id="section-8.1-1.12.1">Added Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span> transport bindings for TCP/TLS and WebSocket, for environments where UDP is unavailable. The WebSocket binding uses the WebSocket message framing in place of the Qmux Record <code>Size</code> field.<a href="#section-8.1-1.12.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.12.1">Added <code>Publisher Compression</code> to SUBSCRIBE_OK for per-frame payload compression (<code>none</code> or <code>deflate</code>).<a href="#section-8.1-1.12.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-1.13">
+            <p id="section-8.1-1.13.1">Added Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span> transport bindings for TCP/TLS and WebSocket, for environments where UDP is unavailable. The WebSocket binding uses the WebSocket message framing in place of the Qmux Record <code>Size</code> field.<a href="#section-8.1-1.13.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>

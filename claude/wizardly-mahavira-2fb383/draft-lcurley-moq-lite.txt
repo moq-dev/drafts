@@ -924,8 +924,8 @@ Table of Contents
      Subscriber Priority (8)
      Subscriber Ordered (8)
      Subscriber Stale (i)
-     Start Group (i)
-     End Group (i)
+     Group Start (i)
+     Group End (i)
    }
 
    *Subscribe ID*: A unique identifier chosen by the subscriber.  A
@@ -956,11 +956,11 @@ Table of Contents
    future subscriptions.  See the Section 6.2 section for more
    information.
 
-   *Start Group*: The first group to deliver.  A value of 0 means the
+   *Group Start*: The first group to deliver.  A value of 0 means the
    latest group (default).  A non-zero value is the absolute group
    sequence + 1.
 
-   *End Group*: The last group to deliver (inclusive).  A value of 0
+   *Group End*: The last group to deliver (inclusive).  A value of 0
    means unbounded (default).  A non-zero value is the absolute group
    sequence + 1.
 
@@ -976,8 +976,8 @@ Table of Contents
      Subscriber Priority (8)
      Subscriber Ordered (8)
      Subscriber Stale (i)
-     Start Group (i)
-     End Group (i)
+     Group Start (i)
+     Group End (i)
    }
 
    See Section 5.1.2 for information about each field.
@@ -995,20 +995,20 @@ Table of Contents
      Publisher Priority (8)
      Publisher Ordered (8)
      Publisher Cache (i)
-     Start Group (i)
-     End Group (i)
+     Group Start (i)
+     Group End (i)
      Publisher Timescale (i)
      Publisher Compression (i)
    }
 
    *Type*: Set to 0x0 to indicate a SUBSCRIBE_OK message.
 
-   *Start Group*: The resolved absolute start group sequence.  A value
+   *Group Start*: The resolved absolute start group sequence.  A value
    of 0 means the start group is not yet known; the publisher MUST send
    a subsequent SUBSCRIBE_OK with a resolved value.  A non-zero value is
    the absolute group sequence + 1.
 
-   *End Group*: The resolved absolute end group sequence (inclusive).  A
+   *Group End*: The resolved absolute end group sequence (inclusive).  A
    value of 0 means unbounded.  A non-zero value is the absolute group
    sequence + 1.
 
@@ -1030,8 +1030,8 @@ Table of Contents
    Applies only to non-latest groups; the latest group is always
    retained.  Analogous to HTTP Cache-Control: max-age as a lower bound:
 
-   *  A subscriber MAY issue a SUBSCRIBE or FETCH with an older Start
-      Group and expect the publisher to still have it, as long as the
+   *  A subscriber MAY issue a SUBSCRIBE or FETCH with an older Group
+      Start and expect the publisher to still have it, as long as the
       group's age does not exceed Publisher Cache.
 
    *  The publisher MAY retain groups longer than Publisher Cache (a
@@ -1089,17 +1089,17 @@ Table of Contents
    SUBSCRIBE_DROP Message {
      Type (i) = 0x1
      Message Length (i)
-     Start Group (i)
-     End Group (i)
+     Group Start (i)
+     Group End (i)
      Error Code (i)
    }
 
    *Type*: Set to 0x1 to indicate a SUBSCRIBE_DROP message.
 
-   *Start Group*: The first absolute group sequence in the dropped
+   *Group Start*: The first absolute group sequence in the dropped
    range.
 
-   *End Group*: The last absolute group sequence in the dropped range
+   *Group End*: The last absolute group sequence in the dropped range
    (inclusive).
 
    *Error Code*: An application-specific error code.  A value of 0
@@ -1115,7 +1115,7 @@ Table of Contents
      Track Name (s)
      Subscriber Priority (8)
      Group Sequence (i)
-     Start Frame (i)
+     Frame Start (i)
    }
 
    *Broadcast Path*: The broadcast path of the track to fetch from.
@@ -1128,11 +1128,11 @@ Table of Contents
 
    *Group Sequence*: The sequence number of the group to fetch.
 
-   *Start Frame*: The index of the first frame to return, counting from
+   *Frame Start*: The index of the first frame to return, counting from
    0 for the first frame in the group.  The publisher skips all frames
    before this index and begins the response at this frame, allowing a
    subscriber to resume partway through a group.  A value of 0 returns
-   the entire group.  If Start Frame is greater than or equal to the
+   the entire group.  If Frame Start is greater than or equal to the
    number of frames currently in the group, the publisher returns no
    FRAME messages (FINing the stream once the group is complete).
 
@@ -1265,9 +1265,14 @@ Table of Contents
 
 8.1.  moq-lite-05
 
-   *  Added Start Frame to FETCH so a subscriber can begin partway
+   *  Added Frame Start to FETCH so a subscriber can begin partway
       through a group instead of always at frame 0, allowing resumption
       of a partially-received group.
+
+   *  Renamed Start Group/End Group to Group Start/Group End in
+      SUBSCRIBE, SUBSCRIBE_UPDATE, SUBSCRIBE_OK, and SUBSCRIBE_DROP for
+      consistency with the entity-first naming used elsewhere (e.g.
+      Group Sequence).  Wire format unchanged.
 
    *  Allowed a duplicate active ANNOUNCE to atomically replace the
       prior advertisement (equivalent to UNANNOUNCE+ANNOUNCE).  Used
