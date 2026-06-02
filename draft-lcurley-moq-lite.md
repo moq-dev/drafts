@@ -295,7 +295,7 @@ Either endpoint MAY reset/cancel the stream at any time.
 ### Fetch
 A subscriber opens a Fetch Stream (0x3) to request a single Group from a Track.
 
-The subscriber sends a FETCH message containing the broadcast path, track name, priority, and group sequence.
+The subscriber sends a FETCH message containing the broadcast path, track name, priority, group sequence, and the frame index at which to start.
 Unlike Group Streams (which MUST start with a GROUP message), the publisher responds with FRAME messages directly on the same bidirectional stream — there is no preceding GROUP header.
 The Subscribe ID and Group Sequence for the returned FRAME messages are implicit, taken from the original FETCH request.
 The publisher FINs the stream after the last frame, or resets the stream on error.
@@ -773,6 +773,7 @@ FETCH Message {
   Track Name (s)
   Subscriber Priority (8)
   Group Sequence (i)
+  Start Frame (i)
 }
 ~~~
 
@@ -788,6 +789,14 @@ See the [Prioritization](#prioritization) section for more information.
 
 **Group Sequence**:
 The sequence number of the group to fetch.
+
+**Start Frame**:
+The index of the first frame to return, counting from `0` for the first frame in the group.
+The publisher skips all frames before this index and begins the response at this frame, allowing a subscriber to resume partway through a group.
+A value of `0` returns the entire group.
+If `Start Frame` is greater than or equal to the number of frames currently in the group, the publisher returns no FRAME messages (FINing the stream once the group is complete).
+
+The returned FRAME messages are otherwise unchanged: when the Track's `Publisher Timescale` is non-zero, the first returned frame's `Timestamp Delta` is delta-encoded from `0` (i.e. its absolute timestamp), not from the timestamp of the skipped frame (see [FRAME](#frame)).
 
 The publisher responds with FRAME messages on the same stream.
 The publisher FINs the stream after the last frame, or resets on error.
@@ -897,6 +906,7 @@ A generic library or relay MUST NOT inspect or modify the decompressed contents 
 # Appendix A: Changelog
 
 ## moq-lite-05
+- Added `Start Frame` to FETCH so a subscriber can begin partway through a group instead of always at frame `0`, allowing resumption of a partially-received group.
 - Allowed a duplicate `active` ANNOUNCE to atomically replace the prior advertisement (equivalent to UNANNOUNCE+ANNOUNCE). Used when only the origin or hop path changes (e.g. relay failover) without interrupting the broadcast. No new wire enum value — the existing `active` status carries the new metadata.
 - Added ANNOUNCE_OK message, sent once at the head of the Announce Stream response. Carries the publisher's `Hop ID` (hoisted out of every ANNOUNCE's Hop ID list) and an `Active Count` so subscribers can batch the initial set instead of reporting each ANNOUNCE as it trickles in.
 - Added `Publisher Timescale` to SUBSCRIBE_OK for per-track timestamp negotiation. When `Publisher Timescale` is 0, the per-frame timestamp/duration fields are omitted entirely from FRAME and datagram bodies.
