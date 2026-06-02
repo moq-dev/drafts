@@ -2306,7 +2306,8 @@ The sequence number of the group to fetch.<a href="#section-7.10-6" class="pilcr
 The index of the first frame to return, counting from <code>0</code> for the first frame in the group.
 The publisher skips all frames before this index and begins the response at this frame, allowing a subscriber to resume partway through a group.
 A value of <code>0</code> returns the entire group.
-If <code>Frame Start</code> is greater than or equal to the number of frames currently in the group, the publisher returns no FRAME messages (FINing the stream once the group is complete).<a href="#section-7.10-7" class="pilcrow">¶</a></p>
+If the group is still in progress and frame <code>Frame Start</code> has not yet been produced, the publisher waits and delivers it (and any later frames) as they arrive, just like a live subscription; it does not return early.
+Only once the group is complete is the out-of-range case resolved: if <code>Frame Start</code> is greater than or equal to the group's final frame count, the publisher returns no FRAME messages and FINs the stream.<a href="#section-7.10-7" class="pilcrow">¶</a></p>
 <p id="section-7.10-8">The returned FRAME messages are otherwise unchanged: when the Track's <code>Publisher Timescale</code> is non-zero, the first returned frame's <code>Timestamp Delta</code> is delta-encoded from <code>0</code> (i.e. its absolute timestamp), not from the timestamp of the skipped frame (see <a href="#frame" class="auto internal xref">Section 3.5</a>).<a href="#section-7.10-8" class="pilcrow">¶</a></p>
 <p id="section-7.10-9">The publisher responds with FRAME messages on the same stream.
 The publisher FINs the stream after the last frame, or resets on error.<a href="#section-7.10-9" class="pilcrow">¶</a></p>
