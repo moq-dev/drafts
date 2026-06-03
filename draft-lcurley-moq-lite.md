@@ -288,6 +288,8 @@ A subscriber opens Subscribe Streams to request a Track.
 
 The subscriber MUST start a Subscribe Stream with a SUBSCRIBE message followed by any number of SUBSCRIBE_UPDATE messages.
 The publisher replies with any number of SUBSCRIBE_START, SUBSCRIBE_END, and SUBSCRIBE_DROP messages; the subscription is accepted implicitly (a rejection is a stream reset).
+If the publisher cannot serve the subscription — the track does not exist, or it otherwise refuses — it MUST reset the stream rather than leave it pending, and SHOULD do so promptly (within roughly a round trip) so the subscriber is not left waiting.
+A subscription the publisher accepts but has no groups for yet is not a rejection: for a live track the publisher MAY withhold SUBSCRIBE_START until the first matching group is produced, and for a track that has already ended with no matching groups it MUST send SUBSCRIBE_END (resolving an empty range) rather than reset. A subscriber therefore distinguishes "pending" from "refused" by the stream reset, not by a timeout.
 The Subscribe Stream does not carry the track's publisher properties — those are immutable and fetched once via a [Track Stream](#track-stream) (see [TRACK_INFO](#track-info)).
 The subscriber MUST have the track's TRACK_INFO before it can parse the FRAME messages that arrive on Group Streams, since the timescale and compression determine the frame wire format; it MAY open the Track and Subscribe streams concurrently and buffer frames until TRACK_INFO arrives.
 
@@ -314,7 +316,8 @@ A subscriber opens a Track Stream (0x6) to learn a Track's immutable publisher p
 The subscriber sends a TRACK message containing the broadcast path and track name.
 The publisher replies with a single TRACK_INFO message and then FINs the stream, or resets the stream on error (e.g. the track does not exist).
 The returned properties are fixed for the lifetime of the track, so the subscriber SHOULD cache TRACK_INFO and reuse it across every SUBSCRIBE and FETCH for that track rather than requesting it again.
-When the track was discovered via an ANNOUNCE, the cached value is tied to that advertisement: if the broadcast is re-announced (a new `active` ANNOUNCE that atomically replaces the prior one), the subscriber SHOULD discard the cached TRACK_INFO and request it again.
+When the track was discovered via an ANNOUNCE, the cached value is tied to that advertisement: if the broadcast is re-announced (a new `active` ANNOUNCE that atomically replaces the prior one), the subscriber MUST discard the cached TRACK_INFO and MUST re-request it before parsing any further FRAME messages, since the timescale or compression may have changed.
+If FRAME messages cannot be decoded against the cached TRACK_INFO (for example a malformed delta or payload after a missed re-announcement), the subscriber MUST reset the affected stream with a protocol violation and re-request TRACK_INFO.
 A subscriber that reached the track without an advertisement (e.g. a path known out of band) has no such invalidation signal; it MAY re-request TRACK_INFO whenever it needs to confirm freshness (for example on a new session). A stale cache only risks misparsing frames from a changed track, so the subscriber that cannot observe re-announcements SHOULD NOT cache TRACK_INFO beyond a single connection.
 
 Because a subscriber MAY open the Track stream concurrently with a SUBSCRIBE or FETCH (see [Subscribe](#subscribe) and [Fetch](#fetch)) and cannot parse any buffered group frames until TRACK_INFO arrives, the publisher SHOULD prioritize TRACK_INFO ahead of group data on the connection.
@@ -358,7 +361,7 @@ This depends on the QUIC implementation and it may not be possible to get fine-g
 
 ### Priority
 The `Subscriber Priority` is scoped to the connection and MAY change over the life of the subscription via SUBSCRIBE_UPDATE.
-The `Publisher Priority` is fixed for the lifetime of the subscription (see [TRACK_INFO](#track-info)) and SHOULD be used only to resolve conflicts or ties.
+The `Publisher Priority` is fixed for the lifetime of the Track (see [TRACK_INFO](#track-info)) and SHOULD be used only to resolve conflicts or ties.
 
 A conflict can occur when a relay tries to serve multiple downstream subscriptions from a single upstream subscription.
 The relay cannot pick any one subscriber's priority, so the upstream subscription SHOULD use the publisher priority instead of some combination of different subscriber priorities.
@@ -372,14 +375,14 @@ There are two people in a conference call, Ali and Bob.
 We subscribe to both of their audio tracks with subscriber priority 2 and video tracks with subscriber priority 1.
 Each publisher advertises a fixed publisher priority — here audio at 2 and video at 1 — used only to break ties.
 This results in equal priority for `Ali` and `Bob` while prioritizing audio.
-```
+```text
 ali/audio + bob/audio: subscriber_priority=2 publisher_priority=2
 ali/video + bob/video: subscriber_priority=1 publisher_priority=1
 ```
 
 Because publisher priority cannot change, dynamic adaptation is the subscriber's job.
 If the subscriber detects that Bob is actively speaking, it raises the subscriber priority of Bob's tracks via SUBSCRIBE_UPDATE:
-```
+```text
 bob/audio: subscriber_priority=4 publisher_priority=2
 bob/video: subscriber_priority=3 publisher_priority=1
 ali/audio: subscriber_priority=2 publisher_priority=2
@@ -755,7 +758,7 @@ An empty payload (size 0) MUST NOT be compressed and remains empty on the wire.
 
 The publisher SHOULD only enable compression for payload types that benefit from it (e.g. JSON, text, uncompressed binary structures).
 Already-compressed media (e.g. H.264, Opus, AV1) gains nothing and SHOULD use `none`.
-A subscriber that does not recognize the value MUST NOT subscribe to or fetch the track, and resets any such stream with a protocol violation.
+A subscriber that does not recognize the value MUST NOT open a Subscribe or Fetch stream for the track; if it already opened one before receiving TRACK_INFO, it MUST reset that stream with a protocol violation. The Track Stream itself needs no reset — the publisher FINs it after TRACK_INFO.
 
 A relay MAY transcode payloads between compression algorithms (including bridging different protocol versions, e.g. a moq-lite-05 publisher to a moq-lite-04 subscriber) provided the decompressed bytes are identical to what the publisher produced.
 A relay SHOULD NOT compress an originally-uncompressed payload unless there is a strong content signal that compression is beneficial (e.g. the track name ends in `.json`), because the relay cannot otherwise predict whether compression will help or hurt.
