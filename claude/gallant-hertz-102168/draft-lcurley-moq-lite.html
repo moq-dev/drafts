@@ -1749,6 +1749,8 @@ There <span class="bcp14">MAY</span> be multiple Announce Streams, potentially c
 <p id="section-5.1.2-1">A subscriber opens Subscribe Streams to request a Track.<a href="#section-5.1.2-1" class="pilcrow">¶</a></p>
 <p id="section-5.1.2-2">The subscriber <span class="bcp14">MUST</span> start a Subscribe Stream with a SUBSCRIBE message followed by any number of SUBSCRIBE_UPDATE messages.
 The publisher replies with any number of SUBSCRIBE_START, SUBSCRIBE_END, and SUBSCRIBE_DROP messages; the subscription is accepted implicitly (a rejection is a stream reset).
+If the publisher cannot serve the subscription — the track does not exist, or it otherwise refuses — it <span class="bcp14">MUST</span> reset the stream rather than leave it pending, and <span class="bcp14">SHOULD</span> do so promptly (within roughly a round trip) so the subscriber is not left waiting.
+A subscription the publisher accepts but has no groups for yet is not a rejection: for a live track the publisher <span class="bcp14">MAY</span> withhold SUBSCRIBE_START until the first matching group is produced, and for a track that has already ended with no matching groups it <span class="bcp14">MUST</span> send SUBSCRIBE_END (resolving an empty range) rather than reset. A subscriber therefore distinguishes "pending" from "refused" by the stream reset, not by a timeout.
 The Subscribe Stream does not carry the track's publisher properties — those are immutable and fetched once via a <span><a href="#track-stream" class="internal xref">Track Stream</a> (<a href="#track-stream" class="auto internal xref">Section 5.1.4</a>)</span> (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.9</a>)</span>).
 The subscriber <span class="bcp14">MUST</span> have the track's TRACK_INFO before it can parse the FRAME messages that arrive on Group Streams, since the timescale and compression determine the frame wire format; it <span class="bcp14">MAY</span> open the Track and Subscribe streams concurrently and buffer frames until TRACK_INFO arrives.<a href="#section-5.1.2-2" class="pilcrow">¶</a></p>
 <p id="section-5.1.2-3">The publisher sends SUBSCRIBE_START once the absolute start group is resolved, and SUBSCRIBE_END once no further groups will be produced (see <span><a href="#subscribe-start" class="internal xref">SUBSCRIBE_START</a> (<a href="#subscribe-start" class="auto internal xref">Section 7.10</a>)</span> and <span><a href="#subscribe-end" class="internal xref">SUBSCRIBE_END</a> (<a href="#subscribe-end" class="auto internal xref">Section 7.11</a>)</span>).
@@ -1781,7 +1783,8 @@ The publisher FINs the stream after the last frame, or resets the stream on erro
 <p id="section-5.1.4-2">The subscriber sends a TRACK message containing the broadcast path and track name.
 The publisher replies with a single TRACK_INFO message and then FINs the stream, or resets the stream on error (e.g. the track does not exist).
 The returned properties are fixed for the lifetime of the track, so the subscriber <span class="bcp14">SHOULD</span> cache TRACK_INFO and reuse it across every SUBSCRIBE and FETCH for that track rather than requesting it again.
-When the track was discovered via an ANNOUNCE, the cached value is tied to that advertisement: if the broadcast is re-announced (a new <code>active</code> ANNOUNCE that atomically replaces the prior one), the subscriber <span class="bcp14">SHOULD</span> discard the cached TRACK_INFO and request it again.
+When the track was discovered via an ANNOUNCE, the cached value is tied to that advertisement: if the broadcast is re-announced (a new <code>active</code> ANNOUNCE that atomically replaces the prior one), the subscriber <span class="bcp14">MUST</span> discard the cached TRACK_INFO and <span class="bcp14">MUST</span> re-request it before parsing any further FRAME messages, since the timescale or compression may have changed.
+If FRAME messages cannot be decoded against the cached TRACK_INFO (for example a malformed delta or payload after a missed re-announcement), the subscriber <span class="bcp14">MUST</span> reset the affected stream with a protocol violation and re-request TRACK_INFO.
 A subscriber that reached the track without an advertisement (e.g. a path known out of band) has no such invalidation signal; it <span class="bcp14">MAY</span> re-request TRACK_INFO whenever it needs to confirm freshness (for example on a new session). A stale cache only risks misparsing frames from a changed track, so the subscriber that cannot observe re-announcements <span class="bcp14">SHOULD NOT</span> cache TRACK_INFO beyond a single connection.<a href="#section-5.1.4-2" class="pilcrow">¶</a></p>
 <p id="section-5.1.4-3">Because a subscriber <span class="bcp14">MAY</span> open the Track stream concurrently with a SUBSCRIBE or FETCH (see <a href="#subscribe" class="auto internal xref">Section 5.1.2</a> and <a href="#fetch" class="auto internal xref">Section 5.1.3</a>) and cannot parse any buffered group frames until TRACK_INFO arrives, the publisher <span class="bcp14">SHOULD</span> prioritize TRACK_INFO ahead of group data on the connection.
 Otherwise the concurrent case — intended to keep a cold subscribe or fetch to a single round trip — would stall behind queued group frames that the subscriber cannot yet decode.<a href="#section-5.1.4-3" class="pilcrow">¶</a></p>
@@ -1843,7 +1846,7 @@ This depends on the QUIC implementation and it may not be possible to get fine-g
 <a href="#section-6.1.1" class="section-number selfRef">6.1.1. </a><a href="#name-priority" class="section-name selfRef">Priority</a>
           </h4>
 <p id="section-6.1.1-1">The <code>Subscriber Priority</code> is scoped to the connection and <span class="bcp14">MAY</span> change over the life of the subscription via SUBSCRIBE_UPDATE.
-The <code>Publisher Priority</code> is fixed for the lifetime of the subscription (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.9</a>)</span>) and <span class="bcp14">SHOULD</span> be used only to resolve conflicts or ties.<a href="#section-6.1.1-1" class="pilcrow">¶</a></p>
+The <code>Publisher Priority</code> is fixed for the lifetime of the Track (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.9</a>)</span>) and <span class="bcp14">SHOULD</span> be used only to resolve conflicts or ties.<a href="#section-6.1.1-1" class="pilcrow">¶</a></p>
 <p id="section-6.1.1-2">A conflict can occur when a relay tries to serve multiple downstream subscriptions from a single upstream subscription.
 The relay cannot pick any one subscriber's priority, so the upstream subscription <span class="bcp14">SHOULD</span> use the publisher priority instead of some combination of different subscriber priorities.
 Publisher priority is therefore mostly relevant on the upstream (origin-facing) leg of a relay; closer to the subscriber, the subscriber priority dominates.<a href="#section-6.1.1-2" class="pilcrow">¶</a></p>
@@ -1853,13 +1856,13 @@ There are two people in a conference call, Ali and Bob.<a href="#section-6.1.1-4
 <p id="section-6.1.1-5">We subscribe to both of their audio tracks with subscriber priority 2 and video tracks with subscriber priority 1.
 Each publisher advertises a fixed publisher priority — here audio at 2 and video at 1 — used only to break ties.
 This results in equal priority for <code>Ali</code> and <code>Bob</code> while prioritizing audio.
-<code>
+<code>text
 ali/audio + bob/audio: subscriber_priority=2 publisher_priority=2
 ali/video + bob/video: subscriber_priority=1 publisher_priority=1
 </code><a href="#section-6.1.1-5" class="pilcrow">¶</a></p>
 <p id="section-6.1.1-6">Because publisher priority cannot change, dynamic adaptation is the subscriber's job.
 If the subscriber detects that Bob is actively speaking, it raises the subscriber priority of Bob's tracks via SUBSCRIBE_UPDATE:
-<code>
+<code>text
 bob/audio: subscriber_priority=4 publisher_priority=2
 bob/video: subscriber_priority=3 publisher_priority=1
 ali/audio: subscriber_priority=2 publisher_priority=2
@@ -2288,7 +2291,7 @@ The Frame <code>Message Length</code> describes the compressed (on-wire) size.
 An empty payload (size 0) <span class="bcp14">MUST NOT</span> be compressed and remains empty on the wire.<a href="#section-7.9-12" class="pilcrow">¶</a></p>
 <p id="section-7.9-13">The publisher <span class="bcp14">SHOULD</span> only enable compression for payload types that benefit from it (e.g. JSON, text, uncompressed binary structures).
 Already-compressed media (e.g. H.264, Opus, AV1) gains nothing and <span class="bcp14">SHOULD</span> use <code>none</code>.
-A subscriber that does not recognize the value <span class="bcp14">MUST NOT</span> subscribe to or fetch the track, and resets any such stream with a protocol violation.<a href="#section-7.9-13" class="pilcrow">¶</a></p>
+A subscriber that does not recognize the value <span class="bcp14">MUST NOT</span> open a Subscribe or Fetch stream for the track; if it already opened one before receiving TRACK_INFO, it <span class="bcp14">MUST</span> reset that stream with a protocol violation. The Track Stream itself needs no reset — the publisher FINs it after TRACK_INFO.<a href="#section-7.9-13" class="pilcrow">¶</a></p>
 <p id="section-7.9-14">A relay <span class="bcp14">MAY</span> transcode payloads between compression algorithms (including bridging different protocol versions, e.g. a moq-lite-05 publisher to a moq-lite-04 subscriber) provided the decompressed bytes are identical to what the publisher produced.
 A relay <span class="bcp14">SHOULD NOT</span> compress an originally-uncompressed payload unless there is a strong content signal that compression is beneficial (e.g. the track name ends in <code>.json</code>), because the relay cannot otherwise predict whether compression will help or hurt.<a href="#section-7.9-14" class="pilcrow">¶</a></p>
 </section>

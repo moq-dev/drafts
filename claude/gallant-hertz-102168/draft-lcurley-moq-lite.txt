@@ -511,7 +511,17 @@ Table of Contents
    followed by any number of SUBSCRIBE_UPDATE messages.  The publisher
    replies with any number of SUBSCRIBE_START, SUBSCRIBE_END, and
    SUBSCRIBE_DROP messages; the subscription is accepted implicitly (a
-   rejection is a stream reset).  The Subscribe Stream does not carry
+   rejection is a stream reset).  If the publisher cannot serve the
+   subscription — the track does not exist, or it otherwise refuses — it
+   MUST reset the stream rather than leave it pending, and SHOULD do so
+   promptly (within roughly a round trip) so the subscriber is not left
+   waiting.  A subscription the publisher accepts but has no groups for
+   yet is not a rejection: for a live track the publisher MAY withhold
+   SUBSCRIBE_START until the first matching group is produced, and for a
+   track that has already ended with no matching groups it MUST send
+   SUBSCRIBE_END (resolving an empty range) rather than reset.  A
+   subscriber therefore distinguishes "pending" from "refused" by the
+   stream reset, not by a timeout.  The Subscribe Stream does not carry
    the track's publisher properties — those are immutable and fetched
    once via a Track Stream (Section 5.1.4) (see TRACK_INFO
    (Section 7.9)).  The subscriber MUST have the track's TRACK_INFO
@@ -566,9 +576,14 @@ Table of Contents
    requesting it again.  When the track was discovered via an ANNOUNCE,
    the cached value is tied to that advertisement: if the broadcast is
    re-announced (a new active ANNOUNCE that atomically replaces the
-   prior one), the subscriber SHOULD discard the cached TRACK_INFO and
-   request it again.  A subscriber that reached the track without an
-   advertisement (e.g. a path known out of band) has no such
+   prior one), the subscriber MUST discard the cached TRACK_INFO and
+   MUST re-request it before parsing any further FRAME messages, since
+   the timescale or compression may have changed.  If FRAME messages
+   cannot be decoded against the cached TRACK_INFO (for example a
+   malformed delta or payload after a missed re-announcement), the
+   subscriber MUST reset the affected stream with a protocol violation
+   and re-request TRACK_INFO.  A subscriber that reached the track
+   without an advertisement (e.g. a path known out of band) has no such
    invalidation signal; it MAY re-request TRACK_INFO whenever it needs
    to confirm freshness (for example on a new session).  A stale cache
    only risks misparsing frames from a changed track, so the subscriber
@@ -642,7 +657,7 @@ Table of Contents
 
    The Subscriber Priority is scoped to the connection and MAY change
    over the life of the subscription via SUBSCRIBE_UPDATE.  The
-   Publisher Priority is fixed for the lifetime of the subscription (see
+   Publisher Priority is fixed for the lifetime of the Track (see
    TRACK_INFO (Section 7.9)) and SHOULD be used only to resolve
    conflicts or ties.
 
@@ -662,14 +677,14 @@ Table of Contents
    and video tracks with subscriber priority 1.  Each publisher
    advertises a fixed publisher priority — here audio at 2 and video at
    1 — used only to break ties.  This results in equal priority for Ali
-   and Bob while prioritizing audio. ali/audio + bob/audio:
+   and Bob while prioritizing audio. text ali/audio + bob/audio:
    subscriber_priority=2 publisher_priority=2 ali/video + bob/video:
    subscriber_priority=1 publisher_priority=1
 
    Because publisher priority cannot change, dynamic adaptation is the
    subscriber's job.  If the subscriber detects that Bob is actively
    speaking, it raises the subscriber priority of Bob's tracks via
-   SUBSCRIBE_UPDATE: bob/audio: subscriber_priority=4
+   SUBSCRIBE_UPDATE: text bob/audio: subscriber_priority=4
    publisher_priority=2 bob/video: subscriber_priority=3
    publisher_priority=1 ali/audio: subscriber_priority=2
    publisher_priority=2 ali/video: subscriber_priority=1
@@ -1142,8 +1157,10 @@ Table of Contents
    benefit from it (e.g. JSON, text, uncompressed binary structures).
    Already-compressed media (e.g. H.264, Opus, AV1) gains nothing and
    SHOULD use none.  A subscriber that does not recognize the value MUST
-   NOT subscribe to or fetch the track, and resets any such stream with
-   a protocol violation.
+   NOT open a Subscribe or Fetch stream for the track; if it already
+   opened one before receiving TRACK_INFO, it MUST reset that stream
+   with a protocol violation.  The Track Stream itself needs no reset —
+   the publisher FINs it after TRACK_INFO.
 
    A relay MAY transcode payloads between compression algorithms
    (including bridging different protocol versions, e.g. a moq-lite-05
