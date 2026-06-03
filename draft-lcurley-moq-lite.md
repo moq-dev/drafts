@@ -314,7 +314,11 @@ A subscriber opens a Track Stream (0x6) to learn a Track's immutable publisher p
 The subscriber sends a TRACK message containing the broadcast path and track name.
 The publisher replies with a single TRACK_INFO message and then FINs the stream, or resets the stream on error (e.g. the track does not exist).
 The returned properties are fixed for the lifetime of the track, so the subscriber SHOULD cache TRACK_INFO and reuse it across every SUBSCRIBE and FETCH for that track rather than requesting it again.
-A cached value is tied to the current broadcast advertisement; if the broadcast is re-announced (a new `active` ANNOUNCE that atomically replaces the prior one), the subscriber SHOULD discard the cached TRACK_INFO and request it again.
+When the track was discovered via an ANNOUNCE, the cached value is tied to that advertisement: if the broadcast is re-announced (a new `active` ANNOUNCE that atomically replaces the prior one), the subscriber SHOULD discard the cached TRACK_INFO and request it again.
+A subscriber that reached the track without an advertisement (e.g. a path known out of band) has no such invalidation signal; it MAY re-request TRACK_INFO whenever it needs to confirm freshness (for example on a new session). A stale cache only risks misparsing frames from a changed track, so the subscriber that cannot observe re-announcements SHOULD NOT cache TRACK_INFO beyond a single connection.
+
+Because a subscriber MAY open the Track stream concurrently with a SUBSCRIBE or FETCH (see [Subscribe](#subscribe) and [Fetch](#fetch)) and cannot parse any buffered group frames until TRACK_INFO arrives, the publisher SHOULD prioritize TRACK_INFO ahead of group data on the connection.
+Otherwise the concurrent case — intended to keep a cold subscribe or fetch to a single round trip — would stall behind queued group frames that the subscriber cannot yet decode.
 
 ### Probe
 A subscriber opens a Probe Stream (0x4) to measure the available bitrate of the connection.
