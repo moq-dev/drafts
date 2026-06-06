@@ -1434,8 +1434,9 @@ Qmux provides a length-delimited polyfill for QUIC streams on top of TCP/TLS or 
 <p id="section-3.1-4">The session is active immediately after the QUIC/WebTransport connection is established.
 Both endpoints <span class="bcp14">SHOULD</span> begin sending and receiving streams right away to avoid an extra round-trip.<a href="#section-3.1-4" class="pilcrow">¶</a></p>
 <p id="section-3.1-5">Optional capabilities and extensions are negotiated via a SETUP message (see <a href="#setup" class="auto internal xref">Section 7.3</a>).
-Each endpoint opens a unidirectional Setup Stream at the start of the session, sends a single SETUP message advertising what it supports, and immediately closes the stream (FIN).
+Each endpoint <span class="bcp14">MUST</span> open a unidirectional Setup Stream at the start of the session, send a single SETUP message advertising what it supports, and immediately close the stream (FIN); an endpoint with no optional capabilities sends a SETUP with an empty parameter list.
 The two SETUP messages are independent; neither endpoint waits for the peer's SETUP before opening other streams.
+Because a SETUP is always sent, the buffering below is bounded: an endpoint knows the peer's full capability set has arrived once it receives that single SETUP.
 An endpoint <span class="bcp14">SHOULD</span> continue to send and process non-Setup streams until a negotiated extension would change the behavior or encoding of a stream, in which case it <span class="bcp14">MUST</span> buffer that stream until the peer's SETUP has been received.
 For example, if an extension adds a field to SUBSCRIBE_OK, the subscriber buffers SUBSCRIBE_OK until SETUP arrives so the new field can be parsed.<a href="#section-3.1-5" class="pilcrow">¶</a></p>
 <p id="section-3.1-6">As a fallback, an endpoint that opens an extension stream the peer does not support simply sees that stream reset (see <a href="#stream_type" class="auto internal xref">Section 7.2</a>).
@@ -1930,10 +1931,10 @@ This avoids stalling expiration on tracks that intentionally emit empty groups a
           <h4 id="name-setup">
 <a href="#section-6.3.1" class="section-number selfRef">6.3.1. </a><a href="#name-setup" class="section-name selfRef">Setup</a>
           </h4>
-<p id="section-6.3.1-1">Either endpoint <span class="bcp14">MAY</span> open a Setup Stream (0x1) at the start of the session to advertise the optional capabilities and extensions it supports.<a href="#section-6.3.1-1" class="pilcrow">¶</a></p>
+<p id="section-6.3.1-1">Each endpoint <span class="bcp14">MUST</span> open a Setup Stream (0x1) at the start of the session to advertise the optional capabilities and extensions it supports.<a href="#section-6.3.1-1" class="pilcrow">¶</a></p>
 <p id="section-6.3.1-2">The opener sends a single SETUP message and immediately closes the stream (FIN).
-There is at most one Setup Stream per direction; an endpoint that receives a second Setup Stream <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION.
-An endpoint that opens no Setup Stream is assumed to support no optional capabilities.<a href="#section-6.3.1-2" class="pilcrow">¶</a></p>
+There is exactly one Setup Stream per direction; an endpoint that receives a second Setup Stream <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION.
+An endpoint with no optional capabilities sends a SETUP with an empty parameter list rather than omitting the stream, giving the peer a deterministic signal that no capabilities are forthcoming.<a href="#section-6.3.1-2" class="pilcrow">¶</a></p>
 <p id="section-6.3.1-3">See the <a href="#session" class="auto internal xref">Section 3.1</a> section for how an endpoint avoids waiting on the peer's SETUP before exchanging other streams.<a href="#section-6.3.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
