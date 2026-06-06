@@ -9,7 +9,7 @@
 <meta content="
        This document defines a PROBE extension for MoQ Transport  .
 A subscriber opens a bidirectional PROBE stream to request that the publisher pad the connection up to a target bitrate.
-The publisher sends padding as defined in   Section 7.7 and periodically responds with the measured bitrate and an elapsed timestamp, enabling the subscriber to estimate the available bandwidth. 
+The publisher sends padding as defined in   Section 11.5 and periodically responds with the measured bitrate and an elapsed timestamp, enabling the subscriber to estimate the available bandwidth. 
     " name="description">
 <meta content="xml2rfc 3.33.0" name="generator">
 <meta content="draft-lcurley-moq-probe-latest" name="ietf.draft">
@@ -1048,7 +1048,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Curley</td>
-<td class="center">Expires 5 December 2026</td>
+<td class="center">Expires 8 December 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1061,12 +1061,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-lcurley-moq-probe-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-06-03" class="published">3 June 2026</time>
+<time datetime="2026-06-06" class="published">6 June 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-12-05">5 December 2026</time></dd>
+<dd class="expires"><time datetime="2026-12-08">8 December 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1080,7 +1080,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
 <p id="section-abstract-1">This document defines a PROBE extension for MoQ Transport <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>.
 A subscriber opens a bidirectional PROBE stream to request that the publisher pad the connection up to a target bitrate.
-The publisher sends padding as defined in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 7.7 and periodically responds with the measured bitrate and an elapsed timestamp, enabling the subscriber to estimate the available bandwidth.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+The publisher sends padding as defined in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 11.5 and periodically responds with the measured bitrate and an elapsed timestamp, enabling the subscriber to estimate the available bandwidth.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-discussion-venues">
@@ -1112,7 +1112,7 @@ The publisher sends padding as defined in <span>[<a href="#moqt" class="cite xre
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 5 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 8 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1182,10 +1182,10 @@ The publisher sends padding as defined in <span>[<a href="#moqt" class="cite xre
             <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1">
-                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-moqt-setup-option-type" class="internal xref">MOQT Setup Option Type</a></p>
+                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-moqt-setup-options" class="internal xref">MOQT Setup Options</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.2">
-                <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-moqt-stream-type" class="internal xref">MOQT Stream Type</a></p>
+                <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-moqt-message-types" class="internal xref">MOQT Message Types</a></p>
 </li>
             </ul>
 </li>
@@ -1255,7 +1255,7 @@ A relay terminates the PROBE stream and does not forward it upstream, avoiding i
         <h3 id="name-this-extension">
 <a href="#section-2.3" class="section-number selfRef">2.3. </a><a href="#name-this-extension" class="section-name selfRef">This Extension</a>
         </h3>
-<p id="section-2.3-1"><span>[<a href="#moqt" class="cite xref">moqt</a>]</span> defines padding streams and datagrams (Section 7.7) for probing, but does not define a signaling mechanism for a subscriber to request padding or for a publisher to report measurements.
+<p id="section-2.3-1"><span>[<a href="#moqt" class="cite xref">moqt</a>]</span> defines padding streams and datagrams (Section 11.5) for probing, but does not define a signaling mechanism for a subscriber to request padding or for a publisher to report measurements.
 This extension fills that gap: the subscriber opens a PROBE stream to request that the publisher pad the connection to a target bitrate using <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> padding.
 The publisher responds with periodic measurements, allowing the subscriber to adjust its subscriptions accordingly.<a href="#section-2.3-1" class="pilcrow">¶</a></p>
 </section>
@@ -1267,18 +1267,41 @@ The publisher responds with periodic measurements, allowing the subscriber to ad
       <h2 id="name-setup-negotiation">
 <a href="#section-3" class="section-number selfRef">3. </a><a href="#name-setup-negotiation" class="section-name selfRef">Setup Negotiation</a>
       </h2>
-<p id="section-3-1">The PROBE extension is negotiated during the SETUP exchange as defined in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 9.4.<a href="#section-3-1" class="pilcrow">¶</a></p>
-<p id="section-3-2">Both endpoints indicate support by including the following Setup Option:<a href="#section-3-2" class="pilcrow">¶</a></p>
+<p id="section-3-1">The PROBE extension is negotiated during the SETUP exchange as defined in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10.3.
+Each endpoint advertises the capabilities it supports when acting as a publisher (the responder on a PROBE stream).<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">An endpoint indicates support by including the following Setup Option:<a href="#section-3-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-3-3">
 <pre>
 PROBE Setup Option {
-  Option Key (vi64) = TBD1
-  Option Value Length (vi64) = 0
+  Option Key (vi64) = 0x950BE
+  Option Value Length (vi64)
+  Level (vi64)
 }
 </pre><a href="#section-3-3" class="pilcrow">¶</a>
 </div>
-<p id="section-3-4">If both endpoints include this option, the PROBE extension is available for the session.
-If a peer receives a PROBE stream without having negotiated the extension, it <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION.<a href="#section-3-4" class="pilcrow">¶</a></p>
+<p id="section-3-4"><strong>Level</strong>:
+The publisher capability level the sender supports, where each level includes the one below it:<a href="#section-3-4" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3-5.1">
+          <p id="section-3-5.1.1"><code>1</code> <strong>Report</strong>: The publisher can measure and periodically report its estimated bitrate via PROBE_RESPONSE.<a href="#section-3-5.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-3-5.2">
+          <p id="section-3-5.2.1"><code>2</code> <strong>Increase</strong>: The publisher can additionally send padding (or redundant data) to probe for bandwidth above its current sending rate, up to the subscriber's target.<a href="#section-3-5.2.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<p id="section-3-6">The levels are nested rather than independent: probing for more bandwidth is meaningless without measuring it, so Increase always includes Report. Reporting the current bitrate is far simpler to implement, so a publisher may support Report without Increase.<a href="#section-3-6" class="pilcrow">¶</a></p>
+<p id="section-3-7">A subscriber <span class="bcp14">MUST</span> consult the publisher's advertised Level before relying on a PROBE stream:<a href="#section-3-7" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3-8.1">
+          <p id="section-3-8.1.1">If the publisher omitted the option (or sent <code>0</code>), the PROBE extension is unavailable. A subscriber <span class="bcp14">MUST NOT</span> open a PROBE stream; if it does, the publisher <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION.<a href="#section-3-8.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-3-8.2">
+          <p id="section-3-8.2.1">At <code>Report</code>, the subscriber <span class="bcp14">MAY</span> open a PROBE stream to monitor the measured bitrate but <span class="bcp14">MUST NOT</span> expect padding above the current sending rate. It <span class="bcp14">MUST</span> set Target Bitrate to 0 and use an alternative if it needs to probe for additional bandwidth.<a href="#section-3-8.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-3-8.3">
+          <p id="section-3-8.3.1">At <code>Increase</code>, the subscriber <span class="bcp14">MAY</span> request a non-zero Target Bitrate and expect the publisher to actively probe up to it.<a href="#section-3-8.3.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
 </section>
 </div>
 <div id="probe-stream">
@@ -1286,16 +1309,14 @@ If a peer receives a PROBE stream without having negotiated the extension, it <s
       <h2 id="name-probe-stream">
 <a href="#section-4" class="section-number selfRef">4. </a><a href="#name-probe-stream" class="section-name selfRef">PROBE Stream</a>
       </h2>
-<p id="section-4-1">The PROBE extension uses a new bidirectional stream type.<a href="#section-4-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4-2">
-<pre>
-STREAM_TYPE = TBD2
-</pre><a href="#section-4-2" class="pilcrow">¶</a>
-</div>
-<p id="section-4-3">The stream type is sent at the beginning of the stream, encoded as a variable-length integer, consistent with <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> stream type framing.<a href="#section-4-3" class="pilcrow">¶</a></p>
-<p id="section-4-4">A subscriber (stream opener) sends PROBE_REQUEST messages on the stream.
-The publisher (responder) sends PROBE_RESPONSE messages on the stream.
-Either endpoint <span class="bcp14">MAY</span> close or reset the stream at any time.<a href="#section-4-4" class="pilcrow">¶</a></p>
+<p id="section-4-1">The PROBE extension defines two new MOQT messages, PROBE_REQUEST and PROBE_RESPONSE, exchanged on a bidirectional request stream.
+<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> no longer assigns dedicated bidirectional stream types; a request stream is identified by its first message type, and per <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 3.3 a bidirectional stream <span class="bcp14">MUST NOT</span> begin with a message type the peer has not negotiated.
+The PROBE Setup Option (see <span><a href="#setup-negotiation" class="internal xref">Setup Negotiation</a> (<a href="#setup-negotiation" class="auto internal xref">Section 3</a>)</span>) performs this negotiation.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-2">A subscriber opens the stream with a PROBE_REQUEST message, which <span class="bcp14">MUST</span> be the first message on the stream.
+The subscriber (stream opener) sends PROBE_REQUEST messages and the publisher (responder) sends PROBE_RESPONSE messages on the same stream.
+An endpoint that receives a PROBE_REQUEST without having advertised the PROBE Setup Option <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION.
+Either endpoint <span class="bcp14">MAY</span> close or reset the stream at any time.<a href="#section-4-2" class="pilcrow">¶</a></p>
+<p id="section-4-3">Both messages use the <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10 control-message framing: a <code>Type</code> identifying the message, a 16-bit <code>Length</code>, and the payload.<a href="#section-4-3" class="pilcrow">¶</a></p>
 <div id="proberequest">
 <section id="section-4.1">
         <h3 id="name-probe_request">
@@ -1304,15 +1325,17 @@ Either endpoint <span class="bcp14">MAY</span> close or reset the stream at any 
 <p id="section-4.1-1">A subscriber sends a PROBE_REQUEST to indicate the target the publisher should attempt to reach.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.1-2">
 <pre>
-PROBE_REQUEST {
-  Message Length (vi64)
+PROBE_REQUEST Message {
+  Type (vi64) = 0x950BE
+  Length (16)
   Target Bitrate (vi64)
 }
 </pre><a href="#section-4.1-2" class="pilcrow">¶</a>
 </div>
 <p id="section-4.1-3"><strong>Target Bitrate</strong>:
 The desired bitrate in kilobits per second.
-The publisher <span class="bcp14">SHOULD</span> send padding as defined in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 7.7 to attempt to reach this rate.
+The publisher <span class="bcp14">SHOULD</span> send padding as defined in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 11.5 to attempt to reach this rate, but only if it advertised the Increase capability (see <span><a href="#setup-negotiation" class="internal xref">Setup Negotiation</a> (<a href="#setup-negotiation" class="auto internal xref">Section 3</a>)</span>).
+A subscriber <span class="bcp14">MUST</span> set this to 0 unless the publisher advertised Increase.
 A value of 0 indicates no padding is needed; the publisher <span class="bcp14">SHOULD</span> only send media data but <span class="bcp14">MUST</span> continue sending PROBE_RESPONSE messages.
 This is useful for passively monitoring the current bitrate without actively probing for more bandwidth.
 Either endpoint <span class="bcp14">MAY</span> close or reset the stream to stop receiving updates entirely.<a href="#section-4.1-3" class="pilcrow">¶</a></p>
@@ -1329,8 +1352,9 @@ The publisher <span class="bcp14">MUST</span> use the most recently received tar
 <p id="section-4.2-1">The publisher periodically sends PROBE_RESPONSE messages containing the measured bitrate and the elapsed time since the last response.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.2-2">
 <pre>
-PROBE_RESPONSE {
-  Message Length (vi64)
+PROBE_RESPONSE Message {
+  Type (vi64) = 0x950BF
+  Length (16)
   Measured Bitrate (vi64)
   Elapsed (vi64)
 }
@@ -1356,7 +1380,7 @@ The interval is implementation-defined but a value between 100ms and 1000ms is <
       <h2 id="name-padding">
 <a href="#section-5" class="section-number selfRef">5. </a><a href="#name-padding" class="section-name selfRef">Padding</a>
       </h2>
-<p id="section-5-1">The publisher <span class="bcp14">SHOULD</span> send padding using the mechanisms defined in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 7.7 (padding streams and/or padding datagrams).<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-5-1">The publisher <span class="bcp14">SHOULD</span> send padding using the mechanisms defined in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 11.5 (padding streams and/or padding datagrams).<a href="#section-5-1" class="pilcrow">¶</a></p>
 <p id="section-5-2">The publisher <span class="bcp14">MUST NOT</span> exceed the target with padding alone.
 If media traffic already meets or exceeds the target, no additional padding is necessary.<a href="#section-5-2" class="pilcrow">¶</a></p>
 <p id="section-5-3">The publisher <span class="bcp14">MUST</span> respect the QUIC congestion controller.
@@ -1382,12 +1406,15 @@ Implementations <span class="bcp14">SHOULD</span> enforce a minimum inter-reques
 <a href="#section-7" class="section-number selfRef">7. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
 <p id="section-7-1">This document requests the following registrations:<a href="#section-7-1" class="pilcrow">¶</a></p>
-<div id="moqt-setup-option-type">
+<div id="moqt-setup-options">
 <section id="section-7.1">
-        <h3 id="name-moqt-setup-option-type">
-<a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-moqt-setup-option-type" class="section-name selfRef">MOQT Setup Option Type</a>
+        <h3 id="name-moqt-setup-options">
+<a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-moqt-setup-options" class="section-name selfRef">MOQT Setup Options</a>
         </h3>
-<p id="section-7.1-1">This document registers the following entry in the "MoQ Setup Option Types" registry:<a href="#section-7.1-1" class="pilcrow">¶</a></p>
+<p id="section-7.1-1">This document requests a registration in the "MOQT Setup Options" registry (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 15.4), whose policy is Specification Required.
+moq-transport defines no private-use range for Setup Options; extensions request a (provisional) codepoint.
+A high, distinctive value is chosen to avoid the low ranges reserved by <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> and to minimize collisions with provisional registrations by other extensions; it also avoids the greasing pattern (<code>0x7f * N + 0x9D</code>).
+This is the same value as the PROBE_REQUEST message type below; Setup Options and Message Types are independent registries, so the shared value is unambiguous.<a href="#section-7.1-1" class="pilcrow">¶</a></p>
 <table class="center" id="table-1">
           <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
 <thead>
@@ -1399,7 +1426,7 @@ Implementations <span class="bcp14">SHOULD</span> enforce a minimum inter-reques
           </thead>
           <tbody>
             <tr>
-              <td class="text-left" rowspan="1" colspan="1">TBD1</td>
+              <td class="text-left" rowspan="1" colspan="1">0x950BE</td>
               <td class="text-left" rowspan="1" colspan="1">PROBE</td>
               <td class="text-left" rowspan="1" colspan="1">This Document</td>
             </tr>
@@ -1407,25 +1434,35 @@ Implementations <span class="bcp14">SHOULD</span> enforce a minimum inter-reques
         </table>
 </section>
 </div>
-<div id="moqt-stream-type">
+<div id="moqt-message-types">
 <section id="section-7.2">
-        <h3 id="name-moqt-stream-type">
-<a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-moqt-stream-type" class="section-name selfRef">MOQT Stream Type</a>
+        <h3 id="name-moqt-message-types">
+<a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-moqt-message-types" class="section-name selfRef">MOQT Message Types</a>
         </h3>
-<p id="section-7.2-1">This document registers the following entry in the "MoQ Stream Types" registry:<a href="#section-7.2-1" class="pilcrow">¶</a></p>
+<p id="section-7.2-1">This document requests registrations in the "MOQT Message Types" registry (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 15).
+<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> replaced dedicated bidirectional stream types with request message types, so the PROBE stream is identified by its first message rather than a stream type.
+High, distinctive values are chosen to avoid the low ranges reserved by <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> and to minimize collisions with provisional registrations by other extensions; they also avoid the greasing pattern (<code>0x7f * N + 0x9D</code>).<a href="#section-7.2-1" class="pilcrow">¶</a></p>
 <table class="center" id="table-2">
           <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
 <thead>
             <tr>
               <th class="text-left" rowspan="1" colspan="1">Value</th>
               <th class="text-left" rowspan="1" colspan="1">Name</th>
+              <th class="text-left" rowspan="1" colspan="1">Stream</th>
               <th class="text-left" rowspan="1" colspan="1">Reference</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td class="text-left" rowspan="1" colspan="1">TBD2</td>
-              <td class="text-left" rowspan="1" colspan="1">PROBE</td>
+              <td class="text-left" rowspan="1" colspan="1">0x950BE</td>
+              <td class="text-left" rowspan="1" colspan="1">PROBE_REQUEST</td>
+              <td class="text-left" rowspan="1" colspan="1">Request, First</td>
+              <td class="text-left" rowspan="1" colspan="1">This Document</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0x950BF</td>
+              <td class="text-left" rowspan="1" colspan="1">PROBE_RESPONSE</td>
+              <td class="text-left" rowspan="1" colspan="1">Request</td>
               <td class="text-left" rowspan="1" colspan="1">This Document</td>
             </tr>
           </tbody>

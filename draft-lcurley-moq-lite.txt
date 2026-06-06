@@ -3,9 +3,9 @@
 
 
 moq                                                            L. Curley
-Internet-Draft                                               3 June 2026
+Internet-Draft                                               6 June 2026
 Intended status: Informational                                          
-Expires: 5 December 2026
+Expires: 8 December 2026
 
 
                          Media over QUIC - Lite
@@ -46,7 +46,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 5 December 2026.
+   This Internet-Draft will expire on 8 December 2026.
 
 Copyright Notice
 
@@ -92,23 +92,26 @@ Table of Contents
        6.1.2.  Ordered
      6.2.  Expiration
      6.3.  Unidirectional Streams
-       6.3.1.  Group
+       6.3.1.  Setup
+       6.3.2.  Group
      6.4.  Datagrams
    7.  Encoding
      7.1.  Message Length
      7.2.  STREAM_TYPE
-     7.3.  ANNOUNCE_INTEREST
-     7.4.  ANNOUNCE_OK
-     7.5.  ANNOUNCE
-     7.6.  SUBSCRIBE
-     7.7.  SUBSCRIBE_UPDATE
-     7.8.  SUBSCRIBE_OK
-     7.9.  SUBSCRIBE_DROP
-     7.10. FETCH
-     7.11. PROBE
-     7.12. GOAWAY
-     7.13. GROUP
-     7.14. FRAME
+     7.3.  SETUP
+       7.3.1.  Probe Parameter
+     7.4.  ANNOUNCE_INTEREST
+     7.5.  ANNOUNCE_OK
+     7.6.  ANNOUNCE
+     7.7.  SUBSCRIBE
+     7.8.  SUBSCRIBE_UPDATE
+     7.9.  SUBSCRIBE_OK
+     7.10. SUBSCRIBE_DROP
+     7.11. FETCH
+     7.12. PROBE
+     7.13. GOAWAY
+     7.14. GROUP
+     7.15. FRAME
    8.  Appendix A: Changelog
      8.1.  moq-lite-05
      8.2.  moq-lite-04
@@ -204,9 +207,29 @@ Table of Contents
    Section 4.2 for the specific bindings and ALPN negotiation.
 
    The session is active immediately after the QUIC/WebTransport
-   connection is established.  Extensions are negotiated via stream
-   probing: an endpoint opens a stream with an unknown type and the peer
-   resets it if unsupported.
+   connection is established.  Both endpoints SHOULD begin sending and
+   receiving streams right away to avoid an extra round-trip.
+
+   Optional capabilities and extensions are negotiated via a SETUP
+   message (see Section 7.3).  Each endpoint MUST open a unidirectional
+   Setup Stream at the start of the session, send a single SETUP message
+   advertising what it supports, and immediately close the stream (FIN);
+   an endpoint with no optional capabilities sends a SETUP with an empty
+   parameter list.  The two SETUP messages are independent; neither
+   endpoint waits for the peer's SETUP before opening other streams.
+   Because a SETUP is always sent, the buffering below is bounded: an
+   endpoint knows the peer's full capability set has arrived once it
+   receives that single SETUP.  An endpoint SHOULD continue to send and
+   process non-Setup streams until a negotiated extension would change
+   the behavior or encoding of a stream, in which case it MUST buffer
+   that stream until the peer's SETUP has been received.  For example,
+   if an extension adds a field to SUBSCRIBE_OK, the subscriber buffers
+   SUBSCRIBE_OK until SETUP arrives so the new field can be parsed.
+
+   As a fallback, an endpoint that opens an extension stream the peer
+   does not support simply sees that stream reset (see Section 7.2).  A
+   negotiated capability applies only to this hop; each session is
+   negotiated independently and relays MUST NOT forward SETUP.
 
    While moq-lite is a point-to-point protocol, it's intended to work
    end-to-end via relays.  Each client establishes a session with a CDN
@@ -532,20 +555,27 @@ Table of Contents
 
 5.1.4.  Probe
 
-   A subscriber opens a Probe Stream (0x4) to measure the available
-   bitrate of the connection.
+   A subscriber opens a Probe Stream (0x4) to measure, and optionally
+   increase, the available bitrate of the connection.  The publisher
+   advertises its Probe level in SETUP (see Probe Parameter
+   (Section 7.3.1)): None, Report (measure only), or Increase (measure
+   and actively probe).
 
    The subscriber sends a PROBE message with a target bitrate on the
    bidirectional stream.  The subscriber MAY send additional PROBE
    messages on the same stream to update the target bitrate; the
-   publisher MUST treat each PROBE as a new target to attempt.  The
-   publisher SHOULD pad the connection to achieve the most recent target
-   bitrate.  The publisher periodically replies with PROBE messages on
-   the same bidirectional stream containing the current estimated
-   bitrate and smoothed RTT.
+   publisher MUST treat each PROBE as a new target to attempt.  If the
+   publisher advertised the Increase capability, it SHOULD pad the
+   connection (or send redundant data) to achieve the most recent target
+   bitrate, without exceeding the congestion window.  A publisher that
+   advertised Report but not Increase ignores the target and only
+   reports; it MUST NOT pad above its current sending rate.  In either
+   case the publisher periodically replies with PROBE messages on the
+   same bidirectional stream containing the current estimated bitrate
+   and smoothed RTT.
 
-   If the publisher does not support PROBE (e.g., congestion controller
-   is not exposed), it MUST reset the stream.
+   If the publisher advertised no Probe capability (e.g., the congestion
+   controller is not exposed), it MUST reset the stream.
 
 5.1.5.  Goaway
 
@@ -641,7 +671,7 @@ Table of Contents
    Expiration governs when an older group is dropped from a live
    subscription's Group Stream(s).  It is distinct from the publisher's
    retention guarantee (see Publisher Cache in SUBSCRIBE_OK
-   (Section 7.8)), which controls whether older groups remain available
+   (Section 7.9)), which controls whether older groups remain available
    for FETCH or future subscriptions.
 
    It is not crucial to aggressively expire groups thanks to
@@ -689,10 +719,29 @@ Table of Contents
                        +=====+========+===========+
                        | 0x0 | Group  | Publisher |
                        +-----+--------+-----------+
+                       | 0x1 | Setup  | Either    |
+                       +-----+--------+-----------+
 
                                  Table 3
 
-6.3.1.  Group
+6.3.1.  Setup
+
+   Each endpoint MUST open a Setup Stream (0x1) at the start of the
+   session to advertise the optional capabilities and extensions it
+   supports.
+
+   The opener sends a single SETUP message and immediately closes the
+   stream (FIN).  There is exactly one Setup Stream per direction; an
+   endpoint that receives a second Setup Stream MUST close the session
+   with a PROTOCOL_VIOLATION.  An endpoint with no optional capabilities
+   sends a SETUP with an empty parameter list rather than omitting the
+   stream, giving the peer a deterministic signal that no capabilities
+   are forthcoming.
+
+   See the Section 3.1 section for how an endpoint avoids waiting on the
+   peer's SETUP before exchanging other streams.
+
+6.3.2.  Group
 
    A publisher creates Group Streams in response to a Subscribe Stream.
 
@@ -737,7 +786,7 @@ Table of Contents
    }
 
    Timestamp and Duration are present only when the Track's Publisher
-   Timescale (see SUBSCRIBE_OK (Section 7.8)) is non-zero.  When
+   Timescale (see SUBSCRIBE_OK (Section 7.9)) is non-zero.  When
    Publisher Timescale is 0, both fields are omitted from the wire and
    the datagram body consists of just Subscribe ID, Group Sequence, and
    Payload.
@@ -763,7 +812,7 @@ Table of Contents
    *Payload*: The frame payload, extending to the end of the datagram.
    If the Track's Publisher Compression is non-zero, the payload is
    compressed using the negotiated algorithm (see SUBSCRIBE_OK
-   (Section 7.8)).  The total datagram body (including all header fields
+   (Section 7.9)).  The total datagram body (including all header fields
    above and the compressed payload if applicable) MUST NOT exceed 1200
    bytes.  This limit ensures the datagram fits within the minimum QUIC
    path MTU without IP-layer fragmentation.  Payloads that would not fit
@@ -796,10 +845,90 @@ Table of Contents
    The stream ID depends on if it's a bidirectional or unidirectional
    stream, as indicated in the Streams section.  A receiver MUST reset
    the stream if it receives an unknown stream type.  Unknown stream
-   types MUST NOT be treated as fatal; this enables extension
-   negotiation via stream probing.
+   types MUST NOT be treated as fatal; this is the fallback when an
+   extension stream is opened against a peer that did not negotiate it.
 
-7.3.  ANNOUNCE_INTEREST
+7.3.  SETUP
+
+   A SETUP message advertises the optional capabilities and extensions
+   the sender supports for this session.  It is sent exactly once, as
+   the only message on a Setup Stream (Section 6.3.1).
+
+   SETUP Message {
+     Message Length (i)
+     Parameter Count (i)
+     Setup Parameter (..) ...
+   }
+
+   Setup Parameter {
+     Parameter ID (i)
+     Parameter Length (i)
+     Parameter Value (..)
+   }
+
+   *Parameter Count*: The number of Setup Parameters that follow.
+
+   *Parameter ID*: Identifies the capability or extension.  A receiver
+   MUST ignore unknown Parameter IDs, allowing new capabilities to be
+   added without breaking older implementations.  A Parameter ID MUST
+   NOT appear more than once; a receiver MUST close the session with a
+   PROTOCOL_VIOLATION if it does.
+
+   *Parameter Length*: The length of Parameter Value in bytes.
+
+   *Parameter Value*: The parameter-specific value, interpreted
+   according to Parameter ID.
+
+   A capability is available for the session only if the relevant
+   endpoint advertises it; an absent parameter means the sender does not
+   support that capability.  The following Setup Parameters are defined:
+
+                        +=====+=======+===========+
+                        |  ID | Name  | Value     |
+                        +=====+=======+===========+
+                        | 0x1 | Probe | Level (i) |
+                        +-----+-------+-----------+
+
+                                  Table 4
+
+7.3.1.  Probe Parameter
+
+   The Probe Parameter advertises the sender's capability level when
+   acting as a publisher on a Probe Stream (Section 5.1.4).  The
+   Parameter Value is a variable-length integer level, where each level
+   includes the one below it:
+
+   *  0 *None*: The publisher does not support probing.  Equivalent to
+      omitting the parameter.
+
+   *  1 *Report*: The publisher can measure and periodically report its
+      estimated bitrate.
+
+   *  2 *Increase*: The publisher can additionally pad the connection
+      (or send redundant data) to probe for bandwidth above its current
+      sending rate, up to the subscriber's target.
+
+   The levels are nested rather than independent: probing for more
+   bandwidth is meaningless without measuring it, so Increase always
+   includes Report.  Reporting the current bitrate is far simpler to
+   implement, so a publisher may support Report without Increase.
+
+   A subscriber MUST consult the publisher's advertised level before
+   relying on a Probe Stream:
+
+   *  At None, the subscriber SHOULD NOT open a Probe Stream; if it
+      does, the publisher MUST reset it.
+
+   *  At Report, the subscriber MAY open a Probe Stream to monitor the
+      estimated bitrate but MUST NOT expect the publisher to pad above
+      its current sending rate.  A subscriber that needs to probe for
+      additional bandwidth MUST use an alternative (e.g. speculatively
+      switching to a higher rendition).
+
+   *  At Increase, the subscriber MAY request a target bitrate and
+      expect the publisher to actively probe up to it.
+
+7.4.  ANNOUNCE_INTEREST
 
    A subscriber sends an ANNOUNCE_INTEREST message to indicate it wants
    to receive an ANNOUNCE message for any broadcasts with a path that
@@ -825,7 +954,7 @@ Table of Contents
    consider reasonable limits on the number of matching broadcasts to
    prevent resource exhaustion.
 
-7.4.  ANNOUNCE_OK
+7.5.  ANNOUNCE_OK
 
    A publisher sends an ANNOUNCE_OK message exactly once, as the first
    message on the response side of an Announce Stream.  It carries
@@ -855,7 +984,7 @@ Table of Contents
    and means the publisher is offering no initial active broadcasts; all
    subsequent ANNOUNCEs (if any) are live updates.
 
-7.5.  ANNOUNCE
+7.6.  ANNOUNCE
 
    A publisher sends an ANNOUNCE message to advertise a change in
    broadcast availability.  Only the suffix is encoded on the wire, as
@@ -912,7 +1041,7 @@ Table of Contents
    older protocol version that does not assign Hop IDs); the Hop Count
    still reflects the total number of entries including unknown hops.
 
-7.6.  SUBSCRIBE
+7.7.  SUBSCRIBE
 
    SUBSCRIBE is sent by a subscriber to start a subscription.
 
@@ -952,7 +1081,7 @@ Table of Contents
    group in live delivery (older groups are immediately stale once a
    newer group arrives).  This is a delivery-time preference, not a
    retention rule: the publisher's cache (see Publisher Cache in
-   SUBSCRIBE_OK (Section 7.8)) may still hold these groups for FETCH or
+   SUBSCRIBE_OK (Section 7.9)) may still hold these groups for FETCH or
    future subscriptions.  See the Section 6.2 section for more
    information.
 
@@ -964,7 +1093,7 @@ Table of Contents
    means unbounded (default).  A non-zero value is the absolute group
    sequence + 1.
 
-7.7.  SUBSCRIBE_UPDATE
+7.8.  SUBSCRIBE_UPDATE
 
    A subscriber can modify a subscription with a SUBSCRIBE_UPDATE
    message.  A subscriber MAY send multiple SUBSCRIBE_UPDATE messages to
@@ -982,7 +1111,7 @@ Table of Contents
 
    See Section 5.1.2 for information about each field.
 
-7.8.  SUBSCRIBE_OK
+7.9.  SUBSCRIBE_OK
 
    A SUBSCRIBE_OK message is sent in response to a SUBSCRIBE.  The
    publisher MAY send multiple SUBSCRIBE_OK messages to update the
@@ -1081,7 +1210,7 @@ Table of Contents
 
    See Section 5.1.2 for information about the other fields.
 
-7.9.  SUBSCRIBE_DROP
+7.10.  SUBSCRIBE_DROP
 
    A SUBSCRIBE_DROP message is sent by the publisher on the Subscribe
    Stream when groups cannot be served.
@@ -1105,7 +1234,7 @@ Table of Contents
    *Error Code*: An application-specific error code.  A value of 0
    indicates no error; the groups are simply unavailable.
 
-7.10.  FETCH
+7.11.  FETCH
 
    FETCH is sent by a subscriber to request a single group from a track.
 
@@ -1148,7 +1277,7 @@ Table of Contents
    The publisher responds with FRAME messages on the same stream.  The
    publisher FINs the stream after the last frame, or resets on error.
 
-7.11.  PROBE
+7.12.  PROBE
 
    PROBE is used to measure the available bitrate of the connection.
 
@@ -1159,9 +1288,12 @@ Table of Contents
    }
 
    *Bitrate*: When sent by the subscriber (stream opener): the target
-   bitrate in bits per second that the publisher should pad up to.  When
-   sent by the publisher (responder): the current estimated bitrate in
-   bits per second.  A value of 0 means unknown.
+   bitrate in bits per second that the publisher should pad up to.  The
+   publisher only honors a target above its current sending rate if it
+   advertised the Increase capability (see Probe Parameter
+   (Section 7.3.1)); otherwise the target is ignored and the publisher
+   only reports.  When sent by the publisher (responder): the current
+   estimated bitrate in bits per second.  A value of 0 means unknown.
 
    *RTT*: The smoothed round-trip time in milliseconds, as defined in
    [RFC9002].  A value of 0 means unknown.
@@ -1171,7 +1303,7 @@ Table of Contents
       statistics directly.  This field may be deprecated once RTT is
       universally available via the underlying transport API.
 
-7.12.  GOAWAY
+7.13.  GOAWAY
 
    A GOAWAY message is sent to initiate a graceful session shutdown with
    an optional redirect.
@@ -1188,7 +1320,7 @@ Table of Contents
    port are permitted.  If validation fails, the recipient MUST close
    the session without reconnecting.
 
-7.13.  GROUP
+7.14.  GROUP
 
    The GROUP message contains information about a Group, as well as a
    reference to the subscription being served.
@@ -1206,7 +1338,7 @@ Table of Contents
    increase by 1 for each new group.  A subscriber MUST handle gaps,
    potentially caused by congestion.
 
-7.14.  FRAME
+7.15.  FRAME
 
    The FRAME message is a payload within a group.
 
@@ -1218,7 +1350,7 @@ Table of Contents
    }
 
    Timestamp Delta and Duration Delta are present only when the Track's
-   Publisher Timescale (see SUBSCRIBE_OK (Section 7.8)) is non-zero.
+   Publisher Timescale (see SUBSCRIBE_OK (Section 7.9)) is non-zero.
    When Publisher Timescale is 0, both fields are omitted from the wire
    and the FRAME consists of just Message Length and Payload.
 
@@ -1259,15 +1391,32 @@ Table of Contents
 
    *Payload*: An application-specific payload.  If the Track's Publisher
    Compression is non-zero, the payload is compressed using the
-   negotiated algorithm (see SUBSCRIBE_OK (Section 7.8)) and the Message
+   negotiated algorithm (see SUBSCRIBE_OK (Section 7.9)) and the Message
    Length describes the compressed size.  A generic library or relay
    MUST NOT inspect or modify the decompressed contents unless otherwise
    negotiated; recompression that preserves the decompressed bytes
-   exactly is allowed (see SUBSCRIBE_OK (Section 7.8)).
+   exactly is allowed (see SUBSCRIBE_OK (Section 7.9)).
 
 8.  Appendix A: Changelog
 
 8.1.  moq-lite-05
+
+   *  Added a SETUP message, sent once on a unidirectional Setup Stream
+      (0x1) at the start of the session and FIN'd immediately.  It
+      carries a list of Setup Parameters for negotiating optional
+      capabilities and extensions per-hop, replacing the prior stream-
+      probing approach (version is still negotiated via ALPN, not
+      SETUP).  Endpoints keep exchanging non-Setup streams without
+      waiting for SETUP, buffering only a stream whose encoding a
+      negotiated extension would change; unknown stream types are still
+      reset as a fallback.
+
+   *  Added a SETUP Probe parameter advertising the publisher's
+      capability level: None, Report (measure and report the estimated
+      bitrate), or Increase (additionally pad to probe for bandwidth
+      above the current sending rate).  The levels are nested since
+      probing without measuring is meaningless.  A subscriber must not
+      rely on a level the publisher did not advertise.
 
    *  Added Frame Start to FETCH so a subscriber can begin partway
       through a group instead of always at frame 0, allowing resumption
@@ -1395,7 +1544,10 @@ Table of Contents
    *  FETCH is HTTP-like (single request/response) vs MoqTransport FETCH
       (multiple groups).
 
-   *  Extensions negotiated via stream probing instead of parameters.
+   *  Capabilities negotiated via a SETUP message on a unidirectional
+      stream that does not block other streams, instead of
+      MoqTransport's blocking CLIENT_SETUP/SERVER_SETUP handshake on the
+      control stream.
 
    *  Both moq-lite and MoqTransport use ALPN for version
       identification.
