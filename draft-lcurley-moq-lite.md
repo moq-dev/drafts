@@ -90,8 +90,9 @@ The session is active immediately after the QUIC/WebTransport connection is esta
 Both endpoints SHOULD begin sending and receiving streams right away to avoid an extra round-trip.
 
 Optional capabilities and extensions are negotiated via a SETUP message (see [SETUP](#setup)).
-Each endpoint opens a unidirectional Setup Stream at the start of the session, sends a single SETUP message advertising what it supports, and immediately closes the stream (FIN).
+Each endpoint MUST open a unidirectional Setup Stream at the start of the session, send a single SETUP message advertising what it supports, and immediately close the stream (FIN); an endpoint with no optional capabilities sends a SETUP with an empty parameter list.
 The two SETUP messages are independent; neither endpoint waits for the peer's SETUP before opening other streams.
+Because a SETUP is always sent, the buffering below is bounded: an endpoint knows the peer's full capability set has arrived once it receives that single SETUP.
 An endpoint SHOULD continue to send and process non-Setup streams until a negotiated extension would change the behavior or encoding of a stream, in which case it MUST buffer that stream until the peer's SETUP has been received.
 For example, if an extension adds a field to SUBSCRIBE_OK, the subscriber buffers SUBSCRIBE_OK until SETUP arrives so the new field can be parsed.
 
@@ -435,11 +436,11 @@ Unidirectional streams are used for data transmission.
 | ------ | -------- | ----------- |
 
 ### Setup {#setup-stream}
-Either endpoint MAY open a Setup Stream (0x1) at the start of the session to advertise the optional capabilities and extensions it supports.
+Each endpoint MUST open a Setup Stream (0x1) at the start of the session to advertise the optional capabilities and extensions it supports.
 
 The opener sends a single SETUP message and immediately closes the stream (FIN).
-There is at most one Setup Stream per direction; an endpoint that receives a second Setup Stream MUST close the session with a PROTOCOL_VIOLATION.
-An endpoint that opens no Setup Stream is assumed to support no optional capabilities.
+There is exactly one Setup Stream per direction; an endpoint that receives a second Setup Stream MUST close the session with a PROTOCOL_VIOLATION.
+An endpoint with no optional capabilities sends a SETUP with an empty parameter list rather than omitting the stream, giving the peer a deterministic signal that no capabilities are forthcoming.
 
 See the [Session](#session) section for how an endpoint avoids waiting on the peer's SETUP before exchanging other streams.
 
