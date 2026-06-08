@@ -1048,7 +1048,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Curley</td>
-<td class="center">Expires 8 December 2026</td>
+<td class="center">Expires 10 December 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1061,12 +1061,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-lcurley-moq-lite-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-06-06" class="published">6 June 2026</time>
+<time datetime="2026-06-08" class="published">8 June 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-12-08">8 December 2026</time></dd>
+<dd class="expires"><time datetime="2026-12-10">10 December 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1112,7 +1112,7 @@ While primarily designed for media, the transport is payload agnostic and can be
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 8 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 10 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1208,10 +1208,13 @@ While primarily designed for media, the transport is payload agnostic and can be
                     <p id="section-toc.1-1.5.2.1.2.3.1"><a href="#section-5.1.3" class="auto internal xref">5.1.3</a>.  <a href="#name-fetch" class="internal xref">Fetch</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1.2.4">
-                    <p id="section-toc.1-1.5.2.1.2.4.1"><a href="#section-5.1.4" class="auto internal xref">5.1.4</a>.  <a href="#name-probe" class="internal xref">Probe</a></p>
+                    <p id="section-toc.1-1.5.2.1.2.4.1"><a href="#section-5.1.4" class="auto internal xref">5.1.4</a>.  <a href="#name-track-2" class="internal xref">Track</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1.2.5">
-                    <p id="section-toc.1-1.5.2.1.2.5.1"><a href="#section-5.1.5" class="auto internal xref">5.1.5</a>.  <a href="#name-goaway" class="internal xref">Goaway</a></p>
+                    <p id="section-toc.1-1.5.2.1.2.5.1"><a href="#section-5.1.5" class="auto internal xref">5.1.5</a>.  <a href="#name-probe" class="internal xref">Probe</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1.2.6">
+                    <p id="section-toc.1-1.5.2.1.2.6.1"><a href="#section-5.1.6" class="auto internal xref">5.1.6</a>.  <a href="#name-goaway" class="internal xref">Goaway</a></p>
 </li>
                 </ul>
 </li>
@@ -1283,25 +1286,34 @@ While primarily designed for media, the transport is payload agnostic and can be
                 <p id="section-toc.1-1.7.2.8.1"><a href="#section-7.8" class="auto internal xref">7.8</a>.  <a href="#name-subscribe_update" class="internal xref">SUBSCRIBE_UPDATE</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.9">
-                <p id="section-toc.1-1.7.2.9.1"><a href="#section-7.9" class="auto internal xref">7.9</a>.  <a href="#name-subscribe_ok" class="internal xref">SUBSCRIBE_OK</a></p>
+                <p id="section-toc.1-1.7.2.9.1"><a href="#section-7.9" class="auto internal xref">7.9</a>.  <a href="#name-track-3" class="internal xref">TRACK</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.10">
-                <p id="section-toc.1-1.7.2.10.1"><a href="#section-7.10" class="auto internal xref">7.10</a>. <a href="#name-subscribe_drop" class="internal xref">SUBSCRIBE_DROP</a></p>
+                <p id="section-toc.1-1.7.2.10.1"><a href="#section-7.10" class="auto internal xref">7.10</a>. <a href="#name-track_info" class="internal xref">TRACK_INFO</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.11">
-                <p id="section-toc.1-1.7.2.11.1"><a href="#section-7.11" class="auto internal xref">7.11</a>. <a href="#name-fetch-2" class="internal xref">FETCH</a></p>
+                <p id="section-toc.1-1.7.2.11.1"><a href="#section-7.11" class="auto internal xref">7.11</a>. <a href="#name-subscribe_ok" class="internal xref">SUBSCRIBE_OK</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.12">
-                <p id="section-toc.1-1.7.2.12.1"><a href="#section-7.12" class="auto internal xref">7.12</a>. <a href="#name-probe-2" class="internal xref">PROBE</a></p>
+                <p id="section-toc.1-1.7.2.12.1"><a href="#section-7.12" class="auto internal xref">7.12</a>. <a href="#name-subscribe_end" class="internal xref">SUBSCRIBE_END</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.13">
-                <p id="section-toc.1-1.7.2.13.1"><a href="#section-7.13" class="auto internal xref">7.13</a>. <a href="#name-goaway-2" class="internal xref">GOAWAY</a></p>
+                <p id="section-toc.1-1.7.2.13.1"><a href="#section-7.13" class="auto internal xref">7.13</a>. <a href="#name-subscribe_drop" class="internal xref">SUBSCRIBE_DROP</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.14">
-                <p id="section-toc.1-1.7.2.14.1"><a href="#section-7.14" class="auto internal xref">7.14</a>. <a href="#name-group-3" class="internal xref">GROUP</a></p>
+                <p id="section-toc.1-1.7.2.14.1"><a href="#section-7.14" class="auto internal xref">7.14</a>. <a href="#name-fetch-2" class="internal xref">FETCH</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.15">
-                <p id="section-toc.1-1.7.2.15.1"><a href="#section-7.15" class="auto internal xref">7.15</a>. <a href="#name-frame-2" class="internal xref">FRAME</a></p>
+                <p id="section-toc.1-1.7.2.15.1"><a href="#section-7.15" class="auto internal xref">7.15</a>. <a href="#name-probe-2" class="internal xref">PROBE</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.16">
+                <p id="section-toc.1-1.7.2.16.1"><a href="#section-7.16" class="auto internal xref">7.16</a>. <a href="#name-goaway-2" class="internal xref">GOAWAY</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.17">
+                <p id="section-toc.1-1.7.2.17.1"><a href="#section-7.17" class="auto internal xref">7.17</a>. <a href="#name-group-3" class="internal xref">GROUP</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.18">
+                <p id="section-toc.1-1.7.2.18.1"><a href="#section-7.18" class="auto internal xref">7.18</a>. <a href="#name-frame-2" class="internal xref">FRAME</a></p>
 </li>
             </ul>
 </li>
@@ -1502,7 +1514,7 @@ The same subscription <span class="bcp14">MAY</span> receive groups via both str
 <p id="section-3.5-1">A Frame is a payload of bytes within a Group.<a href="#section-3.5-1" class="pilcrow">¶</a></p>
 <p id="section-3.5-2">A frame is used to represent a chunk of data with an upfront size.
 The contents are opaque to the moq-lite layer.<a href="#section-3.5-2" class="pilcrow">¶</a></p>
-<p id="section-3.5-3">Each frame carries a presentation timestamp expressed in the parent Track's <code>Timescale</code> (units per second, negotiated in SUBSCRIBE_OK), and a duration in the same scale.
+<p id="section-3.5-3">Each frame carries a presentation timestamp expressed in the parent Track's <code>Timescale</code> (units per second, part of the <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>), and a duration in the same scale.
 The timestamp is the source-of-truth for media time and is used by the moq-lite layer for <a href="#expiration" class="auto internal xref">Section 6.2</a> decisions instead of wall-clock arrival time.
 The duration is a hint for the application layer (e.g. presentation scheduling) and is not used by moq-lite itself; a duration of <code>0</code> means unknown and the frame is presented until the next frame begins.
 A Track with a <code>Timescale</code> of 0 (unspecified) carries no meaningful timestamps or durations and falls back to wall-clock arrival time for expiration.<a href="#section-3.5-3" class="pilcrow">¶</a></p>
@@ -1704,6 +1716,11 @@ There's a 1-byte STREAM_TYPE at the beginning of each stream.<a href="#section-5
               <td class="text-left" rowspan="1" colspan="1">Goaway</td>
               <td class="text-left" rowspan="1" colspan="1">Either</td>
             </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0x6</td>
+              <td class="text-left" rowspan="1" colspan="1">Track</td>
+              <td class="text-left" rowspan="1" colspan="1">Subscriber</td>
+            </tr>
           </tbody>
         </table>
 <div id="announce">
@@ -1750,10 +1767,16 @@ There <span class="bcp14">MAY</span> be multiple Announce Streams, potentially c
           </h4>
 <p id="section-5.1.2-1">A subscriber opens Subscribe Streams to request a Track.<a href="#section-5.1.2-1" class="pilcrow">¶</a></p>
 <p id="section-5.1.2-2">The subscriber <span class="bcp14">MUST</span> start a Subscribe Stream with a SUBSCRIBE message followed by any number of SUBSCRIBE_UPDATE messages.
-The publisher replies with a SUBSCRIBE_OK message followed by any number of SUBSCRIBE_DROP and additional SUBSCRIBE_OK messages.
-The first message on the response stream <span class="bcp14">MUST</span> be a SUBSCRIBE_OK; it is not valid to send a SUBSCRIBE_DROP before SUBSCRIBE_OK.<a href="#section-5.1.2-2" class="pilcrow">¶</a></p>
-<p id="section-5.1.2-3">The publisher closes the stream (FIN) when every group from start to end has been accounted for, either via a GROUP stream (completed or reset) or a SUBSCRIBE_DROP message.
-Unbounded subscriptions (no end group) stay open until the publisher closes the stream to indicate the track has ended, or either endpoint resets.
+When a start group can be resolved, the publisher replies with a SUBSCRIBE_OK message (confirming the subscription and resolving its start group), followed by any number of SUBSCRIBE_END and SUBSCRIBE_DROP messages.
+When the accepted track has already ended with no matching groups there is no start group to resolve, so the publisher sends SUBSCRIBE_END with no preceding SUBSCRIBE_OK.
+A rejection is a stream reset: if the publisher cannot serve the subscription — the track does not exist, or it otherwise refuses — it <span class="bcp14">MUST</span> reset the stream rather than leave it pending, and <span class="bcp14">SHOULD</span> do so promptly (within roughly a round trip) so the subscriber is not left waiting.
+A subscription the publisher accepts but has no groups for yet is not a rejection: for a live track the publisher <span class="bcp14">MAY</span> withhold SUBSCRIBE_OK until the first matching group resolves the start. A subscriber therefore distinguishes "pending" from "refused" by the stream reset, not by a timeout.
+The Subscribe Stream does not carry the track's publisher properties — those are immutable and fetched once via a <span><a href="#track-stream" class="internal xref">Track Stream</a> (<a href="#track-stream" class="auto internal xref">Section 5.1.4</a>)</span> (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>).
+The subscriber <span class="bcp14">MUST</span> have the track's TRACK_INFO before it can parse the FRAME messages that arrive on Group Streams, since the timescale and compression determine the frame wire format; it <span class="bcp14">MAY</span> open the Track and Subscribe streams concurrently and buffer frames until TRACK_INFO arrives.<a href="#section-5.1.2-2" class="pilcrow">¶</a></p>
+<p id="section-5.1.2-3">The publisher sends SUBSCRIBE_OK once the absolute start group is resolved, and SUBSCRIBE_END once no further groups will be produced (see <span><a href="#subscribe-ok" class="internal xref">SUBSCRIBE_OK</a> (<a href="#subscribe-ok" class="auto internal xref">Section 7.11</a>)</span> and <span><a href="#subscribe-end" class="internal xref">SUBSCRIBE_END</a> (<a href="#subscribe-end" class="auto internal xref">Section 7.12</a>)</span>).
+The publisher closes the stream (FIN) only once every group from start to end has been accounted for, either via a GROUP stream (completed or reset) or a SUBSCRIBE_DROP message.
+This <span class="bcp14">MAY</span> occur after SUBSCRIBE_END, since stragglers within the range can still be dropped.
+Unbounded subscriptions (no end group) stay open until the publisher sends SUBSCRIBE_END (and accounts for the remaining groups) to indicate the track has ended, or either endpoint resets.
 Either endpoint <span class="bcp14">MAY</span> reset/cancel the stream at any time.<a href="#section-5.1.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1764,38 +1787,55 @@ Either endpoint <span class="bcp14">MAY</span> reset/cancel the stream at any ti
           </h4>
 <p id="section-5.1.3-1">A subscriber opens a Fetch Stream (0x3) to request a single Group from a Track.<a href="#section-5.1.3-1" class="pilcrow">¶</a></p>
 <p id="section-5.1.3-2">The subscriber sends a FETCH message containing the broadcast path, track name, priority, group sequence, and the frame index at which to start.
-Unlike Group Streams (which <span class="bcp14">MUST</span> start with a GROUP message), the publisher responds with FRAME messages directly on the same bidirectional stream — there is no preceding GROUP header.
+The publisher responds with FRAME messages directly on the same bidirectional stream — there is no response header.
 The Subscribe ID and Group Sequence for the returned FRAME messages are implicit, taken from the original FETCH request.
+As with a subscription, the subscriber <span class="bcp14">MUST</span> already have the track's <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span> to parse the returned frames; because the properties are immutable, a single Track Stream lookup is reused across every FETCH of that track (group-by-group fetches do not re-fetch it).
 The publisher FINs the stream after the last frame, or resets the stream on error.<a href="#section-5.1.3-2" class="pilcrow">¶</a></p>
 <p id="section-5.1.3-3">Fetch behaves like HTTP: a single request/response per stream.<a href="#section-5.1.3-3" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="probe">
+<div id="track-stream">
 <section id="section-5.1.4">
-          <h4 id="name-probe">
-<a href="#section-5.1.4" class="section-number selfRef">5.1.4. </a><a href="#name-probe" class="section-name selfRef">Probe</a>
+          <h4 id="name-track-2">
+<a href="#section-5.1.4" class="section-number selfRef">5.1.4. </a><a href="#name-track-2" class="section-name selfRef">Track</a>
           </h4>
-<p id="section-5.1.4-1">A subscriber opens a Probe Stream (0x4) to measure, and optionally increase, the available bitrate of the connection.
-The publisher advertises its Probe level in SETUP (see <span><a href="#probe-parameter" class="internal xref">Probe Parameter</a> (<a href="#probe-parameter" class="auto internal xref">Section 7.3.1</a>)</span>): None, Report (measure only), or Increase (measure and actively probe).<a href="#section-5.1.4-1" class="pilcrow">¶</a></p>
-<p id="section-5.1.4-2">The subscriber sends a PROBE message with a target bitrate on the bidirectional stream.
+<p id="section-5.1.4-1">A subscriber opens a Track Stream (0x6) to learn a Track's immutable publisher properties without subscribing or fetching.<a href="#section-5.1.4-1" class="pilcrow">¶</a></p>
+<p id="section-5.1.4-2">The subscriber sends a TRACK message containing the broadcast path and track name.
+The publisher replies with a single TRACK_INFO message and then FINs the stream, or resets the stream on error (e.g. the track does not exist).
+The returned properties are fixed for the lifetime of the track, so the subscriber <span class="bcp14">SHOULD</span> cache TRACK_INFO and reuse it across every SUBSCRIBE and FETCH for that track rather than requesting it again.
+When the track was discovered via an ANNOUNCE, the cached value is tied to that advertisement: if the broadcast is re-announced (a new <code>active</code> ANNOUNCE that atomically replaces the prior one), the subscriber <span class="bcp14">MUST</span> discard the cached TRACK_INFO and <span class="bcp14">MUST</span> re-request it before parsing any further FRAME messages, since the timescale or compression may have changed.
+If FRAME messages cannot be decoded against the cached TRACK_INFO (for example a malformed delta or payload after a missed re-announcement), the subscriber <span class="bcp14">MUST</span> reset the affected stream with a protocol violation and re-request TRACK_INFO.
+A subscriber that reached the track without an advertisement (e.g. a path known out of band) has no such invalidation signal; it <span class="bcp14">MAY</span> re-request TRACK_INFO whenever it needs to confirm freshness (for example on a new session). A stale cache only risks misparsing frames from a changed track, so the subscriber that cannot observe re-announcements <span class="bcp14">SHOULD NOT</span> cache TRACK_INFO beyond a single connection.<a href="#section-5.1.4-2" class="pilcrow">¶</a></p>
+<p id="section-5.1.4-3">Because a subscriber <span class="bcp14">MAY</span> open the Track stream concurrently with a SUBSCRIBE or FETCH (see <a href="#subscribe" class="auto internal xref">Section 5.1.2</a> and <a href="#fetch" class="auto internal xref">Section 5.1.3</a>) and cannot parse any buffered group frames until TRACK_INFO arrives, the publisher <span class="bcp14">SHOULD</span> prioritize TRACK_INFO ahead of group data on the connection.
+Otherwise the concurrent case — intended to keep a cold subscribe or fetch to a single round trip — would stall behind queued group frames that the subscriber cannot yet decode.<a href="#section-5.1.4-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="probe">
+<section id="section-5.1.5">
+          <h4 id="name-probe">
+<a href="#section-5.1.5" class="section-number selfRef">5.1.5. </a><a href="#name-probe" class="section-name selfRef">Probe</a>
+          </h4>
+<p id="section-5.1.5-1">A subscriber opens a Probe Stream (0x4) to measure, and optionally increase, the available bitrate of the connection.
+The publisher advertises its Probe level in SETUP (see <span><a href="#probe-parameter" class="internal xref">Probe Parameter</a> (<a href="#probe-parameter" class="auto internal xref">Section 7.3.1</a>)</span>): None, Report (measure only), or Increase (measure and actively probe).<a href="#section-5.1.5-1" class="pilcrow">¶</a></p>
+<p id="section-5.1.5-2">The subscriber sends a PROBE message with a target bitrate on the bidirectional stream.
 The subscriber <span class="bcp14">MAY</span> send additional PROBE messages on the same stream to update the target bitrate; the publisher <span class="bcp14">MUST</span> treat each PROBE as a new target to attempt.
 If the publisher advertised the Increase capability, it <span class="bcp14">SHOULD</span> pad the connection (or send redundant data) to achieve the most recent target bitrate, without exceeding the congestion window.
 A publisher that advertised Report but not Increase ignores the target and only reports; it <span class="bcp14">MUST NOT</span> pad above its current sending rate.
-In either case the publisher periodically replies with PROBE messages on the same bidirectional stream containing the current estimated bitrate and smoothed RTT.<a href="#section-5.1.4-2" class="pilcrow">¶</a></p>
-<p id="section-5.1.4-3">If the publisher advertised no Probe capability (e.g., the congestion controller is not exposed), it <span class="bcp14">MUST</span> reset the stream.<a href="#section-5.1.4-3" class="pilcrow">¶</a></p>
+In either case the publisher periodically replies with PROBE messages on the same bidirectional stream containing the current estimated bitrate and smoothed RTT.<a href="#section-5.1.5-2" class="pilcrow">¶</a></p>
+<p id="section-5.1.5-3">If the publisher advertised no Probe capability (e.g., the congestion controller is not exposed), it <span class="bcp14">MUST</span> reset the stream.<a href="#section-5.1.5-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="goaway">
-<section id="section-5.1.5">
+<section id="section-5.1.6">
           <h4 id="name-goaway">
-<a href="#section-5.1.5" class="section-number selfRef">5.1.5. </a><a href="#name-goaway" class="section-name selfRef">Goaway</a>
+<a href="#section-5.1.6" class="section-number selfRef">5.1.6. </a><a href="#name-goaway" class="section-name selfRef">Goaway</a>
           </h4>
-<p id="section-5.1.5-1">Either endpoint can open a Goaway Stream (0x5) to initiate a graceful session shutdown.<a href="#section-5.1.5-1" class="pilcrow">¶</a></p>
-<p id="section-5.1.5-2">The sender sends a GOAWAY message containing an optional new session URI.
+<p id="section-5.1.6-1">Either endpoint can open a Goaway Stream (0x5) to initiate a graceful session shutdown.<a href="#section-5.1.6-1" class="pilcrow">¶</a></p>
+<p id="section-5.1.6-2">The sender sends a GOAWAY message containing an optional new session URI.
 If the URI is non-empty, the peer <span class="bcp14">SHOULD</span> establish a new session at the provided URI and migrate any active subscriptions.
-The peer <span class="bcp14">MUST NOT</span> open new streams on the current session after receiving a GOAWAY.<a href="#section-5.1.5-2" class="pilcrow">¶</a></p>
-<p id="section-5.1.5-3">The sender closes the stream (FIN) when it is ready to terminate the session.
-The peer <span class="bcp14">SHOULD</span> close all streams and the session after migrating or when it no longer needs the session.<a href="#section-5.1.5-3" class="pilcrow">¶</a></p>
+The peer <span class="bcp14">MUST NOT</span> open new streams on the current session after receiving a GOAWAY.<a href="#section-5.1.6-2" class="pilcrow">¶</a></p>
+<p id="section-5.1.6-3">The sender closes the stream (FIN) when it is ready to terminate the session.
+The peer <span class="bcp14">SHOULD</span> close all streams and the session after migrating or when it no longer needs the session.<a href="#section-5.1.6-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1827,34 +1867,30 @@ This depends on the QUIC implementation and it may not be possible to get fine-g
           <h4 id="name-priority">
 <a href="#section-6.1.1" class="section-number selfRef">6.1.1. </a><a href="#name-priority" class="section-name selfRef">Priority</a>
           </h4>
-<p id="section-6.1.1-1">The <code>Subscriber Priority</code> is scoped to the connection.
-The <code>Publisher Priority</code> <span class="bcp14">SHOULD</span> be used to resolve conflicts or ties.<a href="#section-6.1.1-1" class="pilcrow">¶</a></p>
+<p id="section-6.1.1-1">The <code>Subscriber Priority</code> is scoped to the connection and <span class="bcp14">MAY</span> change over the life of the subscription via SUBSCRIBE_UPDATE.
+The <code>Publisher Priority</code> is fixed for the lifetime of the Track (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>) and <span class="bcp14">SHOULD</span> be used only to resolve conflicts or ties.<a href="#section-6.1.1-1" class="pilcrow">¶</a></p>
 <p id="section-6.1.1-2">A conflict can occur when a relay tries to serve multiple downstream subscriptions from a single upstream subscription.
-Any upstream subscription <span class="bcp14">SHOULD</span> use the publisher priority, not some combination of different subscriber priorities.<a href="#section-6.1.1-2" class="pilcrow">¶</a></p>
+The relay cannot pick any one subscriber's priority, so the upstream subscription <span class="bcp14">SHOULD</span> use the publisher priority instead of some combination of different subscriber priorities.
+Publisher priority is therefore mostly relevant on the upstream (origin-facing) leg of a relay; closer to the subscriber, the subscriber priority dominates.<a href="#section-6.1.1-2" class="pilcrow">¶</a></p>
 <p id="section-6.1.1-3">Rather than try to explain everything, here's an example:<a href="#section-6.1.1-3" class="pilcrow">¶</a></p>
 <p id="section-6.1.1-4"><strong>Example:</strong>
 There are two people in a conference call, Ali and Bob.<a href="#section-6.1.1-4" class="pilcrow">¶</a></p>
-<p id="section-6.1.1-5">We subscribe to both of their audio tracks with priority 2 and video tracks with priority 1.
-This will cause equal priority for <code>Ali</code> and <code>Bob</code> while prioritizing audio.
-<code>
+<p id="section-6.1.1-5">We subscribe to both of their audio tracks with subscriber priority 2 and video tracks with subscriber priority 1.
+Each publisher advertises a fixed publisher priority — here audio at 2 and video at 1 — used only to break ties.
+This results in equal priority for <code>Ali</code> and <code>Bob</code> while prioritizing audio.
+<code>text
 ali/audio + bob/audio: subscriber_priority=2 publisher_priority=2
 ali/video + bob/video: subscriber_priority=1 publisher_priority=1
 </code><a href="#section-6.1.1-5" class="pilcrow">¶</a></p>
-<p id="section-6.1.1-6">If Bob starts actively speaking, they can bump their publisher priority via a SUBSCRIBE_OK message.
-This would cause tracks be delivered in this order:
-<code>
-bob/audio: subscriber_priority=2 publisher_priority=3
+<p id="section-6.1.1-6">Because publisher priority cannot change, dynamic adaptation is the subscriber's job.
+If the subscriber detects that Bob is actively speaking, it raises the subscriber priority of Bob's tracks via SUBSCRIBE_UPDATE:
+<code>text
+bob/audio: subscriber_priority=4 publisher_priority=2
+bob/video: subscriber_priority=3 publisher_priority=1
 ali/audio: subscriber_priority=2 publisher_priority=2
-bob/video: subscriber_priority=1 publisher_priority=2
 ali/video: subscriber_priority=1 publisher_priority=1
 </code><a href="#section-6.1.1-6" class="pilcrow">¶</a></p>
-<p id="section-6.1.1-7">The subscriber priority takes precedence, so we could override it if we decided to full-screen Ali's window:
-<code>
-ali/audio subscriber_priority=4 publisher_priority=2
-ali/video subscriber_priority=3 publisher_priority=1
-bob/audio subscriber_priority=2 publisher_priority=3
-bob/video subscriber_priority=1 publisher_priority=2
-</code><a href="#section-6.1.1-7" class="pilcrow">¶</a></p>
+<p id="section-6.1.1-7">The subscriber priority takes precedence, so the subscriber can likewise full-screen Ali's window by raising the subscriber priority of Ali's tracks above Bob's.<a href="#section-6.1.1-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="ordered">
@@ -1879,7 +1915,7 @@ An application <span class="bcp14">MUST</span> support gaps and out-of-order del
 <a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-expiration" class="section-name selfRef">Expiration</a>
         </h3>
 <p id="section-6.2-1">Expiration governs when an older group is dropped from a live subscription's Group Stream(s).
-It is distinct from the publisher's retention guarantee (see <code>Publisher Cache</code> in <span><a href="#subscribe-ok" class="internal xref">SUBSCRIBE_OK</a> (<a href="#subscribe-ok" class="auto internal xref">Section 7.9</a>)</span>), which controls whether older groups remain available for FETCH or future subscriptions.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+It is distinct from the publisher's retention guarantee (see <code>Publisher Cache</code> in <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>), which controls whether older groups remain available for FETCH or future subscriptions.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
 <p id="section-6.2-2">It is not crucial to aggressively expire groups thanks to <a href="#prioritization" class="auto internal xref">Section 6.1</a>.
 However, a lower priority group will still consume RAM, bandwidth, and potentially flow control.
 It is <span class="bcp14">RECOMMENDED</span> that an application set conservative limits and only resort to expiration when data is absolutely no longer needed.<a href="#section-6.2-2" class="pilcrow">¶</a></p>
@@ -1978,7 +2014,7 @@ DATAGRAM Body {
 }
 </pre><a href="#section-6.4-5" class="pilcrow">¶</a>
 </div>
-<p id="section-6.4-6"><code>Timestamp</code> and <code>Duration</code> are present only when the Track's <code>Publisher Timescale</code> (see <span><a href="#subscribe-ok" class="internal xref">SUBSCRIBE_OK</a> (<a href="#subscribe-ok" class="auto internal xref">Section 7.9</a>)</span>) is non-zero.
+<p id="section-6.4-6"><code>Timestamp</code> and <code>Duration</code> are present only when the Track's <code>Publisher Timescale</code> (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>) is non-zero.
 When <code>Publisher Timescale</code> is 0, both fields are omitted from the wire and the datagram body consists of just <code>Subscribe ID</code>, <code>Group Sequence</code>, and <code>Payload</code>.<a href="#section-6.4-6" class="pilcrow">¶</a></p>
 <p id="section-6.4-7"><strong>Subscribe ID</strong>:
 The Subscribe ID of an active subscription on the same session.
@@ -1994,7 +2030,7 @@ The absolute duration of the frame, expressed in the Track's negotiated <code>Ti
 A value of <code>0</code> means the duration is unknown; the frame is presented until the next frame begins (or indefinitely, since a datagram-delivered group contains exactly one frame, until the application supersedes it).<a href="#section-6.4-10" class="pilcrow">¶</a></p>
 <p id="section-6.4-11"><strong>Payload</strong>:
 The frame payload, extending to the end of the datagram.
-If the Track's <code>Publisher Compression</code> is non-zero, the payload is compressed using the negotiated algorithm (see <span><a href="#subscribe-ok" class="internal xref">SUBSCRIBE_OK</a> (<a href="#subscribe-ok" class="auto internal xref">Section 7.9</a>)</span>).
+If the Track's <code>Publisher Compression</code> is non-zero, the payload is compressed using the negotiated algorithm (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>).
 The total datagram body (including all header fields above and the compressed payload if applicable) <span class="bcp14">MUST NOT</span> exceed 1200 bytes.
 This limit ensures the datagram fits within the minimum QUIC path MTU without IP-layer fragmentation.
 Payloads that would not fit <span class="bcp14">MUST</span> be sent as a Group Stream instead.
@@ -2094,7 +2130,7 @@ The following Setup Parameters are defined:<a href="#section-7.3-7" class="pilcr
           <h4 id="name-probe-parameter">
 <a href="#section-7.3.1" class="section-number selfRef">7.3.1. </a><a href="#name-probe-parameter" class="section-name selfRef">Probe Parameter</a>
           </h4>
-<p id="section-7.3.1-1">The Probe Parameter advertises the sender's capability level when acting as a publisher on a <span><a href="#probe" class="internal xref">Probe Stream</a> (<a href="#probe" class="auto internal xref">Section 5.1.4</a>)</span>.
+<p id="section-7.3.1-1">The Probe Parameter advertises the sender's capability level when acting as a publisher on a <span><a href="#probe" class="internal xref">Probe Stream</a> (<a href="#probe" class="auto internal xref">Section 5.1.5</a>)</span>.
 The Parameter Value is a variable-length integer level, where each level includes the one below it:<a href="#section-7.3.1-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-7.3.1-2.1">
@@ -2259,7 +2295,7 @@ The subscriber's preference, in milliseconds, for how long a non-latest group ma
 The publisher <span class="bcp14">SHOULD</span> reset (at the QUIC level) Group Streams for groups whose age relative to the latest group exceeds this duration.
 Applies only to non-latest groups; the latest group is never dropped on staleness grounds.
 A value of <code>0</code> means the subscriber wants only the latest group in live delivery (older groups are immediately stale once a newer group arrives).
-This is a delivery-time preference, not a retention rule: the publisher's cache (see <code>Publisher Cache</code> in <span><a href="#subscribe-ok" class="internal xref">SUBSCRIBE_OK</a> (<a href="#subscribe-ok" class="auto internal xref">Section 7.9</a>)</span>) may still hold these groups for FETCH or future subscriptions.
+This is a delivery-time preference, not a retention rule: the publisher's cache (see <code>Publisher Cache</code> in <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>) may still hold these groups for FETCH or future subscriptions.
 See the <a href="#expiration" class="auto internal xref">Section 6.2</a> section for more information.<a href="#section-7.7-6" class="pilcrow">¶</a></p>
 <p id="section-7.7-7"><strong>Group Start</strong>:
 The first group to deliver.
@@ -2294,118 +2330,182 @@ SUBSCRIBE_UPDATE Message {
 <p id="section-7.8-3">See <a href="#subscribe" class="auto internal xref">Section 5.1.2</a> for information about each field.<a href="#section-7.8-3" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="subscribe-ok">
+<div id="track-1">
 <section id="section-7.9">
-        <h3 id="name-subscribe_ok">
-<a href="#section-7.9" class="section-number selfRef">7.9. </a><a href="#name-subscribe_ok" class="section-name selfRef">SUBSCRIBE_OK</a>
+        <h3 id="name-track-3">
+<a href="#section-7.9" class="section-number selfRef">7.9. </a><a href="#name-track-3" class="section-name selfRef">TRACK</a>
         </h3>
-<p id="section-7.9-1">A SUBSCRIBE_OK message is sent in response to a SUBSCRIBE.
-The publisher <span class="bcp14">MAY</span> send multiple SUBSCRIBE_OK messages to update the subscription.
-The first message on the response stream <span class="bcp14">MUST</span> be a SUBSCRIBE_OK; a SUBSCRIBE_DROP <span class="bcp14">MUST NOT</span> precede it.<a href="#section-7.9-1" class="pilcrow">¶</a></p>
+<p id="section-7.9-1">TRACK is sent by a subscriber to request a Track's immutable publisher properties.
+It is the first message on a Track Stream (0x6).<a href="#section-7.9-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-7.9-2">
 <pre>
-SUBSCRIBE_OK Message {
-  Type (i) = 0x0
+TRACK Message {
+  Message Length (i)
+  Broadcast Path (s)
+  Track Name (s)
+}
+</pre><a href="#section-7.9-2" class="pilcrow">¶</a>
+</div>
+<p id="section-7.9-3"><strong>Broadcast Path</strong>:
+The broadcast path of the track.<a href="#section-7.9-3" class="pilcrow">¶</a></p>
+<p id="section-7.9-4"><strong>Track Name</strong>:
+The name of the track.<a href="#section-7.9-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="track-info">
+<section id="section-7.10">
+        <h3 id="name-track_info">
+<a href="#section-7.10" class="section-number selfRef">7.10. </a><a href="#name-track_info" class="section-name selfRef">TRACK_INFO</a>
+        </h3>
+<p id="section-7.10-1">TRACK_INFO is sent by the publisher in response to a TRACK message.
+It is the sole message on the Track Stream; the publisher FINs immediately afterward, or resets the stream on error (e.g. the track does not exist).<a href="#section-7.10-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.10-2">
+<pre>
+TRACK_INFO Message {
   Message Length (i)
   Publisher Priority (8)
   Publisher Ordered (8)
   Publisher Cache (i)
-  Group Start (i)
-  Group End (i)
   Publisher Timescale (i)
   Publisher Compression (i)
 }
-</pre><a href="#section-7.9-2" class="pilcrow">¶</a>
+</pre><a href="#section-7.10-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.9-3"><strong>Type</strong>:
-Set to 0x0 to indicate a SUBSCRIBE_OK message.<a href="#section-7.9-3" class="pilcrow">¶</a></p>
-<p id="section-7.9-4"><strong>Group Start</strong>:
-The resolved absolute start group sequence.
-A value of 0 means the start group is not yet known; the publisher <span class="bcp14">MUST</span> send a subsequent SUBSCRIBE_OK with a resolved value.
-A non-zero value is the absolute group sequence + 1.<a href="#section-7.9-4" class="pilcrow">¶</a></p>
-<p id="section-7.9-5"><strong>Group End</strong>:
-The resolved absolute end group sequence (inclusive).
-A value of 0 means unbounded.
-A non-zero value is the absolute group sequence + 1.<a href="#section-7.9-5" class="pilcrow">¶</a></p>
-<p id="section-7.9-6"><strong>Publisher Timescale</strong>:
+<p id="section-7.10-3">Every field is <strong>fixed for the lifetime of the Track</strong> and <span class="bcp14">MUST NOT</span> change; a change requires a new Track (a re-announcement of the broadcast).
+This immutability is what lets the properties live on their own stream — fetched once and cached — instead of being echoed on every SUBSCRIBE and FETCH response.
+It is also deliberate for relays: a relay serving one upstream subscription to many downstream subscribers would otherwise have to fan a single publisher-side change out to every downstream (and invalidate any cached groups) — publisher changes fan <em>out</em>.
+Subscriber properties (see <a href="#subscribe" class="auto internal xref">Section 5.1.2</a>) are the opposite: they fan <em>in</em> at the relay, which already merges them, so they <span class="bcp14">MAY</span> change freely via SUBSCRIBE_UPDATE.<a href="#section-7.10-3" class="pilcrow">¶</a></p>
+<p id="section-7.10-4"><strong>Publisher Priority</strong>:
+The publisher's priority for this Track, represented as a u8, used only to resolve ties between subscriptions of equal subscriber priority.
+See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> section for more information.<a href="#section-7.10-4" class="pilcrow">¶</a></p>
+<p id="section-7.10-5"><strong>Publisher Ordered</strong>:
+The publisher's group ordering preference (ascending <code>0x1</code> or descending <code>0x0</code>), used only to resolve ties.
+See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> section for more information.<a href="#section-7.10-5" class="pilcrow">¶</a></p>
+<p id="section-7.10-6"><strong>Publisher Cache</strong>:
+The minimum age, in milliseconds, the publisher guarantees to retain a group past the arrival of a newer group.
+Applies only to non-latest groups; the latest group is always retained.
+Analogous to HTTP <code>Cache-Control: max-age</code> as a lower bound:<a href="#section-7.10-6" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-7.10-7.1">
+            <p id="section-7.10-7.1.1">A subscriber <span class="bcp14">MAY</span> issue a SUBSCRIBE or FETCH with an older <code>Group Start</code> and expect the publisher to still have it, as long as the group's age does not exceed <code>Publisher Cache</code>.<a href="#section-7.10-7.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-7.10-7.2">
+            <p id="section-7.10-7.2.1">The publisher <span class="bcp14">MAY</span> retain groups longer than <code>Publisher Cache</code> (a best-effort cache beyond the guarantee); subscribers <span class="bcp14">MUST NOT</span> assume older groups are unavailable.<a href="#section-7.10-7.2.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-7.10-8">A value of <code>0</code> means no retention guarantee beyond live delivery; older groups <span class="bcp14">MAY</span> still be available but the publisher makes no promise.
+The unit is milliseconds (independent of <code>Publisher Timescale</code>) so cache retention is decoupled from media time when timescale is unspecified.<a href="#section-7.10-8" class="pilcrow">¶</a></p>
+<p id="section-7.10-9"><strong>Publisher Timescale</strong>:
 The number of timestamp units per second for frame timestamps on this Track.
 A value of 0 means unspecified; the subscriber <span class="bcp14">MUST</span> treat per-frame timestamps as opaque and fall back to wall-clock arrival time for <a href="#expiration" class="auto internal xref">Section 6.2</a>.
 When <code>Publisher Timescale</code> is 0, the per-frame <code>Timestamp Delta</code> and <code>Duration Delta</code> fields are omitted from FRAME messages and the <code>Timestamp</code> and <code>Duration</code> fields are omitted from datagram bodies (see <a href="#frame" class="auto internal xref">Section 3.5</a> and <a href="#datagrams" class="auto internal xref">Section 6.4</a>).
-A non-zero value is fixed for the lifetime of the subscription and <span class="bcp14">MUST NOT</span> change in subsequent SUBSCRIBE_OK messages; a change in timescale requires a new subscription.
-Common values include <code>1000</code> (milliseconds), <code>1000000</code> (microseconds), <code>48000</code> (audio sample rate), and <code>90000</code> (RTP video clock).<a href="#section-7.9-6" class="pilcrow">¶</a></p>
-<p id="section-7.9-7"><strong>Publisher Cache</strong>:
-The minimum age, in milliseconds, the publisher guarantees to retain a group past the arrival of a newer group.
-Applies only to non-latest groups; the latest group is always retained.
-Analogous to HTTP <code>Cache-Control: max-age</code> as a lower bound:<a href="#section-7.9-7" class="pilcrow">¶</a></p>
+Common values include <code>1000</code> (milliseconds), <code>1000000</code> (microseconds), <code>48000</code> (audio sample rate), and <code>90000</code> (RTP video clock).<a href="#section-7.10-9" class="pilcrow">¶</a></p>
+<p id="section-7.10-10"><strong>Publisher Compression</strong>:
+The compression algorithm applied to every Frame <code>Payload</code> on this Track.<a href="#section-7.10-10" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-7.9-8.1">
-            <p id="section-7.9-8.1.1">A subscriber <span class="bcp14">MAY</span> issue a SUBSCRIBE or FETCH with an older <code>Group Start</code> and expect the publisher to still have it, as long as the group's age does not exceed <code>Publisher Cache</code>.<a href="#section-7.9-8.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-7.10-11.1">
+            <p id="section-7.10-11.1.1"><code>none</code> (0): payloads are transmitted verbatim (default).<a href="#section-7.10-11.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-7.9-8.2">
-            <p id="section-7.9-8.2.1">The publisher <span class="bcp14">MAY</span> retain groups longer than <code>Publisher Cache</code> (a best-effort cache beyond the guarantee); subscribers <span class="bcp14">MUST NOT</span> assume older groups are unavailable.<a href="#section-7.9-8.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-7.10-11.2">
+            <p id="section-7.10-11.2.1"><code>deflate</code> (1): payloads are compressed with raw DEFLATE as defined in <span>[<a href="#RFC1951" class="cite xref">RFC1951</a>]</span>, with no zlib or gzip framing.<a href="#section-7.10-11.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-7.9-9">A value of <code>0</code> means no retention guarantee beyond live delivery; older groups <span class="bcp14">MAY</span> still be available but the publisher makes no promise.
-The unit is milliseconds (independent of <code>Publisher Timescale</code>) so cache retention is decoupled from media time when timescale is unspecified.
-The value <span class="bcp14">MAY</span> change in subsequent SUBSCRIBE_OK messages to reflect changing publisher policy; the subscriber <span class="bcp14">SHOULD</span> use the most recent value.<a href="#section-7.9-9" class="pilcrow">¶</a></p>
-<p id="section-7.9-10"><strong>Publisher Compression</strong>:
-The compression algorithm applied to every Frame <code>Payload</code> on this Track.<a href="#section-7.9-10" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-7.9-11.1">
-            <p id="section-7.9-11.1.1"><code>none</code> (0): payloads are transmitted verbatim (default).<a href="#section-7.9-11.1.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-7.9-11.2">
-            <p id="section-7.9-11.2.1"><code>deflate</code> (1): payloads are compressed with raw DEFLATE as defined in <span>[<a href="#RFC1951" class="cite xref">RFC1951</a>]</span>, with no zlib or gzip framing.<a href="#section-7.9-11.2.1" class="pilcrow">¶</a></p>
-</li>
-        </ul>
-<p id="section-7.9-12">Compression is applied per-frame: each Frame <code>Payload</code> is an independent compressed stream with no shared dictionary or state between frames.
+<p id="section-7.10-12">Compression is applied per-frame: each Frame <code>Payload</code> is an independent compressed stream with no shared dictionary or state between frames.
 This keeps frames independently decodable and avoids head-of-line decoding within a group.
 The Frame <code>Message Length</code> describes the compressed (on-wire) size.
-An empty payload (size 0) <span class="bcp14">MUST NOT</span> be compressed and remains empty on the wire.<a href="#section-7.9-12" class="pilcrow">¶</a></p>
-<p id="section-7.9-13">The publisher <span class="bcp14">SHOULD</span> only enable compression for payload types that benefit from it (e.g. JSON, text, uncompressed binary structures).
+An empty payload (size 0) <span class="bcp14">MUST NOT</span> be compressed and remains empty on the wire.<a href="#section-7.10-12" class="pilcrow">¶</a></p>
+<p id="section-7.10-13">The publisher <span class="bcp14">SHOULD</span> only enable compression for payload types that benefit from it (e.g. JSON, text, uncompressed binary structures).
 Already-compressed media (e.g. H.264, Opus, AV1) gains nothing and <span class="bcp14">SHOULD</span> use <code>none</code>.
-The value is fixed for the lifetime of the subscription and <span class="bcp14">MUST NOT</span> change in subsequent SUBSCRIBE_OK messages; a change in compression requires a new subscription.
-A subscriber that does not recognize the value <span class="bcp14">MUST</span> close the subscription with a protocol violation.<a href="#section-7.9-13" class="pilcrow">¶</a></p>
-<p id="section-7.9-14">A relay <span class="bcp14">MAY</span> transcode payloads between compression algorithms (including bridging different protocol versions, e.g. a moq-lite-05 publisher to a moq-lite-04 subscriber) provided the decompressed bytes are identical to what the publisher produced.
-A relay <span class="bcp14">SHOULD NOT</span> compress an originally-uncompressed payload unless there is a strong content signal that compression is beneficial (e.g. the track name ends in <code>.json</code>), because the relay cannot otherwise predict whether compression will help or hurt.<a href="#section-7.9-14" class="pilcrow">¶</a></p>
-<p id="section-7.9-15">See <a href="#subscribe" class="auto internal xref">Section 5.1.2</a> for information about the other fields.<a href="#section-7.9-15" class="pilcrow">¶</a></p>
+A subscriber that does not recognize the value <span class="bcp14">MUST NOT</span> open a Subscribe or Fetch stream for the track; if it already opened one before receiving TRACK_INFO, it <span class="bcp14">MUST</span> reset that stream with a protocol violation. The Track Stream itself needs no reset — the publisher FINs it after TRACK_INFO.<a href="#section-7.10-13" class="pilcrow">¶</a></p>
+<p id="section-7.10-14">A relay <span class="bcp14">MAY</span> transcode payloads between compression algorithms (including bridging different protocol versions, e.g. a moq-lite-05 publisher to a moq-lite-04 subscriber) provided the decompressed bytes are identical to what the publisher produced.
+A relay <span class="bcp14">SHOULD NOT</span> compress an originally-uncompressed payload unless there is a strong content signal that compression is beneficial (e.g. the track name ends in <code>.json</code>), because the relay cannot otherwise predict whether compression will help or hurt.<a href="#section-7.10-14" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="subscribe-ok">
+<section id="section-7.11">
+        <h3 id="name-subscribe_ok">
+<a href="#section-7.11" class="section-number selfRef">7.11. </a><a href="#name-subscribe_ok" class="section-name selfRef">SUBSCRIBE_OK</a>
+        </h3>
+<p id="section-7.11-1">A SUBSCRIBE_OK message confirms a subscription and resolves its absolute start group.
+It is the first message the publisher sends on the Subscribe Stream, once the start group is known.<a href="#section-7.11-1" class="pilcrow">¶</a></p>
+<p id="section-7.11-2">This is the trimmed-down counterpart of MoqTransport's SUBSCRIBE_OK: it retains the name and the role of the publisher's positive response, but carries only the resolved start group (all other per-track properties live in <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>).<a href="#section-7.11-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.11-3">
+<pre>
+SUBSCRIBE_OK Message {
+  Type (i) = 0x0
+  Message Length (i)
+  Group (i)
+}
+</pre><a href="#section-7.11-3" class="pilcrow">¶</a>
+</div>
+<p id="section-7.11-4"><strong>Type</strong>:
+Set to 0x0 to indicate a SUBSCRIBE_OK message.<a href="#section-7.11-4" class="pilcrow">¶</a></p>
+<p id="section-7.11-5"><strong>Group</strong>:
+The absolute sequence number of the first group that will be delivered.
+This <span class="bcp14">MUST</span> be greater than or equal to the requested <code>Group Start</code> (see <a href="#subscribe" class="auto internal xref">Section 5.1.2</a>).
+If it is strictly greater, the groups in between are unavailable and will not be delivered; SUBSCRIBE_OK thus also acts as an implicit drop of that leading range, and no separate SUBSCRIBE_DROP is required for it.
+A subscriber that requested the latest group (<code>Group Start</code> = 0) learns the resolved sequence here.<a href="#section-7.11-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="subscribe-end">
+<section id="section-7.12">
+        <h3 id="name-subscribe_end">
+<a href="#section-7.12" class="section-number selfRef">7.12. </a><a href="#name-subscribe_end" class="section-name selfRef">SUBSCRIBE_END</a>
+        </h3>
+<p id="section-7.12-1">A SUBSCRIBE_END message is sent by the publisher to signal that no group after a given sequence will be produced.<a href="#section-7.12-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.12-2">
+<pre>
+SUBSCRIBE_END Message {
+  Type (i) = 0x1
+  Message Length (i)
+  Group (i)
+}
+</pre><a href="#section-7.12-2" class="pilcrow">¶</a>
+</div>
+<p id="section-7.12-3"><strong>Type</strong>:
+Set to 0x1 to indicate a SUBSCRIBE_END message.<a href="#section-7.12-3" class="pilcrow">¶</a></p>
+<p id="section-7.12-4"><strong>Group</strong>:
+The absolute sequence number of the last group that may be delivered (inclusive).
+The subscriber <span class="bcp14">MUST NOT</span> wait for any group after this sequence.
+SUBSCRIBE_END bounds the range but does not by itself end the stream: the publisher <span class="bcp14">MAY</span> still send SUBSCRIBE_DROP for groups at or below this sequence that it cannot deliver, and FINs the stream only once every group up to this sequence has been accounted for.<a href="#section-7.12-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="subscribedrop">
-<section id="section-7.10">
+<section id="section-7.13">
         <h3 id="name-subscribe_drop">
-<a href="#section-7.10" class="section-number selfRef">7.10. </a><a href="#name-subscribe_drop" class="section-name selfRef">SUBSCRIBE_DROP</a>
+<a href="#section-7.13" class="section-number selfRef">7.13. </a><a href="#name-subscribe_drop" class="section-name selfRef">SUBSCRIBE_DROP</a>
         </h3>
-<p id="section-7.10-1">A SUBSCRIBE_DROP message is sent by the publisher on the Subscribe Stream when groups cannot be served.<a href="#section-7.10-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.10-2">
+<p id="section-7.13-1">A SUBSCRIBE_DROP message is sent by the publisher on the Subscribe Stream when groups cannot be served.
+It <span class="bcp14">MAY</span> arrive at any point after the subscription is opened, including after SUBSCRIBE_END for stragglers within the resolved range (a leading range is instead dropped implicitly by SUBSCRIBE_OK).<a href="#section-7.13-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.13-2">
 <pre>
 SUBSCRIBE_DROP Message {
-  Type (i) = 0x1
+  Type (i) = 0x2
   Message Length (i)
   Group Start (i)
   Group End (i)
   Error Code (i)
 }
-</pre><a href="#section-7.10-2" class="pilcrow">¶</a>
+</pre><a href="#section-7.13-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.10-3"><strong>Type</strong>:
-Set to 0x1 to indicate a SUBSCRIBE_DROP message.<a href="#section-7.10-3" class="pilcrow">¶</a></p>
-<p id="section-7.10-4"><strong>Group Start</strong>:
-The first absolute group sequence in the dropped range.<a href="#section-7.10-4" class="pilcrow">¶</a></p>
-<p id="section-7.10-5"><strong>Group End</strong>:
-The last absolute group sequence in the dropped range (inclusive).<a href="#section-7.10-5" class="pilcrow">¶</a></p>
-<p id="section-7.10-6"><strong>Error Code</strong>:
+<p id="section-7.13-3"><strong>Type</strong>:
+Set to 0x2 to indicate a SUBSCRIBE_DROP message.<a href="#section-7.13-3" class="pilcrow">¶</a></p>
+<p id="section-7.13-4"><strong>Group Start</strong>:
+The first absolute group sequence in the dropped range.<a href="#section-7.13-4" class="pilcrow">¶</a></p>
+<p id="section-7.13-5"><strong>Group End</strong>:
+The last absolute group sequence in the dropped range (inclusive).<a href="#section-7.13-5" class="pilcrow">¶</a></p>
+<p id="section-7.13-6"><strong>Error Code</strong>:
 An application-specific error code.
-A value of 0 indicates no error; the groups are simply unavailable.<a href="#section-7.10-6" class="pilcrow">¶</a></p>
+A value of 0 indicates no error; the groups are simply unavailable.<a href="#section-7.13-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="fetch-1">
-<section id="section-7.11">
+<section id="section-7.14">
         <h3 id="name-fetch-2">
-<a href="#section-7.11" class="section-number selfRef">7.11. </a><a href="#name-fetch-2" class="section-name selfRef">FETCH</a>
+<a href="#section-7.14" class="section-number selfRef">7.14. </a><a href="#name-fetch-2" class="section-name selfRef">FETCH</a>
         </h3>
-<p id="section-7.11-1">FETCH is sent by a subscriber to request a single group from a track.<a href="#section-7.11-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.11-2">
+<p id="section-7.14-1">FETCH is sent by a subscriber to request a single group from a track.<a href="#section-7.14-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.14-2">
 <pre>
 FETCH Message {
   Message Length (i)
@@ -2415,110 +2515,112 @@ FETCH Message {
   Group Sequence (i)
   Frame Start (i)
 }
-</pre><a href="#section-7.11-2" class="pilcrow">¶</a>
+</pre><a href="#section-7.14-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.11-3"><strong>Broadcast Path</strong>:
-The broadcast path of the track to fetch from.<a href="#section-7.11-3" class="pilcrow">¶</a></p>
-<p id="section-7.11-4"><strong>Track Name</strong>:
-The name of the track to fetch from.<a href="#section-7.11-4" class="pilcrow">¶</a></p>
-<p id="section-7.11-5"><strong>Subscriber Priority</strong>:
+<p id="section-7.14-3"><strong>Broadcast Path</strong>:
+The broadcast path of the track to fetch from.<a href="#section-7.14-3" class="pilcrow">¶</a></p>
+<p id="section-7.14-4"><strong>Track Name</strong>:
+The name of the track to fetch from.<a href="#section-7.14-4" class="pilcrow">¶</a></p>
+<p id="section-7.14-5"><strong>Subscriber Priority</strong>:
 The priority of the fetch within the session, represented as a u8.
-See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> section for more information.<a href="#section-7.11-5" class="pilcrow">¶</a></p>
-<p id="section-7.11-6"><strong>Group Sequence</strong>:
-The sequence number of the group to fetch.<a href="#section-7.11-6" class="pilcrow">¶</a></p>
-<p id="section-7.11-7"><strong>Frame Start</strong>:
+See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> section for more information.<a href="#section-7.14-5" class="pilcrow">¶</a></p>
+<p id="section-7.14-6"><strong>Group Sequence</strong>:
+The sequence number of the group to fetch.<a href="#section-7.14-6" class="pilcrow">¶</a></p>
+<p id="section-7.14-7"><strong>Frame Start</strong>:
 The index of the first frame to return, counting from <code>0</code> for the first frame in the group.
 The publisher skips all frames before this index and begins the response at this frame, allowing a subscriber to resume partway through a group.
 A value of <code>0</code> returns the entire group.
 If the group is still in progress and frame <code>Frame Start</code> has not yet been produced, the publisher waits and delivers it (and any later frames) as they arrive, just like a live subscription; it does not return early.
-Only once the group is complete is the out-of-range case resolved: if <code>Frame Start</code> is greater than or equal to the group's final frame count, the publisher returns no FRAME messages and FINs the stream.<a href="#section-7.11-7" class="pilcrow">¶</a></p>
-<p id="section-7.11-8">The returned FRAME messages are otherwise unchanged: when the Track's <code>Publisher Timescale</code> is non-zero, the first returned frame's <code>Timestamp Delta</code> is delta-encoded from <code>0</code> (i.e. its absolute timestamp), not from the timestamp of the skipped frame (see <a href="#frame" class="auto internal xref">Section 3.5</a>).<a href="#section-7.11-8" class="pilcrow">¶</a></p>
-<p id="section-7.11-9">The publisher responds with FRAME messages on the same stream.
-The publisher FINs the stream after the last frame, or resets on error.<a href="#section-7.11-9" class="pilcrow">¶</a></p>
+Only once the group is complete is the out-of-range case resolved: if <code>Frame Start</code> is greater than or equal to the group's final frame count, the publisher returns no FRAME messages and FINs the stream.<a href="#section-7.14-7" class="pilcrow">¶</a></p>
+<p id="section-7.14-8">The returned FRAME messages are otherwise unchanged: when the Track's <code>Publisher Timescale</code> is non-zero, the first returned frame's <code>Timestamp Delta</code> is delta-encoded from <code>0</code> (i.e. its absolute timestamp), not from the timestamp of the skipped frame (see <a href="#frame" class="auto internal xref">Section 3.5</a>).<a href="#section-7.14-8" class="pilcrow">¶</a></p>
+<p id="section-7.14-9">The publisher responds with FRAME messages directly on the same stream — there is no response header.
+The subscriber parses them using the track's <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>, which it <span class="bcp14">MUST</span> already have (see the <span><a href="#track-stream" class="internal xref">Track Stream</a> (<a href="#track-stream" class="auto internal xref">Section 5.1.4</a>)</span>); the group sequence is implicit from the FETCH request.
+The publisher FINs the stream after the last frame, or resets on error.
+There is no FETCH_ERROR message — the publisher signals failure by resetting the stream.<a href="#section-7.14-9" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="probe-1">
-<section id="section-7.12">
+<section id="section-7.15">
         <h3 id="name-probe-2">
-<a href="#section-7.12" class="section-number selfRef">7.12. </a><a href="#name-probe-2" class="section-name selfRef">PROBE</a>
+<a href="#section-7.15" class="section-number selfRef">7.15. </a><a href="#name-probe-2" class="section-name selfRef">PROBE</a>
         </h3>
-<p id="section-7.12-1">PROBE is used to measure the available bitrate of the connection.<a href="#section-7.12-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.12-2">
+<p id="section-7.15-1">PROBE is used to measure the available bitrate of the connection.<a href="#section-7.15-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.15-2">
 <pre>
 PROBE Message {
   Message Length (i)
   Bitrate (i)
   RTT (i)
 }
-</pre><a href="#section-7.12-2" class="pilcrow">¶</a>
+</pre><a href="#section-7.15-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.12-3"><strong>Bitrate</strong>:
+<p id="section-7.15-3"><strong>Bitrate</strong>:
 When sent by the subscriber (stream opener): the target bitrate in bits per second that the publisher should pad up to.
 The publisher only honors a target above its current sending rate if it advertised the Increase capability (see <span><a href="#probe-parameter" class="internal xref">Probe Parameter</a> (<a href="#probe-parameter" class="auto internal xref">Section 7.3.1</a>)</span>); otherwise the target is ignored and the publisher only reports.
 When sent by the publisher (responder): the current estimated bitrate in bits per second.
-A value of 0 means unknown.<a href="#section-7.12-3" class="pilcrow">¶</a></p>
-<p id="section-7.12-4"><strong>RTT</strong>:
+A value of 0 means unknown.<a href="#section-7.15-3" class="pilcrow">¶</a></p>
+<p id="section-7.15-4"><strong>RTT</strong>:
 The smoothed round-trip time in milliseconds, as defined in <span>[<a href="#RFC9002" class="cite xref">RFC9002</a>]</span>.
-A value of 0 means unknown.<a href="#section-7.12-4" class="pilcrow">¶</a></p>
+A value of 0 means unknown.<a href="#section-7.15-4" class="pilcrow">¶</a></p>
 <ul class="normal ulEmpty">
-<li class="normal ulEmpty" id="section-7.12-5.1">
-            <p id="section-7.12-5.1.1">NOTE: RTT is included in the PROBE message because not all QUIC implementations and browser WebTransport APIs expose RTT statistics directly. This field may be deprecated once RTT is universally available via the underlying transport API.<a href="#section-7.12-5.1.1" class="pilcrow">¶</a></p>
+<li class="normal ulEmpty" id="section-7.15-5.1">
+            <p id="section-7.15-5.1.1">NOTE: RTT is included in the PROBE message because not all QUIC implementations and browser WebTransport APIs expose RTT statistics directly. This field may be deprecated once RTT is universally available via the underlying transport API.<a href="#section-7.15-5.1.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
 </div>
 <div id="goaway-1">
-<section id="section-7.13">
+<section id="section-7.16">
         <h3 id="name-goaway-2">
-<a href="#section-7.13" class="section-number selfRef">7.13. </a><a href="#name-goaway-2" class="section-name selfRef">GOAWAY</a>
+<a href="#section-7.16" class="section-number selfRef">7.16. </a><a href="#name-goaway-2" class="section-name selfRef">GOAWAY</a>
         </h3>
-<p id="section-7.13-1">A GOAWAY message is sent to initiate a graceful session shutdown with an optional redirect.<a href="#section-7.13-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.13-2">
+<p id="section-7.16-1">A GOAWAY message is sent to initiate a graceful session shutdown with an optional redirect.<a href="#section-7.16-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.16-2">
 <pre>
 GOAWAY Message {
   Message Length (i)
   New Session URI (s)
 }
-</pre><a href="#section-7.13-2" class="pilcrow">¶</a>
+</pre><a href="#section-7.16-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.13-3"><strong>New Session URI</strong>:
+<p id="section-7.16-3"><strong>New Session URI</strong>:
 A URI for the peer to reconnect to.
 An empty string indicates no redirect; the peer should simply close the session.
 A recipient <span class="bcp14">MUST</span> validate the URI against local policy before reconnecting, including verifying the scheme, authority, and port are permitted.
-If validation fails, the recipient <span class="bcp14">MUST</span> close the session without reconnecting.<a href="#section-7.13-3" class="pilcrow">¶</a></p>
+If validation fails, the recipient <span class="bcp14">MUST</span> close the session without reconnecting.<a href="#section-7.16-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="group-2">
-<section id="section-7.14">
+<section id="section-7.17">
         <h3 id="name-group-3">
-<a href="#section-7.14" class="section-number selfRef">7.14. </a><a href="#name-group-3" class="section-name selfRef">GROUP</a>
+<a href="#section-7.17" class="section-number selfRef">7.17. </a><a href="#name-group-3" class="section-name selfRef">GROUP</a>
         </h3>
-<p id="section-7.14-1">The GROUP message contains information about a Group, as well as a reference to the subscription being served.<a href="#section-7.14-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.14-2">
+<p id="section-7.17-1">The GROUP message contains information about a Group, as well as a reference to the subscription being served.<a href="#section-7.17-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.17-2">
 <pre>
 GROUP Message {
   Message Length (i)
   Subscribe ID (i)
   Group Sequence (i)
 }
-</pre><a href="#section-7.14-2" class="pilcrow">¶</a>
+</pre><a href="#section-7.17-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.14-3"><strong>Subscribe ID</strong>:
+<p id="section-7.17-3"><strong>Subscribe ID</strong>:
 The corresponding Subscribe ID.
-This ID is used to distinguish between multiple subscriptions for the same track.<a href="#section-7.14-3" class="pilcrow">¶</a></p>
-<p id="section-7.14-4"><strong>Group Sequence</strong>:
+This ID is used to distinguish between multiple subscriptions for the same track.<a href="#section-7.17-3" class="pilcrow">¶</a></p>
+<p id="section-7.17-4"><strong>Group Sequence</strong>:
 The sequence number of the group.
 This <span class="bcp14">SHOULD</span> increase by 1 for each new group.
-A subscriber <span class="bcp14">MUST</span> handle gaps, potentially caused by congestion.<a href="#section-7.14-4" class="pilcrow">¶</a></p>
+A subscriber <span class="bcp14">MUST</span> handle gaps, potentially caused by congestion.<a href="#section-7.17-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="frame-1">
-<section id="section-7.15">
+<section id="section-7.18">
         <h3 id="name-frame-2">
-<a href="#section-7.15" class="section-number selfRef">7.15. </a><a href="#name-frame-2" class="section-name selfRef">FRAME</a>
+<a href="#section-7.18" class="section-number selfRef">7.18. </a><a href="#name-frame-2" class="section-name selfRef">FRAME</a>
         </h3>
-<p id="section-7.15-1">The FRAME message is a payload within a group.<a href="#section-7.15-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.15-2">
+<p id="section-7.18-1">The FRAME message is a payload within a group.<a href="#section-7.18-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.18-2">
 <pre>
 FRAME Message {
   [Timestamp Delta (i)]
@@ -2526,41 +2628,41 @@ FRAME Message {
   Message Length (i)
   Payload (b)
 }
-</pre><a href="#section-7.15-2" class="pilcrow">¶</a>
+</pre><a href="#section-7.18-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.15-3"><code>Timestamp Delta</code> and <code>Duration Delta</code> are present only when the Track's <code>Publisher Timescale</code> (see <span><a href="#subscribe-ok" class="internal xref">SUBSCRIBE_OK</a> (<a href="#subscribe-ok" class="auto internal xref">Section 7.9</a>)</span>) is non-zero.
-When <code>Publisher Timescale</code> is 0, both fields are omitted from the wire and the FRAME consists of just <code>Message Length</code> and <code>Payload</code>.<a href="#section-7.15-3" class="pilcrow">¶</a></p>
-<p id="section-7.15-4"><strong>Timestamp Delta</strong>:
+<p id="section-7.18-3"><code>Timestamp Delta</code> and <code>Duration Delta</code> are present only when the Track's <code>Publisher Timescale</code> (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>) is non-zero.
+When <code>Publisher Timescale</code> is 0, both fields are omitted from the wire and the FRAME consists of just <code>Message Length</code> and <code>Payload</code>.<a href="#section-7.18-3" class="pilcrow">¶</a></p>
+<p id="section-7.18-4"><strong>Timestamp Delta</strong>:
 A signed delta from the previous frame's timestamp, in the Track's negotiated <code>Timescale</code>.
-Encoded as a zigzag-mapped variable-length integer:<a href="#section-7.15-4" class="pilcrow">¶</a></p>
+Encoded as a zigzag-mapped variable-length integer:<a href="#section-7.18-4" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-7.15-5.1">
-            <p id="section-7.15-5.1.1">Encode: <code>unsigned = (signed &lt;&lt; 1) ^ (signed &gt;&gt; 63)</code> (arithmetic right shift).<a href="#section-7.15-5.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-7.18-5.1">
+            <p id="section-7.18-5.1.1">Encode: <code>unsigned = (signed &lt;&lt; 1) ^ (signed &gt;&gt; 63)</code> (arithmetic right shift).<a href="#section-7.18-5.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-7.15-5.2">
-            <p id="section-7.15-5.2.1">Decode: <code>signed = (unsigned &gt;&gt; 1) ^ -(unsigned &amp; 1)</code>.<a href="#section-7.15-5.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-7.18-5.2">
+            <p id="section-7.18-5.2.1">Decode: <code>signed = (unsigned &gt;&gt; 1) ^ -(unsigned &amp; 1)</code>.<a href="#section-7.18-5.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-7.15-6">Zigzag interleaves non-negative and negative values (<code>0 → 0, -1 → 1, 1 → 2, -2 → 3, 2 → 4, ...</code>) so small magnitudes of either sign fit in a 1-byte varint and there is exactly one wire encoding for zero.
-The first frame of a group is delta-encoded from <code>0</code>, so its <code>Timestamp Delta</code> is the zigzag encoding of the absolute timestamp.<a href="#section-7.15-6" class="pilcrow">¶</a></p>
-<p id="section-7.15-7"><strong>Duration Delta</strong>:
+<p id="section-7.18-6">Zigzag interleaves non-negative and negative values (<code>0 → 0, -1 → 1, 1 → 2, -2 → 3, 2 → 4, ...</code>) so small magnitudes of either sign fit in a 1-byte varint and there is exactly one wire encoding for zero.
+The first frame of a group is delta-encoded from <code>0</code>, so its <code>Timestamp Delta</code> is the zigzag encoding of the absolute timestamp.<a href="#section-7.18-6" class="pilcrow">¶</a></p>
+<p id="section-7.18-7"><strong>Duration Delta</strong>:
 A signed delta from the previous frame's duration, in the Track's negotiated <code>Timescale</code>, encoded using the same zigzag mapping as <code>Timestamp Delta</code>.
 A wire value of <code>0</code> means the duration is unchanged from the previous frame; this is the common case for constant-rate media and fits in one byte.
-The first frame of a group is delta-encoded from a prior duration of <code>0</code>.<a href="#section-7.15-7" class="pilcrow">¶</a></p>
-<p id="section-7.15-8">The resolved duration value carries the following semantics for the application:<a href="#section-7.15-8" class="pilcrow">¶</a></p>
+The first frame of a group is delta-encoded from a prior duration of <code>0</code>.<a href="#section-7.18-7" class="pilcrow">¶</a></p>
+<p id="section-7.18-8">The resolved duration value carries the following semantics for the application:<a href="#section-7.18-8" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-7.15-9.1">
-            <p id="section-7.15-9.1.1">A resolved duration of <code>0</code> means the duration is unknown; the frame is presented until the next frame in the group begins (or until the group ends, if it is the last frame).<a href="#section-7.15-9.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-7.18-9.1">
+            <p id="section-7.18-9.1.1">A resolved duration of <code>0</code> means the duration is unknown; the frame is presented until the next frame in the group begins (or until the group ends, if it is the last frame).<a href="#section-7.18-9.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-7.15-9.2">
-            <p id="section-7.15-9.2.1">A non-zero resolved duration is the explicit presentation duration in the Track's <code>Timescale</code>.<a href="#section-7.15-9.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-7.18-9.2">
+            <p id="section-7.18-9.2.1">A non-zero resolved duration is the explicit presentation duration in the Track's <code>Timescale</code>.<a href="#section-7.18-9.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-7.15-10">The duration is an application-level hint and is not used by the moq-lite layer for delivery decisions.<a href="#section-7.15-10" class="pilcrow">¶</a></p>
-<p id="section-7.15-11"><strong>Payload</strong>:
+<p id="section-7.18-10">The duration is an application-level hint and is not used by the moq-lite layer for delivery decisions.<a href="#section-7.18-10" class="pilcrow">¶</a></p>
+<p id="section-7.18-11"><strong>Payload</strong>:
 An application-specific payload.
-If the Track's <code>Publisher Compression</code> is non-zero, the payload is compressed using the negotiated algorithm (see <span><a href="#subscribe-ok" class="internal xref">SUBSCRIBE_OK</a> (<a href="#subscribe-ok" class="auto internal xref">Section 7.9</a>)</span>) and the <code>Message Length</code> describes the compressed size.
-A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify the decompressed contents unless otherwise negotiated; recompression that preserves the decompressed bytes exactly is allowed (see <span><a href="#subscribe-ok" class="internal xref">SUBSCRIBE_OK</a> (<a href="#subscribe-ok" class="auto internal xref">Section 7.9</a>)</span>).<a href="#section-7.15-11" class="pilcrow">¶</a></p>
+If the Track's <code>Publisher Compression</code> is non-zero, the payload is compressed using the negotiated algorithm (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>) and the <code>Message Length</code> describes the compressed size.
+A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify the decompressed contents unless otherwise negotiated; recompression that preserves the decompressed bytes exactly is allowed (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>).<a href="#section-7.18-11" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2586,40 +2688,49 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
             <p id="section-8.1-1.3.1">Added <code>Frame Start</code> to FETCH so a subscriber can begin partway through a group instead of always at frame <code>0</code>, allowing resumption of a partially-received group.<a href="#section-8.1-1.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.4">
-            <p id="section-8.1-1.4.1">Renamed <code>Start Group</code>/<code>End Group</code> to <code>Group Start</code>/<code>Group End</code> in SUBSCRIBE, SUBSCRIBE_UPDATE, SUBSCRIBE_OK, and SUBSCRIBE_DROP for consistency with the entity-first naming used elsewhere (e.g. <code>Group Sequence</code>). Wire format unchanged.<a href="#section-8.1-1.4.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.4.1">Added a Track Stream (0x6): a TRACK request that the publisher answers with a single TRACK_INFO message and then FINs. TRACK_INFO carries the Track's immutable publisher properties (<code>Publisher Priority</code>, <code>Publisher Ordered</code>, <code>Publisher Cache</code>, <code>Publisher Timescale</code>, <code>Publisher Compression</code>). It is fetched once and cached, so the properties are no longer echoed on every response — notably, group-by-group FETCHes reuse one lookup.<a href="#section-8.1-1.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.5">
-            <p id="section-8.1-1.5.1">Allowed a duplicate <code>active</code> ANNOUNCE to atomically replace the prior advertisement (equivalent to UNANNOUNCE+ANNOUNCE). Used when only the origin or hop path changes (e.g. relay failover) without interrupting the broadcast. No new wire enum value — the existing <code>active</code> status carries the new metadata.<a href="#section-8.1-1.5.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.5.1">Removed FETCH_OK and trimmed SUBSCRIBE_OK down to a single resolved start group. Publisher properties moved to TRACK_INFO; a FETCH returns bare FRAME messages. All publisher properties are immutable for the lifetime of the Track — a publisher-side change would otherwise have to fan <em>out</em> to every downstream of a relay, whereas subscriber properties fan <em>in</em> and may still change via SUBSCRIBE_UPDATE.<a href="#section-8.1-1.5.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.6">
-            <p id="section-8.1-1.6.1">Added ANNOUNCE_OK message, sent once at the head of the Announce Stream response. Carries the publisher's <code>Hop ID</code> (hoisted out of every ANNOUNCE's Hop ID list) and an <code>Active Count</code> so subscribers can batch the initial set instead of reporting each ANNOUNCE as it trickles in.<a href="#section-8.1-1.6.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.6.1">Split the resolved group range across SUBSCRIBE_OK and a new SUBSCRIBE_END. SUBSCRIBE_OK resolves the absolute start (<code>&gt;=</code> the requested start; a larger value implicitly drops the leading range), and SUBSCRIBE_END signals that no group will follow a given sequence (stragglers within the range may still be dropped before FIN). SUBSCRIBE_OK keeps the MoqTransport name and its role as the publisher's positive response.<a href="#section-8.1-1.6.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.7">
-            <p id="section-8.1-1.7.1">Added <code>Publisher Timescale</code> to SUBSCRIBE_OK for per-track timestamp negotiation. When <code>Publisher Timescale</code> is 0, the per-frame timestamp/duration fields are omitted entirely from FRAME and datagram bodies.<a href="#section-8.1-1.7.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.7.1">Renamed <code>Start Group</code>/<code>End Group</code> to <code>Group Start</code>/<code>Group End</code> in SUBSCRIBE, SUBSCRIBE_UPDATE, and SUBSCRIBE_DROP for consistency with the entity-first naming used elsewhere (e.g. <code>Group Sequence</code>). Wire format unchanged.<a href="#section-8.1-1.7.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.8">
-            <p id="section-8.1-1.8.1">Added <code>Timestamp Delta</code> and <code>Duration Delta</code> to FRAME, both zigzag-encoded signed varints (present only when timescale is non-zero). <code>Duration Delta = 0</code> is the common "unchanged" case and fits in one byte; a resolved duration of <code>0</code> means "until the next frame".<a href="#section-8.1-1.8.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.8.1">Allowed a duplicate <code>active</code> ANNOUNCE to atomically replace the prior advertisement (equivalent to UNANNOUNCE+ANNOUNCE). Used when only the origin or hop path changes (e.g. relay failover) without interrupting the broadcast. No new wire enum value — the existing <code>active</code> status carries the new metadata.<a href="#section-8.1-1.8.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.9">
-            <p id="section-8.1-1.9.1">Added <code>Timestamp</code> and <code>Duration</code> to the QUIC datagram body (absolute, present only when timescale is non-zero).<a href="#section-8.1-1.9.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.9.1">Added ANNOUNCE_OK message, sent once at the head of the Announce Stream response. Carries the publisher's <code>Hop ID</code> (hoisted out of every ANNOUNCE's Hop ID list) and an <code>Active Count</code> so subscribers can batch the initial set instead of reporting each ANNOUNCE as it trickles in.<a href="#section-8.1-1.9.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.10">
-            <p id="section-8.1-1.10.1">Renamed <code>Publisher Max Latency</code> to <code>Publisher Cache</code> in SUBSCRIBE_OK, now defined as a minimum retention guarantee (similar to HTTP <code>Cache-Control: max-age</code>). Groups may live longer than <code>Publisher Cache</code> and remain FETCH-able.<a href="#section-8.1-1.10.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.10.1">Added <code>Publisher Timescale</code> to TRACK_INFO for per-track timestamp negotiation. When <code>Publisher Timescale</code> is 0, the per-frame timestamp/duration fields are omitted entirely from FRAME and datagram bodies.<a href="#section-8.1-1.10.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.11">
-            <p id="section-8.1-1.11.1">Renamed <code>Subscriber Max Latency</code> to <code>Subscriber Stale</code> in SUBSCRIBE/SUBSCRIBE_UPDATE. It is the subscriber's delivery-time preference for dropping non-latest stale groups, separate from the publisher's retention guarantee.<a href="#section-8.1-1.11.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.11.1">Added <code>Timestamp Delta</code> and <code>Duration Delta</code> to FRAME, both zigzag-encoded signed varints (present only when timescale is non-zero). <code>Duration Delta = 0</code> is the common "unchanged" case and fits in one byte; a resolved duration of <code>0</code> means "until the next frame".<a href="#section-8.1-1.11.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.12">
-            <p id="section-8.1-1.12.1">Timestamp-based expiration replaces wall-clock arrival time when a Track timescale is negotiated.<a href="#section-8.1-1.12.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.12.1">Added <code>Timestamp</code> and <code>Duration</code> to the QUIC datagram body (absolute, present only when timescale is non-zero).<a href="#section-8.1-1.12.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.13">
-            <p id="section-8.1-1.13.1">Added QUIC datagram delivery for groups, sharing Subscribe IDs with existing subscriptions (no separate control stream).<a href="#section-8.1-1.13.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.13.1">Renamed <code>Publisher Max Latency</code> to <code>Publisher Cache</code> (now in TRACK_INFO), defined as a minimum retention guarantee (similar to HTTP <code>Cache-Control: max-age</code>). Groups may live longer than <code>Publisher Cache</code> and remain FETCH-able.<a href="#section-8.1-1.13.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.14">
-            <p id="section-8.1-1.14.1">Added <code>Publisher Compression</code> to SUBSCRIBE_OK for per-frame payload compression (<code>none</code> or <code>deflate</code>).<a href="#section-8.1-1.14.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.14.1">Renamed <code>Subscriber Max Latency</code> to <code>Subscriber Stale</code> in SUBSCRIBE/SUBSCRIBE_UPDATE. It is the subscriber's delivery-time preference for dropping non-latest stale groups, separate from the publisher's retention guarantee.<a href="#section-8.1-1.14.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.15">
-            <p id="section-8.1-1.15.1">Added Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span> transport bindings for TCP/TLS and WebSocket, for environments where UDP is unavailable. The WebSocket binding uses the WebSocket message framing in place of the Qmux Record <code>Size</code> field.<a href="#section-8.1-1.15.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.15.1">Timestamp-based expiration replaces wall-clock arrival time when a Track timescale is negotiated.<a href="#section-8.1-1.15.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-1.16">
+            <p id="section-8.1-1.16.1">Added QUIC datagram delivery for groups, sharing Subscribe IDs with existing subscriptions (no separate control stream).<a href="#section-8.1-1.16.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-1.17">
+            <p id="section-8.1-1.17.1">Added <code>Publisher Compression</code> to TRACK_INFO for per-frame payload compression (<code>none</code> or <code>deflate</code>).<a href="#section-8.1-1.17.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-1.18">
+            <p id="section-8.1-1.18.1">Added Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span> transport bindings for TCP/TLS and WebSocket, for environments where UDP is unavailable. The WebSocket binding uses the WebSocket message framing in place of the Qmux Record <code>Size</code> field.<a href="#section-8.1-1.18.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
