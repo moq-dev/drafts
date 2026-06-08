@@ -1048,7 +1048,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Curley</td>
-<td class="center">Expires 5 December 2026</td>
+<td class="center">Expires 10 December 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1061,12 +1061,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-lcurley-moq-lite-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-06-03" class="published">3 June 2026</time>
+<time datetime="2026-06-08" class="published">8 June 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-12-05">5 December 2026</time></dd>
+<dd class="expires"><time datetime="2026-12-10">10 December 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1112,7 +1112,7 @@ While primarily designed for media, the transport is payload agnostic and can be
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 5 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 10 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1281,7 +1281,7 @@ While primarily designed for media, the transport is payload agnostic and can be
                 <p id="section-toc.1-1.7.2.9.1"><a href="#section-7.9" class="auto internal xref">7.9</a>.  <a href="#name-track_info" class="internal xref">TRACK_INFO</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.10">
-                <p id="section-toc.1-1.7.2.10.1"><a href="#section-7.10" class="auto internal xref">7.10</a>. <a href="#name-subscribe_start" class="internal xref">SUBSCRIBE_START</a></p>
+                <p id="section-toc.1-1.7.2.10.1"><a href="#section-7.10" class="auto internal xref">7.10</a>. <a href="#name-subscribe_ok" class="internal xref">SUBSCRIBE_OK</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.11">
                 <p id="section-toc.1-1.7.2.11.1"><a href="#section-7.11" class="auto internal xref">7.11</a>. <a href="#name-subscribe_end" class="internal xref">SUBSCRIBE_END</a></p>
@@ -1748,12 +1748,12 @@ There <span class="bcp14">MAY</span> be multiple Announce Streams, potentially c
           </h4>
 <p id="section-5.1.2-1">A subscriber opens Subscribe Streams to request a Track.<a href="#section-5.1.2-1" class="pilcrow">¶</a></p>
 <p id="section-5.1.2-2">The subscriber <span class="bcp14">MUST</span> start a Subscribe Stream with a SUBSCRIBE message followed by any number of SUBSCRIBE_UPDATE messages.
-The publisher replies with any number of SUBSCRIBE_START, SUBSCRIBE_END, and SUBSCRIBE_DROP messages; the subscription is accepted implicitly (a rejection is a stream reset).
+The publisher replies with a SUBSCRIBE_OK message (confirming the subscription and resolving its start group) followed by any number of SUBSCRIBE_END and SUBSCRIBE_DROP messages; a rejection is a stream reset.
 If the publisher cannot serve the subscription — the track does not exist, or it otherwise refuses — it <span class="bcp14">MUST</span> reset the stream rather than leave it pending, and <span class="bcp14">SHOULD</span> do so promptly (within roughly a round trip) so the subscriber is not left waiting.
-A subscription the publisher accepts but has no groups for yet is not a rejection: for a live track the publisher <span class="bcp14">MAY</span> withhold SUBSCRIBE_START until the first matching group is produced, and for a track that has already ended with no matching groups it <span class="bcp14">MUST</span> send SUBSCRIBE_END (resolving an empty range) rather than reset. A subscriber therefore distinguishes "pending" from "refused" by the stream reset, not by a timeout.
+A subscription the publisher accepts but has no groups for yet is not a rejection: for a live track the publisher <span class="bcp14">MAY</span> withhold SUBSCRIBE_OK until the first matching group resolves the start, and for a track that has already ended with no matching groups it <span class="bcp14">MUST</span> send SUBSCRIBE_END (with no preceding SUBSCRIBE_OK, since there is no start group to resolve) rather than reset. A subscriber therefore distinguishes "pending" from "refused" by the stream reset, not by a timeout.
 The Subscribe Stream does not carry the track's publisher properties — those are immutable and fetched once via a <span><a href="#track-stream" class="internal xref">Track Stream</a> (<a href="#track-stream" class="auto internal xref">Section 5.1.4</a>)</span> (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.9</a>)</span>).
 The subscriber <span class="bcp14">MUST</span> have the track's TRACK_INFO before it can parse the FRAME messages that arrive on Group Streams, since the timescale and compression determine the frame wire format; it <span class="bcp14">MAY</span> open the Track and Subscribe streams concurrently and buffer frames until TRACK_INFO arrives.<a href="#section-5.1.2-2" class="pilcrow">¶</a></p>
-<p id="section-5.1.2-3">The publisher sends SUBSCRIBE_START once the absolute start group is resolved, and SUBSCRIBE_END once no further groups will be produced (see <span><a href="#subscribe-start" class="internal xref">SUBSCRIBE_START</a> (<a href="#subscribe-start" class="auto internal xref">Section 7.10</a>)</span> and <span><a href="#subscribe-end" class="internal xref">SUBSCRIBE_END</a> (<a href="#subscribe-end" class="auto internal xref">Section 7.11</a>)</span>).
+<p id="section-5.1.2-3">The publisher sends SUBSCRIBE_OK once the absolute start group is resolved, and SUBSCRIBE_END once no further groups will be produced (see <span><a href="#subscribe-ok" class="internal xref">SUBSCRIBE_OK</a> (<a href="#subscribe-ok" class="auto internal xref">Section 7.10</a>)</span> and <span><a href="#subscribe-end" class="internal xref">SUBSCRIBE_END</a> (<a href="#subscribe-end" class="auto internal xref">Section 7.11</a>)</span>).
 The publisher closes the stream (FIN) only once every group from start to end has been accounted for, either via a GROUP stream (completed or reset) or a SUBSCRIBE_DROP message.
 This <span class="bcp14">MAY</span> occur after SUBSCRIBE_END, since stragglers within the range can still be dropped.
 Unbounded subscriptions (no end group) stay open until the publisher sends SUBSCRIBE_END (and accounts for the remaining groups) to indicate the track has ended, or either endpoint resets.
@@ -2296,29 +2296,30 @@ A subscriber that does not recognize the value <span class="bcp14">MUST NOT</spa
 A relay <span class="bcp14">SHOULD NOT</span> compress an originally-uncompressed payload unless there is a strong content signal that compression is beneficial (e.g. the track name ends in <code>.json</code>), because the relay cannot otherwise predict whether compression will help or hurt.<a href="#section-7.9-14" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="subscribe-start">
+<div id="subscribe-ok">
 <section id="section-7.10">
-        <h3 id="name-subscribe_start">
-<a href="#section-7.10" class="section-number selfRef">7.10. </a><a href="#name-subscribe_start" class="section-name selfRef">SUBSCRIBE_START</a>
+        <h3 id="name-subscribe_ok">
+<a href="#section-7.10" class="section-number selfRef">7.10. </a><a href="#name-subscribe_ok" class="section-name selfRef">SUBSCRIBE_OK</a>
         </h3>
-<p id="section-7.10-1">A SUBSCRIBE_START message is sent by the publisher to resolve the absolute start group of the subscription.
+<p id="section-7.10-1">A SUBSCRIBE_OK message confirms a subscription and resolves its absolute start group.
 It is the first message the publisher sends on the Subscribe Stream, once the start group is known.<a href="#section-7.10-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.10-2">
+<p id="section-7.10-2">This is the trimmed-down counterpart of MoqTransport's SUBSCRIBE_OK: it retains the name and the role of the publisher's positive response, but carries only the resolved start group (all other per-track properties live in <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.9</a>)</span>).<a href="#section-7.10-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.10-3">
 <pre>
-SUBSCRIBE_START Message {
+SUBSCRIBE_OK Message {
   Type (i) = 0x0
   Message Length (i)
   Group (i)
 }
-</pre><a href="#section-7.10-2" class="pilcrow">¶</a>
+</pre><a href="#section-7.10-3" class="pilcrow">¶</a>
 </div>
-<p id="section-7.10-3"><strong>Type</strong>:
-Set to 0x0 to indicate a SUBSCRIBE_START message.<a href="#section-7.10-3" class="pilcrow">¶</a></p>
-<p id="section-7.10-4"><strong>Group</strong>:
+<p id="section-7.10-4"><strong>Type</strong>:
+Set to 0x0 to indicate a SUBSCRIBE_OK message.<a href="#section-7.10-4" class="pilcrow">¶</a></p>
+<p id="section-7.10-5"><strong>Group</strong>:
 The absolute sequence number of the first group that will be delivered.
 This <span class="bcp14">MUST</span> be greater than or equal to the requested <code>Group Start</code> (see <a href="#subscribe" class="auto internal xref">Section 5.1.2</a>).
-If it is strictly greater, the groups in between are unavailable and will not be delivered; SUBSCRIBE_START thus also acts as an implicit drop of that leading range, and no separate SUBSCRIBE_DROP is required for it.
-A subscriber that requested the latest group (<code>Group Start</code> = 0) learns the resolved sequence here.<a href="#section-7.10-4" class="pilcrow">¶</a></p>
+If it is strictly greater, the groups in between are unavailable and will not be delivered; SUBSCRIBE_OK thus also acts as an implicit drop of that leading range, and no separate SUBSCRIBE_DROP is required for it.
+A subscriber that requested the latest group (<code>Group Start</code> = 0) learns the resolved sequence here.<a href="#section-7.10-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="subscribe-end">
@@ -2350,7 +2351,7 @@ SUBSCRIBE_END bounds the range but does not by itself end the stream: the publis
 <a href="#section-7.12" class="section-number selfRef">7.12. </a><a href="#name-subscribe_drop" class="section-name selfRef">SUBSCRIBE_DROP</a>
         </h3>
 <p id="section-7.12-1">A SUBSCRIBE_DROP message is sent by the publisher on the Subscribe Stream when groups cannot be served.
-It <span class="bcp14">MAY</span> arrive at any point after the subscription is opened, including after SUBSCRIBE_END for stragglers within the resolved range (a leading range is instead dropped implicitly by SUBSCRIBE_START).<a href="#section-7.12-1" class="pilcrow">¶</a></p>
+It <span class="bcp14">MAY</span> arrive at any point after the subscription is opened, including after SUBSCRIBE_END for stragglers within the resolved range (a leading range is instead dropped implicitly by SUBSCRIBE_OK).<a href="#section-7.12-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-7.12-2">
 <pre>
 SUBSCRIBE_DROP Message {
@@ -2558,10 +2559,10 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
             <p id="section-8.1-1.2.1">Added a Track Stream (0x6): a TRACK request that the publisher answers with a single TRACK_INFO message and then FINs. TRACK_INFO carries the Track's immutable publisher properties (<code>Publisher Priority</code>, <code>Publisher Ordered</code>, <code>Publisher Cache</code>, <code>Publisher Timescale</code>, <code>Publisher Compression</code>). It is fetched once and cached, so the properties are no longer echoed on every response — notably, group-by-group FETCHes reuse one lookup.<a href="#section-8.1-1.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.3">
-            <p id="section-8.1-1.3.1">Removed SUBSCRIBE_OK and FETCH_OK. Publisher properties moved to TRACK_INFO; a subscription is now accepted implicitly (rejection is a stream reset) and a FETCH returns bare FRAME messages. All publisher properties are immutable for the lifetime of the Track — a publisher-side change would otherwise have to fan <em>out</em> to every downstream of a relay, whereas subscriber properties fan <em>in</em> and may still change via SUBSCRIBE_UPDATE.<a href="#section-8.1-1.3.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.3.1">Removed FETCH_OK and trimmed SUBSCRIBE_OK down to a single resolved start group. Publisher properties moved to TRACK_INFO; a FETCH returns bare FRAME messages. All publisher properties are immutable for the lifetime of the Track — a publisher-side change would otherwise have to fan <em>out</em> to every downstream of a relay, whereas subscriber properties fan <em>in</em> and may still change via SUBSCRIBE_UPDATE.<a href="#section-8.1-1.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.4">
-            <p id="section-8.1-1.4.1">Moved the resolved group range into dedicated SUBSCRIBE_START and SUBSCRIBE_END messages on the Subscribe Stream. SUBSCRIBE_START resolves the absolute start (<code>&gt;=</code> the requested start; a larger value implicitly drops the leading range), and SUBSCRIBE_END signals that no group will follow a given sequence (stragglers within the range may still be dropped before FIN).<a href="#section-8.1-1.4.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.4.1">Split the resolved group range across SUBSCRIBE_OK and a new SUBSCRIBE_END. SUBSCRIBE_OK resolves the absolute start (<code>&gt;=</code> the requested start; a larger value implicitly drops the leading range), and SUBSCRIBE_END signals that no group will follow a given sequence (stragglers within the range may still be dropped before FIN). SUBSCRIBE_OK keeps the MoqTransport name and its role as the publisher's positive response.<a href="#section-8.1-1.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.5">
             <p id="section-8.1-1.5.1">Renamed <code>Start Group</code>/<code>End Group</code> to <code>Group Start</code>/<code>Group End</code> in SUBSCRIBE, SUBSCRIBE_UPDATE, and SUBSCRIBE_DROP for consistency with the entity-first naming used elsewhere (e.g. <code>Group Sequence</code>). Wire format unchanged.<a href="#section-8.1-1.5.1" class="pilcrow">¶</a></p>

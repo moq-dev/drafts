@@ -3,9 +3,9 @@
 
 
 moq                                                            L. Curley
-Internet-Draft                                               3 June 2026
+Internet-Draft                                               8 June 2026
 Intended status: Informational                                          
-Expires: 5 December 2026
+Expires: 10 December 2026
 
 
                          Media over QUIC - Lite
@@ -46,7 +46,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 5 December 2026.
+   This Internet-Draft will expire on 10 December 2026.
 
 Copyright Notice
 
@@ -105,7 +105,7 @@ Table of Contents
      7.7.  SUBSCRIBE_UPDATE
      7.8.  TRACK
      7.9.  TRACK_INFO
-     7.10. SUBSCRIBE_START
+     7.10. SUBSCRIBE_OK
      7.11. SUBSCRIBE_END
      7.12. SUBSCRIBE_DROP
      7.13. FETCH
@@ -509,38 +509,39 @@ Table of Contents
 
    The subscriber MUST start a Subscribe Stream with a SUBSCRIBE message
    followed by any number of SUBSCRIBE_UPDATE messages.  The publisher
-   replies with any number of SUBSCRIBE_START, SUBSCRIBE_END, and
-   SUBSCRIBE_DROP messages; the subscription is accepted implicitly (a
-   rejection is a stream reset).  If the publisher cannot serve the
-   subscription — the track does not exist, or it otherwise refuses — it
-   MUST reset the stream rather than leave it pending, and SHOULD do so
-   promptly (within roughly a round trip) so the subscriber is not left
-   waiting.  A subscription the publisher accepts but has no groups for
-   yet is not a rejection: for a live track the publisher MAY withhold
-   SUBSCRIBE_START until the first matching group is produced, and for a
-   track that has already ended with no matching groups it MUST send
-   SUBSCRIBE_END (resolving an empty range) rather than reset.  A
-   subscriber therefore distinguishes "pending" from "refused" by the
-   stream reset, not by a timeout.  The Subscribe Stream does not carry
-   the track's publisher properties — those are immutable and fetched
-   once via a Track Stream (Section 5.1.4) (see TRACK_INFO
-   (Section 7.9)).  The subscriber MUST have the track's TRACK_INFO
-   before it can parse the FRAME messages that arrive on Group Streams,
-   since the timescale and compression determine the frame wire format;
-   it MAY open the Track and Subscribe streams concurrently and buffer
-   frames until TRACK_INFO arrives.
+   replies with a SUBSCRIBE_OK message (confirming the subscription and
+   resolving its start group) followed by any number of SUBSCRIBE_END
+   and SUBSCRIBE_DROP messages; a rejection is a stream reset.  If the
+   publisher cannot serve the subscription — the track does not exist,
+   or it otherwise refuses — it MUST reset the stream rather than leave
+   it pending, and SHOULD do so promptly (within roughly a round trip)
+   so the subscriber is not left waiting.  A subscription the publisher
+   accepts but has no groups for yet is not a rejection: for a live
+   track the publisher MAY withhold SUBSCRIBE_OK until the first
+   matching group resolves the start, and for a track that has already
+   ended with no matching groups it MUST send SUBSCRIBE_END (with no
+   preceding SUBSCRIBE_OK, since there is no start group to resolve)
+   rather than reset.  A subscriber therefore distinguishes "pending"
+   from "refused" by the stream reset, not by a timeout.  The Subscribe
+   Stream does not carry the track's publisher properties — those are
+   immutable and fetched once via a Track Stream (Section 5.1.4) (see
+   TRACK_INFO (Section 7.9)).  The subscriber MUST have the track's
+   TRACK_INFO before it can parse the FRAME messages that arrive on
+   Group Streams, since the timescale and compression determine the
+   frame wire format; it MAY open the Track and Subscribe streams
+   concurrently and buffer frames until TRACK_INFO arrives.
 
-   The publisher sends SUBSCRIBE_START once the absolute start group is
+   The publisher sends SUBSCRIBE_OK once the absolute start group is
    resolved, and SUBSCRIBE_END once no further groups will be produced
-   (see SUBSCRIBE_START (Section 7.10) and SUBSCRIBE_END
-   (Section 7.11)).  The publisher closes the stream (FIN) only once
-   every group from start to end has been accounted for, either via a
-   GROUP stream (completed or reset) or a SUBSCRIBE_DROP message.  This
-   MAY occur after SUBSCRIBE_END, since stragglers within the range can
-   still be dropped.  Unbounded subscriptions (no end group) stay open
-   until the publisher sends SUBSCRIBE_END (and accounts for the
-   remaining groups) to indicate the track has ended, or either endpoint
-   resets.  Either endpoint MAY reset/cancel the stream at any time.
+   (see SUBSCRIBE_OK (Section 7.10) and SUBSCRIBE_END (Section 7.11)).
+   The publisher closes the stream (FIN) only once every group from
+   start to end has been accounted for, either via a GROUP stream
+   (completed or reset) or a SUBSCRIBE_DROP message.  This MAY occur
+   after SUBSCRIBE_END, since stragglers within the range can still be
+   dropped.  Unbounded subscriptions (no end group) stay open until the
+   publisher sends SUBSCRIBE_END (and accounts for the remaining groups)
+   to indicate the track has ended, or either endpoint resets.  Either
+   endpoint MAY reset/cancel the stream at any time.
 
 5.1.3.  Fetch
 
@@ -1171,29 +1172,32 @@ Table of Contents
    name ends in .json), because the relay cannot otherwise predict
    whether compression will help or hurt.
 
-7.10.  SUBSCRIBE_START
+7.10.  SUBSCRIBE_OK
 
-   A SUBSCRIBE_START message is sent by the publisher to resolve the
-   absolute start group of the subscription.  It is the first message
-   the publisher sends on the Subscribe Stream, once the start group is
-   known.
+   A SUBSCRIBE_OK message confirms a subscription and resolves its
+   absolute start group.  It is the first message the publisher sends on
+   the Subscribe Stream, once the start group is known.
 
-   SUBSCRIBE_START Message {
+   This is the trimmed-down counterpart of MoqTransport's SUBSCRIBE_OK:
+   it retains the name and the role of the publisher's positive
+   response, but carries only the resolved start group (all other per-
+   track properties live in TRACK_INFO (Section 7.9)).
+
+   SUBSCRIBE_OK Message {
      Type (i) = 0x0
      Message Length (i)
      Group (i)
    }
 
-   *Type*: Set to 0x0 to indicate a SUBSCRIBE_START message.
+   *Type*: Set to 0x0 to indicate a SUBSCRIBE_OK message.
 
    *Group*: The absolute sequence number of the first group that will be
    delivered.  This MUST be greater than or equal to the requested Group
    Start (see Section 5.1.2).  If it is strictly greater, the groups in
-   between are unavailable and will not be delivered; SUBSCRIBE_START
-   thus also acts as an implicit drop of that leading range, and no
-   separate SUBSCRIBE_DROP is required for it.  A subscriber that
-   requested the latest group (Group Start = 0) learns the resolved
-   sequence here.
+   between are unavailable and will not be delivered; SUBSCRIBE_OK thus
+   also acts as an implicit drop of that leading range, and no separate
+   SUBSCRIBE_DROP is required for it.  A subscriber that requested the
+   latest group (Group Start = 0) learns the resolved sequence here.
 
 7.11.  SUBSCRIBE_END
 
@@ -1222,7 +1226,7 @@ Table of Contents
    Stream when groups cannot be served.  It MAY arrive at any point
    after the subscription is opened, including after SUBSCRIBE_END for
    stragglers within the resolved range (a leading range is instead
-   dropped implicitly by SUBSCRIBE_START).
+   dropped implicitly by SUBSCRIBE_OK).
 
    SUBSCRIBE_DROP Message {
      Type (i) = 0x2
@@ -1424,20 +1428,21 @@ Table of Contents
       so the properties are no longer echoed on every response —
       notably, group-by-group FETCHes reuse one lookup.
 
-   *  Removed SUBSCRIBE_OK and FETCH_OK.  Publisher properties moved to
-      TRACK_INFO; a subscription is now accepted implicitly (rejection
-      is a stream reset) and a FETCH returns bare FRAME messages.  All
-      publisher properties are immutable for the lifetime of the Track —
-      a publisher-side change would otherwise have to fan _out_ to every
-      downstream of a relay, whereas subscriber properties fan _in_ and
-      may still change via SUBSCRIBE_UPDATE.
+   *  Removed FETCH_OK and trimmed SUBSCRIBE_OK down to a single
+      resolved start group.  Publisher properties moved to TRACK_INFO; a
+      FETCH returns bare FRAME messages.  All publisher properties are
+      immutable for the lifetime of the Track — a publisher-side change
+      would otherwise have to fan _out_ to every downstream of a relay,
+      whereas subscriber properties fan _in_ and may still change via
+      SUBSCRIBE_UPDATE.
 
-   *  Moved the resolved group range into dedicated SUBSCRIBE_START and
-      SUBSCRIBE_END messages on the Subscribe Stream.  SUBSCRIBE_START
-      resolves the absolute start (>= the requested start; a larger
-      value implicitly drops the leading range), and SUBSCRIBE_END
-      signals that no group will follow a given sequence (stragglers
-      within the range may still be dropped before FIN).
+   *  Split the resolved group range across SUBSCRIBE_OK and a new
+      SUBSCRIBE_END.  SUBSCRIBE_OK resolves the absolute start (>= the
+      requested start; a larger value implicitly drops the leading
+      range), and SUBSCRIBE_END signals that no group will follow a
+      given sequence (stragglers within the range may still be dropped
+      before FIN).  SUBSCRIBE_OK keeps the MoqTransport name and its
+      role as the publisher's positive response.
 
    *  Renamed Start Group/End Group to Group Start/Group End in
       SUBSCRIBE, SUBSCRIBE_UPDATE, and SUBSCRIBE_DROP for consistency
