@@ -287,9 +287,10 @@ There MAY be multiple Announce Streams, potentially containing overlapping prefi
 A subscriber opens Subscribe Streams to request a Track.
 
 The subscriber MUST start a Subscribe Stream with a SUBSCRIBE message followed by any number of SUBSCRIBE_UPDATE messages.
-The publisher replies with a SUBSCRIBE_OK message (confirming the subscription and resolving its start group) followed by any number of SUBSCRIBE_END and SUBSCRIBE_DROP messages; a rejection is a stream reset.
-If the publisher cannot serve the subscription — the track does not exist, or it otherwise refuses — it MUST reset the stream rather than leave it pending, and SHOULD do so promptly (within roughly a round trip) so the subscriber is not left waiting.
-A subscription the publisher accepts but has no groups for yet is not a rejection: for a live track the publisher MAY withhold SUBSCRIBE_OK until the first matching group resolves the start, and for a track that has already ended with no matching groups it MUST send SUBSCRIBE_END (with no preceding SUBSCRIBE_OK, since there is no start group to resolve) rather than reset. A subscriber therefore distinguishes "pending" from "refused" by the stream reset, not by a timeout.
+When a start group can be resolved, the publisher replies with a SUBSCRIBE_OK message (confirming the subscription and resolving its start group), followed by any number of SUBSCRIBE_END and SUBSCRIBE_DROP messages.
+When the accepted track has already ended with no matching groups there is no start group to resolve, so the publisher sends SUBSCRIBE_END with no preceding SUBSCRIBE_OK.
+A rejection is a stream reset: if the publisher cannot serve the subscription — the track does not exist, or it otherwise refuses — it MUST reset the stream rather than leave it pending, and SHOULD do so promptly (within roughly a round trip) so the subscriber is not left waiting.
+A subscription the publisher accepts but has no groups for yet is not a rejection: for a live track the publisher MAY withhold SUBSCRIBE_OK until the first matching group resolves the start. A subscriber therefore distinguishes "pending" from "refused" by the stream reset, not by a timeout.
 The Subscribe Stream does not carry the track's publisher properties — those are immutable and fetched once via a [Track Stream](#track-stream) (see [TRACK_INFO](#track-info)).
 The subscriber MUST have the track's TRACK_INFO before it can parse the FRAME messages that arrive on Group Streams, since the timescale and compression determine the frame wire format; it MAY open the Track and Subscribe streams concurrently and buffer frames until TRACK_INFO arrives.
 
