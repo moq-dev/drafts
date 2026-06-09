@@ -1048,7 +1048,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Curley</td>
-<td class="center">Expires 10 December 2026</td>
+<td class="center">Expires 11 December 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1061,12 +1061,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-lcurley-moq-lite-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-06-08" class="published">8 June 2026</time>
+<time datetime="2026-06-09" class="published">9 June 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-12-10">10 December 2026</time></dd>
+<dd class="expires"><time datetime="2026-12-11">11 December 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1112,7 +1112,7 @@ While primarily designed for media, the transport is payload agnostic and can be
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 10 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 11 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1267,6 +1267,9 @@ While primarily designed for media, the transport is payload agnostic and can be
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3.2.1">
                     <p id="section-toc.1-1.7.2.3.2.1.1"><a href="#section-7.3.1" class="auto internal xref">7.3.1</a>.  <a href="#name-probe-parameter" class="internal xref">Probe Parameter</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3.2.2">
+                    <p id="section-toc.1-1.7.2.3.2.2.1"><a href="#section-7.3.2" class="auto internal xref">7.3.2</a>.  <a href="#name-path-parameter" class="internal xref">Path Parameter</a></p>
 </li>
                 </ul>
 </li>
@@ -1441,21 +1444,23 @@ There is currently no P2P support within QUIC so it's out of scope for moq-lite.
 <p id="section-3.1-2">The moq-lite version identifier is <code>moq-lite-xx</code> where <code>xx</code> is the two-digit draft version.
 For bare QUIC, this is negotiated as an ALPN token during the QUIC handshake.
 For WebTransport over HTTP/3, the QUIC ALPN remains <code>h3</code> and the moq-lite version is advertised via the <code>WT-Available-Protocols</code> and <code>WT-Protocol</code> CONNECT headers.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
-<p id="section-3.1-3">When UDP is unavailable, moq-lite-05 <span class="bcp14">MAY</span> also run over reliable byte-stream transports via Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span>.
-Qmux provides a length-delimited polyfill for QUIC streams on top of TCP/TLS or WebSocket; see <a href="#transports" class="auto internal xref">Section 4.2</a> for the specific bindings and ALPN negotiation.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
-<p id="section-3.1-4">The session is active immediately after the QUIC/WebTransport connection is established.
-Both endpoints <span class="bcp14">SHOULD</span> begin sending and receiving streams right away to avoid an extra round-trip.<a href="#section-3.1-4" class="pilcrow">¶</a></p>
-<p id="section-3.1-5">Optional capabilities and extensions are negotiated via a SETUP message (see <a href="#setup" class="auto internal xref">Section 7.3</a>).
+<p id="section-3.1-3">The bindings negotiated solely via ALPN (bare QUIC and Qmux over TCP/TLS) have no request URI, so a client conveys the request path it wishes to reach via the <span><a href="#path-parameter" class="internal xref">Path Parameter</a> (<a href="#path-parameter" class="auto internal xref">Section 7.3.2</a>)</span> in SETUP.
+The remaining bindings carry the path in their own handshake and do not use this parameter; see <span><a href="#path-parameter" class="internal xref">Path Parameter</a> (<a href="#path-parameter" class="auto internal xref">Section 7.3.2</a>)</span>.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
+<p id="section-3.1-4">When UDP is unavailable, moq-lite-05 <span class="bcp14">MAY</span> also run over reliable byte-stream transports via Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span>.
+Qmux provides a length-delimited polyfill for QUIC streams on top of TCP/TLS or WebSocket; see <a href="#transports" class="auto internal xref">Section 4.2</a> for the specific bindings and ALPN negotiation.<a href="#section-3.1-4" class="pilcrow">¶</a></p>
+<p id="section-3.1-5">The session is active immediately after the QUIC/WebTransport connection is established.
+Both endpoints <span class="bcp14">SHOULD</span> begin sending and receiving streams right away to avoid an extra round-trip.<a href="#section-3.1-5" class="pilcrow">¶</a></p>
+<p id="section-3.1-6">Optional capabilities and extensions are negotiated via a SETUP message (see <a href="#setup" class="auto internal xref">Section 7.3</a>).
 Each endpoint <span class="bcp14">MUST</span> open a unidirectional Setup Stream at the start of the session, send a single SETUP message advertising what it supports, and immediately close the stream (FIN); an endpoint with no optional capabilities sends a SETUP with an empty parameter list.
 The two SETUP messages are independent; neither endpoint waits for the peer's SETUP before opening other streams.
 Because a SETUP is always sent, the buffering below is bounded: an endpoint knows the peer's full capability set has arrived once it receives that single SETUP.
 An endpoint <span class="bcp14">SHOULD</span> continue to send and process non-Setup streams until a negotiated extension would change the behavior or encoding of a stream, in which case it <span class="bcp14">MUST</span> buffer that stream until the peer's SETUP has been received.
-For example, if an extension adds a field to SUBSCRIBE_OK, the subscriber buffers SUBSCRIBE_OK until SETUP arrives so the new field can be parsed.<a href="#section-3.1-5" class="pilcrow">¶</a></p>
-<p id="section-3.1-6">As a fallback, an endpoint that opens an extension stream the peer does not support simply sees that stream reset (see <a href="#stream_type" class="auto internal xref">Section 7.2</a>).
-A negotiated capability applies only to this hop; each session is negotiated independently and relays <span class="bcp14">MUST NOT</span> forward SETUP.<a href="#section-3.1-6" class="pilcrow">¶</a></p>
-<p id="section-3.1-7">While moq-lite is a point-to-point protocol, it's intended to work end-to-end via relays.
+For example, if an extension adds a field to SUBSCRIBE_OK, the subscriber buffers SUBSCRIBE_OK until SETUP arrives so the new field can be parsed.<a href="#section-3.1-6" class="pilcrow">¶</a></p>
+<p id="section-3.1-7">As a fallback, an endpoint that opens an extension stream the peer does not support simply sees that stream reset (see <a href="#stream_type" class="auto internal xref">Section 7.2</a>).
+A negotiated capability applies only to this hop; each session is negotiated independently and relays <span class="bcp14">MUST NOT</span> forward SETUP.<a href="#section-3.1-7" class="pilcrow">¶</a></p>
+<p id="section-3.1-8">While moq-lite is a point-to-point protocol, it's intended to work end-to-end via relays.
 Each client establishes a session with a CDN edge server, ideally the closest one.
-Any broadcasts and subscriptions are transparently proxied by the CDN behind the scenes.<a href="#section-3.1-7" class="pilcrow">¶</a></p>
+Any broadcasts and subscriptions are transparently proxied by the CDN behind the scenes.<a href="#section-3.1-8" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="broadcast">
@@ -2123,6 +2128,11 @@ The following Setup Parameters are defined:<a href="#section-7.3-7" class="pilcr
               <td class="text-left" rowspan="1" colspan="1">Probe</td>
               <td class="text-left" rowspan="1" colspan="1">Level (i)</td>
             </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0x2</td>
+              <td class="text-left" rowspan="1" colspan="1">Path</td>
+              <td class="text-left" rowspan="1" colspan="1">Path (s)</td>
+            </tr>
           </tbody>
         </table>
 <div id="probe-parameter">
@@ -2156,6 +2166,34 @@ The Parameter Value is a variable-length integer level, where each level include
               <p id="section-7.3.1-5.3.1">At <code>Increase</code>, the subscriber <span class="bcp14">MAY</span> request a target bitrate and expect the publisher to actively probe up to it.<a href="#section-7.3.1-5.3.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
+</section>
+</div>
+<div id="path-parameter">
+<section id="section-7.3.2">
+          <h4 id="name-path-parameter">
+<a href="#section-7.3.2" class="section-number selfRef">7.3.2. </a><a href="#name-path-parameter" class="section-name selfRef">Path Parameter</a>
+          </h4>
+<p id="section-7.3.2-1">The Path Parameter carries the request path the client wishes to reach, equivalent to the path component of a moq-lite URI.
+A server uses it to route the session to the correct origin, relay, or virtual host before any broadcasts are exchanged; its interpretation is otherwise application-defined and opaque to moq-lite.
+Unlike the other Setup Parameters it is not a capability — it is connection metadata that rides along in SETUP because that is the first client-to-server message of the session.<a href="#section-7.3.2-1" class="pilcrow">¶</a></p>
+<p id="section-7.3.2-2">The Parameter Value is a non-empty UTF-8 string that begins with <code>/</code> and uses the path syntax of a URI <span>[<a href="#RFC3986" class="cite xref">RFC3986</a>]</span>.<a href="#section-7.3.2-2" class="pilcrow">¶</a></p>
+<p id="section-7.3.2-3">This parameter exists for bindings that have no request URI of their own: the native QUIC binding (binding 1 in <a href="#transports" class="auto internal xref">Section 4.2</a>) and the Qmux-over-TCP/TLS binding (binding 3), both of which negotiate only an ALPN token.
+The remaining bindings convey the path in their own handshake.<a href="#section-7.3.2-3" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-7.3.2-4.1">
+              <p id="section-7.3.2-4.1.1">A client using a binding without a request URI (binding 1 or 3) <span class="bcp14">MUST</span> send exactly one Path Parameter in its SETUP.<a href="#section-7.3.2-4.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-7.3.2-4.2">
+              <p id="section-7.3.2-4.2.1">The Path Parameter <span class="bcp14">MUST NOT</span> be sent on a binding that carries a request URI. The WebTransport (binding 2) and Qmux-over-WebSocket (binding 4) bindings convey the path in their handshake URI (the CONNECT request path and the WebSocket request URI, respectively). A server that receives a Path Parameter on either of these bindings <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION.<a href="#section-7.3.2-4.2.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-7.3.2-4.3">
+              <p id="section-7.3.2-4.3.1">A server <span class="bcp14">MUST NOT</span> send a Path Parameter. SETUP is bidirectional, but the path is meaningful only from client to server; a client that receives a Path Parameter <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION.<a href="#section-7.3.2-4.3.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-7.3.2-4.4">
+              <p id="section-7.3.2-4.4.1">A server that receives a Path that is empty or is not a valid URI path <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION. A server that does not recognize or support the requested path <span class="bcp14">MUST</span> close the session.<a href="#section-7.3.2-4.4.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+<p id="section-7.3.2-5">A relay <span class="bcp14">MUST NOT</span> forward the Path Parameter; like every other negotiated capability it applies only to this hop (see <a href="#session" class="auto internal xref">Section 3.1</a>).<a href="#section-7.3.2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -3064,6 +3102,10 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
 <dt id="RFC2119">[RFC2119]</dt>
       <dd>
 <span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC3986">[RFC3986]</dt>
+      <dd>
+<span class="refAuthor">Berners-Lee, T.</span>, <span class="refAuthor">Fielding, R.</span>, and <span class="refAuthor">L. Masinter</span>, <span class="refTitle">"Uniform Resource Identifier (URI): Generic Syntax"</span>, <span class="seriesInfo">STD 66</span>, <span class="seriesInfo">RFC 3986</span>, <span class="seriesInfo">DOI 10.17487/RFC3986</span>, <time datetime="2005-01" class="refDate">January 2005</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc3986">https://www.rfc-editor.org/rfc/rfc3986</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC6455">[RFC6455]</dt>
       <dd>
