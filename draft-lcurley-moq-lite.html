@@ -2175,7 +2175,7 @@ The Parameter Value is a variable-length integer level, where each level include
           </h4>
 <p id="section-7.3.2-1">The Path Parameter carries the request path the client wishes to reach, equivalent to the path component of a moq-lite URI.
 A server uses it to route the session to the correct origin, relay, or virtual host before any broadcasts are exchanged; its interpretation is otherwise application-defined and opaque to moq-lite.
-Unlike the other Setup Parameters it is not a capability — it is connection metadata that rides along in SETUP because that is the first client-to-server message of the session.<a href="#section-7.3.2-1" class="pilcrow">¶</a></p>
+Unlike the capability-style Setup Parameters, it is per-hop setup metadata that rides along in SETUP because that is the first client-to-server message of the session.<a href="#section-7.3.2-1" class="pilcrow">¶</a></p>
 <p id="section-7.3.2-2">The Parameter Value is a non-empty UTF-8 string that begins with <code>/</code> and uses the path syntax of a URI <span>[<a href="#RFC3986" class="cite xref">RFC3986</a>]</span>.<a href="#section-7.3.2-2" class="pilcrow">¶</a></p>
 <p id="section-7.3.2-3">This parameter exists for bindings that have no request URI of their own: the native QUIC binding (binding 1 in <a href="#transports" class="auto internal xref">Section 4.2</a>) and the Qmux-over-TCP/TLS binding (binding 3), both of which negotiate only an ALPN token.
 The remaining bindings convey the path in their own handshake.<a href="#section-7.3.2-3" class="pilcrow">¶</a></p>
@@ -2193,7 +2193,7 @@ The remaining bindings convey the path in their own handshake.<a href="#section-
               <p id="section-7.3.2-4.4.1">A server that receives a Path that is empty or is not a valid URI path <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION. A server that does not recognize or support the requested path <span class="bcp14">MUST</span> close the session.<a href="#section-7.3.2-4.4.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-7.3.2-5">A relay <span class="bcp14">MUST NOT</span> forward the Path Parameter; like every other negotiated capability it applies only to this hop (see <a href="#session" class="auto internal xref">Section 3.1</a>).<a href="#section-7.3.2-5" class="pilcrow">¶</a></p>
+<p id="section-7.3.2-5">A relay <span class="bcp14">MUST NOT</span> forward the Path Parameter; like other per-hop setup metadata it applies only to this hop (see <a href="#session" class="auto internal xref">Section 3.1</a>).<a href="#section-7.3.2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>

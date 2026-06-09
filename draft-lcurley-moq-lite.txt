@@ -1020,9 +1020,9 @@ Table of Contents
    uses it to route the session to the correct origin, relay, or virtual
    host before any broadcasts are exchanged; its interpretation is
    otherwise application-defined and opaque to moq-lite.  Unlike the
-   other Setup Parameters it is not a capability — it is connection
-   metadata that rides along in SETUP because that is the first client-
-   to-server message of the session.
+   capability-style Setup Parameters, it is per-hop setup metadata that
+   rides along in SETUP because that is the first client-to-server
+   message of the session.
 
    The Parameter Value is a non-empty UTF-8 string that begins with /
    and uses the path syntax of a URI [RFC3986].
@@ -1053,8 +1053,8 @@ Table of Contents
       that does not recognize or support the requested path MUST close
       the session.
 
-   A relay MUST NOT forward the Path Parameter; like every other
-   negotiated capability it applies only to this hop (see Section 3.1).
+   A relay MUST NOT forward the Path Parameter; like other per-hop setup
+   metadata it applies only to this hop (see Section 3.1).
 
 7.4.  ANNOUNCE_INTEREST
 
