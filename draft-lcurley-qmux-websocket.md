@@ -30,7 +30,6 @@ informative:
 
 QMux [qmux] is a polyfill that runs QUIC applications over an ordered, reliable byte-stream transport such as TCP with TLS.
 This document defines a binding for QMux over WebSocket [RFC6455].
-The mapping is straightforward because both layers provide length-delimited messages over a reliable byte stream: a single WebSocket binary message carries exactly one QMux Record's frames, so the Record `Size` field is omitted.
 A WebSocket binding lets QUIC applications reach environments where UDP is blocked and where only an HTTP/WebSocket stack is available, including web browsers that lack WebTransport.
 
 --- middle
@@ -86,8 +85,7 @@ WebSocket has no ALPN exchange, so this binding uses the WebSocket subprotocol n
 
 ## Subprotocol Identifier
 The subprotocol identifier is exactly the application protocol identifier that the application would use as its ALPN over native QUIC; for example `moq-transport-18`.
-No QMux version token appears on the wire.
-The application protocol identifier implies the QMux wire-format version per {{versions}}, so a single identifier selects both the application protocol and the wire format unambiguously.
+The application protocol identifier also determines the QMux wire-format version — for example `moq-transport-18` indicates that `qmux-01` is to be used — so there is no separate QMux version negotiation (see {{versions}}).
 
 ## Client Behavior
 A client offers one or more application protocol identifiers in the `Sec-WebSocket-Protocol` request header, in decreasing order of preference.
@@ -162,10 +160,11 @@ This keep-alive operates at the WebSocket layer and is separate from the QMux `m
 
 
 # Datagrams {#datagrams}
-A WebSocket connection is reliable and ordered, so it cannot provide the unreliable, unordered delivery of the QUIC datagram extension.
+QMux datagrams are supported.
+They are negotiated and encoded exactly as in [qmux]: an endpoint advertises the datagram transport parameter and carries QMux DATAGRAM frames inside binary messages, like any other frame ({{framing}}).
 
-An endpoint MUST NOT negotiate the QMux datagram transport parameter over this binding, and MUST NOT send QMux DATAGRAM frames.
-An application that uses datagrams over native QUIC MUST provide an alternative over this binding (for example, by carrying the same payloads on a QUIC stream).
+A WebSocket connection is reliable and ordered, so DATAGRAM frames carried over this binding are delivered reliably and in order rather than with the best-effort, drop-on-congestion semantics of the QUIC datagram extension.
+This difference is inherent to running over a reliable byte-stream transport and applies equally to QMux over TCP or TLS; an application that depends on datagrams being droppable over native QUIC needs to account for it.
 
 
 # Connection Close {#close}
