@@ -232,9 +232,9 @@ Table of Contents
    On its upstream subscription, the relay receives payloads compressed
    if and only if that hop compressed them (the extension negotiated and
    the relay advertised the algorithm); it decompresses them as needed.
-   On each downstream subscription it serves, it compresses payloads
-   with the track's algorithm when that downstream negotiated the
-   extension and advertised the algorithm, and sends them verbatim
+   On each downstream subscription the relay serves, it compresses
+   payloads with the track's algorithm when that downstream negotiated
+   the extension and advertised the algorithm, and sends them verbatim
    otherwise.
 
    Compression is thus driven by the publisher's track property, not by
@@ -258,10 +258,12 @@ Table of Contents
 
    A malicious sender could emit a small compressed payload that
    decompresses to a very large buffer (a "decompression bomb").  A
-   receiver MUST bound the size of a decompressed object payload and
-   MUST reset the stream with a PROTOCOL_VIOLATION (or an application
-   error) if the bound is exceeded, rather than allocating unbounded
-   memory.
+   receiver MUST bound the size of a decompressed object payload.  If
+   the bound is exceeded it MUST reset the affected Subscribe/Fetch
+   stream (rather than allocate unbounded memory) and MAY close the
+   session with a PROTOCOL_VIOLATION if it considers the peer abusive;
+   the reset is stream-scoped so a single bad object does not tear down
+   unrelated subscriptions.
 
    Compression is orthogonal to [moqt] end-to-end encryption: an
    encrypted payload is effectively incompressible, so a publisher using
