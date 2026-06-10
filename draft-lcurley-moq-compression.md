@@ -118,7 +118,7 @@ There is no shared dictionary or state between objects, so each object decompres
 A relay forwards the COMPRESSION track property unchanged — it is the publisher's end-to-end signal — and applies compression independently on each hop.
 
 On its upstream subscription, the relay receives payloads compressed if and only if that hop compressed them (the extension negotiated and the relay advertised the algorithm); it decompresses them as needed.
-On each downstream subscription it serves, it compresses payloads with the track's algorithm when that downstream negotiated the extension and advertised the algorithm, and sends them verbatim otherwise.
+On each downstream subscription the relay serves, it compresses payloads with the track's algorithm when that downstream negotiated the extension and advertised the algorithm, and sends them verbatim otherwise.
 
 Compression is thus driven by the publisher's track property, not by the relay: a relay does not compress a track the publisher did not mark.
 In every case the decompressed bytes delivered to the application MUST be identical to what the origin published.
@@ -132,7 +132,7 @@ A publisher MUST NOT set COMPRESSION on a track whose object payloads combine se
 Because compression here is per-object with no cross-object dictionary, the exposure is bounded to within a single object, but it is not eliminated.
 
 A malicious sender could emit a small compressed payload that decompresses to a very large buffer (a "decompression bomb").
-A receiver MUST bound the size of a decompressed object payload and MUST reset the stream with a PROTOCOL_VIOLATION (or an application error) if the bound is exceeded, rather than allocating unbounded memory.
+A receiver MUST bound the size of a decompressed object payload. If the bound is exceeded it MUST reset the affected Subscribe/Fetch stream (rather than allocate unbounded memory) and MAY close the session with a PROTOCOL_VIOLATION if it considers the peer abusive; the reset is stream-scoped so a single bad object does not tear down unrelated subscriptions.
 
 Compression is orthogonal to {{moqt}} end-to-end encryption: an encrypted payload is effectively incompressible, so a publisher using end-to-end encryption SHOULD omit COMPRESSION (or use `none`).
 
