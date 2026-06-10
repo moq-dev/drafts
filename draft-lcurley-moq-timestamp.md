@@ -142,17 +142,17 @@ This document requests the following registrations.
 High, distinctive values are requested to avoid the low ranges reserved by {{moqt}} and to minimize collisions with provisional registrations by other extensions; they also avoid the greasing pattern (`0x7f * N + 0x9D`).
 The three property Types are even so that each value is a bare varint with no length prefix (see {{moqt}} Section 2.5).
 
-## MoQ Setup Options
+## MOQT Setup Options
 
-This document requests a registration in the "MoQ Setup Options" registry ({{moqt}} Section 15.4), whose policy is Specification Required.
+This document requests a registration in the "MOQT Setup Options" registry ({{moqt}} Section 15.4), whose policy is Specification Required.
 
 | Value   | Name      | Reference     |
 |:--------|:----------|:--------------|
 | 0x915C1 | TIMESTAMP | This Document |
 
-## MoQ Key-Value-Pair Types
+## MOQT Properties
 
-This document requests registrations in the "MoQ Key-Value-Pair Types" registry ({{moqt}} Section 15), used for message parameters and object/track properties.
+This document requests registrations in the "MOQT Properties" registry ({{moqt}} Section 15.8), used for object and track properties.
 
 | Value   | Name      | Scope  | Reference     |
 |:--------|:----------|:-------|:--------------|

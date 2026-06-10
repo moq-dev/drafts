@@ -134,25 +134,25 @@ This document requests the following registrations.
 High, distinctive values are requested to avoid the low ranges reserved by {{moqt}} and to minimize collisions with provisional registrations by other extensions; they also avoid the greasing pattern (`0x7f * N + 0x9D`).
 The property Type is even so that its value is a bare varint with no length prefix (see {{moqt}} Section 2.5).
 
-## MoQ Setup Options
+## MOQT Setup Options
 
-This document requests a registration in the "MoQ Setup Options" registry ({{moqt}} Section 15.4), whose policy is Specification Required.
+This document requests a registration in the "MOQT Setup Options" registry ({{moqt}} Section 15.4), whose policy is Specification Required.
 
 | Value   | Name        | Reference     |
 |:--------|:------------|:--------------|
 | 0xC03DE | COMPRESSION | This Document |
 
-## MoQ Key-Value-Pair Types
+## MOQT Properties
 
-This document requests a registration in the "MoQ Key-Value-Pair Types" registry ({{moqt}} Section 15), used for message parameters and object/track properties.
+This document requests a registration in the "MOQT Properties" registry ({{moqt}} Section 15.8), used for object and track properties.
 
 | Value   | Name        | Scope | Reference     |
 |:--------|:------------|:------|:--------------|
 | 0xC03D0 | COMPRESSION | Track | This Document |
 
-## MoQ Compression Algorithms
+## MOQT Compression Algorithms
 
-This document requests a new "MoQ Compression Algorithms" registry, with a registration policy of Specification Required.
+This document requests a new "MOQT Compression Algorithms" registry, with a registration policy of Specification Required.
 The initial contents are:
 
 | ID | Name    | Reference     |

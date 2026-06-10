@@ -105,7 +105,8 @@ When a relay receives a namespace advertisement on a session that negotiated thi
 - If its own Hop ID already appears in the list, the advertisement has looped. The relay MUST NOT forward it and SHOULD drop it.
 - Otherwise the relay MAY forward it downstream, appending its own Hop ID as described above.
 
-When bridging from a peer that did not negotiate this extension, a relay MAY synthesize a single leading `0` ("unknown hop") entry to preserve an approximate path length, or MAY omit it; this choice is deployment-specific.
+When bridging from a peer that did not negotiate this extension, a relay SHOULD synthesize a single leading `0` ("unknown hop") entry rather than omitting it.
+Counting the bridged hop keeps path lengths comparable, so that the advisory path selection in the following section behaves consistently across relays that bridge the same non-supporting upstream.
 
 ## Path Selection
 A relay or subscriber that receives advertisements for the same namespace over multiple sessions MAY use the length of the HOP_PATH list as a tiebreaker, preferring the advertisement with the fewest hops (usually the lowest-latency path).
@@ -132,7 +133,8 @@ EXCLUDE_HOP Parameter {
 
 **Hop ID**:
 One or more Hop IDs to exclude, in any order.
-The number of entries is determined by consuming Hop IDs until `Length` bytes have been read; a receiver MUST close the session with a PROTOCOL_VIOLATION if the entries do not exactly fill `Length`, or if `Length` is 0.
+The number of entries is determined by consuming Hop IDs until `Length` bytes have been read; a receiver MUST close the session with a PROTOCOL_VIOLATION if the entries do not exactly fill `Length`.
+An empty list (`Length` 0) is permitted and means "exclude nothing"; like an empty HOP_PATH it is a harmless no-op and a receiver MUST NOT treat it as an error.
 
 A relay that receives a SUBSCRIBE_NAMESPACE carrying EXCLUDE_HOP SHOULD NOT send, on that session, any PUBLISH_NAMESPACE whose HOP_PATH contains any of the listed Hop IDs (including the implicit final entry the relay would itself append).
 The exclusion is scoped to the namespace subscription it accompanies.
@@ -158,22 +160,23 @@ This document requests the following registrations.
 High, distinctive values are requested to avoid the low ranges reserved by {{moqt}} and to minimize collisions with provisional registrations by other extensions; they also avoid the greasing pattern (`0x7f * N + 0x9D`).
 The two parameter Types are odd so that each is length-prefixed (see {{moqt}} Section 2.5).
 
-## MoQ Setup Options
+## MOQT Setup Options
 
-This document requests a registration in the "MoQ Setup Options" registry ({{moqt}} Section 15.4), whose policy is Specification Required.
+This document requests a registration in the "MOQT Setup Options" registry ({{moqt}} Section 15.4), whose policy is Specification Required.
 
 | Value   | Name       | Reference     |
 |:--------|:-----------|:--------------|
 | 0x40B55 | RELAY_HOPS | This Document |
 
-## MoQ Key-Value-Pair Types
+## MOQT Message Parameters
 
-This document requests registrations in the "MoQ Key-Value-Pair Types" registry ({{moqt}} Section 15), used for message parameters and object/track properties.
+This document requests registrations in the "MOQT Message Parameters" registry ({{moqt}} Section 15.7).
+HOP_PATH and EXCLUDE_HOP are message parameters carried in PUBLISH_NAMESPACE and SUBSCRIBE_NAMESPACE respectively.
 
-| Value   | Name        | Carried In         | Reference     |
-|:--------|:------------|:-------------------|:--------------|
-| 0x40B57 | HOP_PATH    | PUBLISH_NAMESPACE  | This Document |
-| 0x40B59 | EXCLUDE_HOP | SUBSCRIBE_NAMESPACE| This Document |
+| Value   | Name        | Carried In          | Reference     |
+|:--------|:------------|:--------------------|:--------------|
+| 0x40B57 | HOP_PATH    | PUBLISH_NAMESPACE   | This Document |
+| 0x40B59 | EXCLUDE_HOP | SUBSCRIBE_NAMESPACE | This Document |
 
 
 --- back
