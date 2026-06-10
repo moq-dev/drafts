@@ -9,7 +9,6 @@
 <meta content="
        QMux   is a polyfill that runs QUIC applications over an ordered, reliable byte-stream transport such as TCP with TLS.
 This document defines a binding for QMux over WebSocket  .
-The mapping is straightforward because both layers provide length-delimited messages over a reliable byte stream: a single WebSocket binary message carries exactly one QMux Record's frames, so the Record  Size  field is omitted.
 A WebSocket binding lets QUIC applications reach environments where UDP is blocked and where only an HTTP/WebSocket stack is available, including web browsers that lack WebTransport. 
     " name="description">
 <meta content="xml2rfc 3.33.0" name="generator">
@@ -1049,7 +1048,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Curley</td>
-<td class="center">Expires 11 December 2026</td>
+<td class="center">Expires 12 December 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1062,12 +1061,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-lcurley-qmux-websocket-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-06-09" class="published">9 June 2026</time>
+<time datetime="2026-06-10" class="published">10 June 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-12-11">11 December 2026</time></dd>
+<dd class="expires"><time datetime="2026-12-12">12 December 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1081,7 +1080,6 @@ svg :is([fill="white"], [fill^="#fff"]) {
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
 <p id="section-abstract-1">QMux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span> is a polyfill that runs QUIC applications over an ordered, reliable byte-stream transport such as TCP with TLS.
 This document defines a binding for QMux over WebSocket <span>[<a href="#RFC6455" class="cite xref">RFC6455</a>]</span>.
-The mapping is straightforward because both layers provide length-delimited messages over a reliable byte stream: a single WebSocket binary message carries exactly one QMux Record's frames, so the Record <code>Size</code> field is omitted.
 A WebSocket binding lets QUIC applications reach environments where UDP is blocked and where only an HTTP/WebSocket stack is available, including web browsers that lack WebTransport.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
@@ -1114,7 +1112,7 @@ A WebSocket binding lets QUIC applications reach environments where UDP is block
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 11 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 12 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1290,8 +1288,7 @@ WebSocket has no ALPN exchange, so this binding uses the WebSocket subprotocol n
 <a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-subprotocol-identifier" class="section-name selfRef">Subprotocol Identifier</a>
         </h3>
 <p id="section-5.1-1">The subprotocol identifier is exactly the application protocol identifier that the application would use as its ALPN over native QUIC; for example <code>moq-transport-18</code>.
-No QMux version token appears on the wire.
-The application protocol identifier implies the QMux wire-format version per <a href="#versions" class="auto internal xref">Section 8</a>, so a single identifier selects both the application protocol and the wire format unambiguously.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+The application protocol identifier also determines the QMux wire-format version — for example <code>moq-transport-18</code> indicates that <code>qmux-01</code> is to be used — so there is no separate QMux version negotiation (see <a href="#versions" class="auto internal xref">Section 8</a>).<a href="#section-5.1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="client-behavior">
@@ -1395,9 +1392,10 @@ An endpoint replies to a Ping with a Pong per <span>[<a href="#RFC6455" class="c
       <h2 id="name-datagrams">
 <a href="#section-10" class="section-number selfRef">10. </a><a href="#name-datagrams" class="section-name selfRef">Datagrams</a>
       </h2>
-<p id="section-10-1">A WebSocket connection is reliable and ordered, so it cannot provide the unreliable, unordered delivery of the QUIC datagram extension.<a href="#section-10-1" class="pilcrow">¶</a></p>
-<p id="section-10-2">An endpoint <span class="bcp14">MUST NOT</span> negotiate the QMux datagram transport parameter over this binding, and <span class="bcp14">MUST NOT</span> send QMux DATAGRAM frames.
-An application that uses datagrams over native QUIC <span class="bcp14">MUST</span> provide an alternative over this binding (for example, by carrying the same payloads on a QUIC stream).<a href="#section-10-2" class="pilcrow">¶</a></p>
+<p id="section-10-1">QMux datagrams are supported.
+They are negotiated and encoded exactly as in <span>[<a href="#qmux" class="cite xref">qmux</a>]</span>: an endpoint advertises the datagram transport parameter and carries QMux DATAGRAM frames inside binary messages, like any other frame (<a href="#framing" class="auto internal xref">Section 6</a>).<a href="#section-10-1" class="pilcrow">¶</a></p>
+<p id="section-10-2">A WebSocket connection is reliable and ordered, so DATAGRAM frames carried over this binding are delivered reliably and in order rather than with the best-effort, drop-on-congestion semantics of the QUIC datagram extension.
+This difference is inherent to running over a reliable byte-stream transport and applies equally to QMux over TCP or TLS; an application that depends on datagrams being droppable over native QUIC needs to account for it.<a href="#section-10-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="close">
