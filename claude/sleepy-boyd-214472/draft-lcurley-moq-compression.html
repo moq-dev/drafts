@@ -1266,20 +1266,23 @@ COMPRESSION Track Property {
 <p id="section-4-3"><strong>Value</strong>:
 The Algorithm identifier the publisher recommends for this track's payloads.
 The absence of the property, or a value of <code>none</code> (0), means the track is not marked for compression and its payloads are always transmitted verbatim.<a href="#section-4-3" class="pilcrow">¶</a></p>
-<p id="section-4-4">The property is fixed for the lifetime of the track and <span class="bcp14">MUST NOT</span> change; a relay forwards it unchanged.<a href="#section-4-4" class="pilcrow">¶</a></p>
-<p id="section-4-5">Whether payloads are actually compressed is decided per hop:<a href="#section-4-5" class="pilcrow">¶</a></p>
+<p id="section-4-4">The property is fixed for the lifetime of the track and <span class="bcp14">MUST NOT</span> change.
+A relay <span class="bcp14">MUST</span> forward it unchanged on every hop, including a hop that has not negotiated the extension: there it is simply an ignored unknown Key-Value-Pair, but forwarding it lets a further-downstream hop that does negotiate the extension still act on the publisher's signal.<a href="#section-4-4" class="pilcrow">¶</a></p>
+<p id="section-4-5">Compression is enabled only by the combination of this track property and the extension being negotiated on a hop.
+A publisher <span class="bcp14">MUST NOT</span> compress object payloads on a track that does not carry the COMPRESSION property, and there is no way to enable compression on a per-object basis: the property governs the whole track, and on a compressing hop every non-empty payload is compressed.<a href="#section-4-5" class="pilcrow">¶</a></p>
+<p id="section-4-6">Whether payloads are actually compressed is decided per hop:<a href="#section-4-6" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4-6.1">
-          <p id="section-4-6.1.1">On a hop where the extension is negotiated and the receiver advertised the property's algorithm, every non-empty object payload <span class="bcp14">MUST</span> be compressed with that algorithm, and the receiver decompresses it.<a href="#section-4-6.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4-7.1">
+          <p id="section-4-7.1.1">On a hop where the extension is negotiated and the receiver advertised the property's algorithm, every non-empty object payload <span class="bcp14">MUST</span> be compressed with that algorithm, and the receiver decompresses it.<a href="#section-4-7.1.1" class="pilcrow">¶</a></p>
 </li>
-        <li class="normal" id="section-4-6.2">
-          <p id="section-4-6.2.1">On any other hop — the extension not negotiated, or the receiver did not advertise that algorithm — payloads are sent verbatim. The receiver either never sees the property (an ignored unknown Key-Value-Pair) or sees it but knows the sender was not permitted to compress for it, so it treats the payloads as verbatim either way.<a href="#section-4-6.2.1" class="pilcrow">¶</a></p>
+        <li class="normal" id="section-4-7.2">
+          <p id="section-4-7.2.1">On any other hop — the extension not negotiated, or the receiver did not advertise that algorithm — payloads are sent verbatim. The receiver either never sees the property (an ignored unknown Key-Value-Pair) or sees it but knows the sender was not permitted to compress for it, so it treats the payloads as verbatim either way.<a href="#section-4-7.2.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-4-7">Compression applies to the object payload only; object properties and message framing are never compressed.
-An empty payload (size 0) <span class="bcp14">MUST NOT</span> be compressed and remains empty on the wire.<a href="#section-4-7" class="pilcrow">¶</a></p>
-<p id="section-4-8">A publisher <span class="bcp14">SHOULD</span> set COMPRESSION only for payload types that benefit from it.
-Already-compressed media <span class="bcp14">SHOULD</span> omit it (or use <code>none</code>).<a href="#section-4-8" class="pilcrow">¶</a></p>
+<p id="section-4-8">Compression applies to the object payload only; object properties and message framing are never compressed.
+An empty payload (size 0) <span class="bcp14">MUST NOT</span> be compressed and remains empty on the wire.<a href="#section-4-8" class="pilcrow">¶</a></p>
+<p id="section-4-9">A publisher <span class="bcp14">SHOULD</span> set COMPRESSION only for payload types that benefit from it.
+Already-compressed media <span class="bcp14">SHOULD</span> omit it (or use <code>none</code>).<a href="#section-4-9" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="compression-algorithms">
