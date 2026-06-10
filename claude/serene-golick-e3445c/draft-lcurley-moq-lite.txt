@@ -107,16 +107,17 @@ Table of Contents
      7.6.  ANNOUNCE
      7.7.  SUBSCRIBE
      7.8.  SUBSCRIBE_UPDATE
-     7.9.  TRACK
-     7.10. TRACK_INFO
-     7.11. SUBSCRIBE_OK
-     7.12. SUBSCRIBE_END
-     7.13. SUBSCRIBE_DROP
-     7.14. FETCH
-     7.15. PROBE
-     7.16. GOAWAY
-     7.17. GROUP
-     7.18. FRAME
+     7.9.  SUBSCRIBE_STATS
+     7.10. TRACK
+     7.11. TRACK_INFO
+     7.12. SUBSCRIBE_OK
+     7.13. SUBSCRIBE_END
+     7.14. SUBSCRIBE_DROP
+     7.15. FETCH
+     7.16. PROBE
+     7.17. GOAWAY
+     7.18. GROUP
+     7.19. FRAME
    8.  Appendix A: Changelog
      8.1.  moq-lite-05
      8.2.  moq-lite-04
@@ -320,7 +321,7 @@ Table of Contents
 
    Each frame carries a presentation timestamp expressed in the parent
    Track's Timescale (units per second, part of the TRACK_INFO
-   (Section 7.10)), and a duration in the same scale.  The timestamp is
+   (Section 7.11)), and a duration in the same scale.  The timestamp is
    the source-of-truth for media time and is used by the moq-lite layer
    for Section 6.2 decisions instead of wall-clock arrival time.  The
    duration is a hint for the application layer (e.g. presentation
@@ -538,33 +539,37 @@ Table of Contents
    A subscriber opens Subscribe Streams to request a Track.
 
    The subscriber MUST start a Subscribe Stream with a SUBSCRIBE message
-   followed by any number of SUBSCRIBE_UPDATE messages.  When a start
-   group can be resolved, the publisher replies with a SUBSCRIBE_OK
-   message (confirming the subscription and resolving its start group),
-   followed by any number of SUBSCRIBE_END and SUBSCRIBE_DROP messages.
-   When the accepted track has already ended with no matching groups
-   there is no start group to resolve, so the publisher sends
-   SUBSCRIBE_END with no preceding SUBSCRIBE_OK.  A rejection is a
-   stream reset: if the publisher cannot serve the subscription — the
-   track does not exist, or it otherwise refuses — it MUST reset the
-   stream rather than leave it pending, and SHOULD do so promptly
-   (within roughly a round trip) so the subscriber is not left waiting.
-   A subscription the publisher accepts but has no groups for yet is not
-   a rejection: for a live track the publisher MAY withhold SUBSCRIBE_OK
-   until the first matching group resolves the start.  A subscriber
-   therefore distinguishes "pending" from "refused" by the stream reset,
-   not by a timeout.  The Subscribe Stream does not carry the track's
-   publisher properties — those are immutable and fetched once via a
-   Track Stream (Section 5.1.4) (see TRACK_INFO (Section 7.10)).  The
-   subscriber MUST have the track's TRACK_INFO before it can parse the
-   FRAME messages that arrive on Group Streams, since the timescale and
-   compression determine the frame wire format; it MAY open the Track
-   and Subscribe streams concurrently and buffer frames until TRACK_INFO
-   arrives.
+   followed by any number of SUBSCRIBE_UPDATE and SUBSCRIBE_STATS
+   messages.  The opening SUBSCRIBE is identified by the stream type
+   (0x2) and carries no message Type; every subsequent message from the
+   subscriber begins with a Type that distinguishes SUBSCRIBE_UPDATE
+   from SUBSCRIBE_STATS, mirroring how the publisher's messages on this
+   stream are typed.  When a start group can be resolved, the publisher
+   replies with a SUBSCRIBE_OK message (confirming the subscription and
+   resolving its start group), followed by any number of SUBSCRIBE_END
+   and SUBSCRIBE_DROP messages.  When the accepted track has already
+   ended with no matching groups there is no start group to resolve, so
+   the publisher sends SUBSCRIBE_END with no preceding SUBSCRIBE_OK.  A
+   rejection is a stream reset: if the publisher cannot serve the
+   subscription — the track does not exist, or it otherwise refuses — it
+   MUST reset the stream rather than leave it pending, and SHOULD do so
+   promptly (within roughly a round trip) so the subscriber is not left
+   waiting.  A subscription the publisher accepts but has no groups for
+   yet is not a rejection: for a live track the publisher MAY withhold
+   SUBSCRIBE_OK until the first matching group resolves the start.  A
+   subscriber therefore distinguishes "pending" from "refused" by the
+   stream reset, not by a timeout.  The Subscribe Stream does not carry
+   the track's publisher properties — those are immutable and fetched
+   once via a Track Stream (Section 5.1.4) (see TRACK_INFO
+   (Section 7.11)).  The subscriber MUST have the track's TRACK_INFO
+   before it can parse the FRAME messages that arrive on Group Streams,
+   since the timescale and compression determine the frame wire format;
+   it MAY open the Track and Subscribe streams concurrently and buffer
+   frames until TRACK_INFO arrives.
 
    The publisher sends SUBSCRIBE_OK once the absolute start group is
    resolved, and SUBSCRIBE_END once no further groups will be produced
-   (see SUBSCRIBE_OK (Section 7.11) and SUBSCRIBE_END (Section 7.12)).
+   (see SUBSCRIBE_OK (Section 7.12) and SUBSCRIBE_END (Section 7.13)).
    The publisher closes the stream (FIN) only once every group from
    start to end has been accounted for, either via a GROUP stream
    (completed or reset) or a SUBSCRIBE_DROP message.  This MAY occur
@@ -586,7 +591,7 @@ Table of Contents
    Subscribe ID and Group Sequence for the returned FRAME messages are
    implicit, taken from the original FETCH request.  As with a
    subscription, the subscriber MUST already have the track's TRACK_INFO
-   (Section 7.10) to parse the returned frames; because the properties
+   (Section 7.11) to parse the returned frames; because the properties
    are immutable, a single Track Stream lookup is reused across every
    FETCH of that track (group-by-group fetches do not re-fetch it).  The
    publisher FINs the stream after the last frame, or resets the stream
@@ -697,7 +702,7 @@ Table of Contents
    The Subscriber Priority is scoped to the connection and MAY change
    over the life of the subscription via SUBSCRIBE_UPDATE.  The
    Publisher Priority is fixed for the lifetime of the Track (see
-   TRACK_INFO (Section 7.10)) and SHOULD be used only to resolve
+   TRACK_INFO (Section 7.11)) and SHOULD be used only to resolve
    conflicts or ties.
 
    A conflict can occur when a relay tries to serve multiple downstream
@@ -754,7 +759,7 @@ Table of Contents
    Expiration governs when an older group is dropped from a live
    subscription's Group Stream(s).  It is distinct from the publisher's
    retention guarantee (see Publisher Cache in TRACK_INFO
-   (Section 7.10)), which controls whether older groups remain available
+   (Section 7.11)), which controls whether older groups remain available
    for FETCH or future subscriptions.
 
    It is not crucial to aggressively expire groups thanks to
@@ -869,7 +874,7 @@ Table of Contents
    }
 
    Timestamp and Duration are present only when the Track's Publisher
-   Timescale (see TRACK_INFO (Section 7.10)) is non-zero.  When
+   Timescale (see TRACK_INFO (Section 7.11)) is non-zero.  When
    Publisher Timescale is 0, both fields are omitted from the wire and
    the datagram body consists of just Subscribe ID, Group Sequence, and
    Payload.
@@ -895,7 +900,7 @@ Table of Contents
    *Payload*: The frame payload, extending to the end of the datagram.
    If the Track's Publisher Compression is non-zero, the payload is
    compressed using the negotiated algorithm (see TRACK_INFO
-   (Section 7.10)).  The total datagram body (including all header
+   (Section 7.11)).  The total datagram body (including all header
    fields above and the compressed payload if applicable) MUST NOT
    exceed 1200 bytes.  This limit ensures the datagram fits within the
    minimum QUIC path MTU without IP-layer fragmentation.  Payloads that
@@ -1183,7 +1188,6 @@ Table of Contents
      Subscriber Stale (i)
      Group Start (i)
      Group End (i)
-     Subscriber Count (i)
    }
 
    *Subscribe ID*: A unique identifier chosen by the subscriber.  A
@@ -1210,7 +1214,7 @@ Table of Contents
    group in live delivery (older groups are immediately stale once a
    newer group arrives).  This is a delivery-time preference, not a
    retention rule: the publisher's cache (see Publisher Cache in
-   TRACK_INFO (Section 7.10)) may still hold these groups for FETCH or
+   TRACK_INFO (Section 7.11)) may still hold these groups for FETCH or
    future subscriptions.  See the Section 6.2 section for more
    information.
 
@@ -1222,23 +1226,6 @@ Table of Contents
    means unbounded (default).  A non-zero value is the absolute group
    sequence + 1.
 
-   *Subscriber Count*: The number of subscribers this subscription
-   represents, encoded as the count minus one: the subscription is the
-   implicit 1, so a leaf subscriber sends 0.  This is a subscriber
-   property (Section 7.10) that fans _in_ at a relay: a relay merging
-   multiple downstream subscriptions into one upstream subscription sets
-   this to the *sum* of their counts, so the value telescopes up the
-   fan-out tree.  A publisher therefore learns its total number of
-   downstream subscribers across any number of relay hops by reading the
-   count on its single upstream subscription, without any per-hop
-   coordination.  The count changes as subscribers join and leave; a
-   relay refreshes it via SUBSCRIBE_UPDATE.  A relay holding a
-   subscription open with no live downstream subscribers (e.g. briefly
-   retaining it for reuse) MUST still report at least 1, since the held
-   subscription cannot represent fewer subscribers than itself.  The
-   count is advisory: a subscriber MAY misreport it, and a relay MUST
-   NOT use it for delivery decisions.
-
 7.8.  SUBSCRIBE_UPDATE
 
    A subscriber can modify a subscription with a SUBSCRIBE_UPDATE
@@ -1247,25 +1234,66 @@ Table of Contents
    either direction (growing or shrinking).
 
    SUBSCRIBE_UPDATE Message {
+     Type (i) = 0x0
      Message Length (i)
      Subscriber Priority (8)
      Subscriber Ordered (8)
      Subscriber Stale (i)
      Group Start (i)
      Group End (i)
+   }
+
+   *Type*: Set to 0x0 to indicate a SUBSCRIBE_UPDATE message.
+
+   See Section 5.1.2 for information about each remaining field.
+
+7.9.  SUBSCRIBE_STATS
+
+   A subscriber sends a SUBSCRIBE_STATS message to report telemetry
+   about a subscription.  Unlike SUBSCRIBE_UPDATE, it does not modify
+   the subscription and the publisher only observes it; it is kept
+   separate so that refreshing telemetry does not re-echo the
+   subscription's delivery parameters on every change.  A subscriber MAY
+   send multiple SUBSCRIBE_STATS messages over the life of the
+   subscription to refresh the values.
+
+   SUBSCRIBE_STATS Message {
+     Type (i) = 0x1
+     Message Length (i)
      Subscriber Count (i)
    }
 
-   See Section 5.1.2 for information about each field.
+   *Type*: Set to 0x1 to indicate a SUBSCRIBE_STATS message.
 
-   A relay SHOULD rate-limit SUBSCRIBE_UPDATE messages sent purely to
-   refresh the Subscriber Count (for example, coalescing changes within
-   a short window of roughly a second), so that rapid subscriber churn
-   does not flood the upstream with control messages.  Because the count
-   is the latest aggregate rather than a delta, a change that reverts
-   within the window requires no message at all.
+   *Subscriber Count*: The number of subscribers this subscription
+   represents, encoded as the count minus one: the subscription is the
+   implicit 1, so a leaf subscriber sends 0.  This is a subscriber-side
+   value that fans _in_ at a relay: a relay merging multiple downstream
+   subscriptions into one upstream subscription sets this to the *sum*
+   of their counts, so the value telescopes up the fan-out tree.  A
+   publisher therefore learns its total number of downstream subscribers
+   across any number of relay hops by reading the count on its single
+   upstream subscription, without any per-hop coordination.  Until a
+   SUBSCRIBE_STATS is received, the count is 1; a leaf subscriber that
+   represents only itself need not send the message.  A relay holding a
+   subscription open with no live downstream subscribers (e.g. briefly
+   retaining it for reuse) MUST still report at least 1, since the held
+   subscription cannot represent fewer subscribers than itself.  The
+   count is advisory: a subscriber MAY misreport it, and a relay MUST
+   NOT use it for delivery decisions.
 
-7.9.  TRACK
+   A relay SHOULD rate-limit SUBSCRIBE_STATS messages (for example,
+   coalescing changes within a short window of roughly a second), so
+   that rapid subscriber churn does not flood the upstream with control
+   messages.  Because the count is the latest aggregate rather than a
+   delta, a change that reverts within the window requires no message at
+   all.
+
+   Future revisions MAY append additional stats to this message; the
+   Message Length bounds the message so a receiver can stop after the
+   fields it understands.
+
+7.10.  TRACK
 
    TRACK is sent by a subscriber to request a Track's immutable
    publisher properties.  It is the first message on a Track Stream
@@ -1281,7 +1309,7 @@ Table of Contents
 
    *Track Name*: The name of the track.
 
-7.10.  TRACK_INFO
+7.11.  TRACK_INFO
 
    TRACK_INFO is sent by the publisher in response to a TRACK message.
    It is the sole message on the Track Stream; the publisher FINs
@@ -1380,7 +1408,7 @@ Table of Contents
    name ends in .json), because the relay cannot otherwise predict
    whether compression will help or hurt.
 
-7.11.  SUBSCRIBE_OK
+7.12.  SUBSCRIBE_OK
 
    A SUBSCRIBE_OK message confirms a subscription and resolves its
    absolute start group.  It is the first message the publisher sends on
@@ -1389,7 +1417,7 @@ Table of Contents
    This is the trimmed-down counterpart of MoqTransport's SUBSCRIBE_OK:
    it retains the name and the role of the publisher's positive
    response, but carries only the resolved start group (all other per-
-   track properties live in TRACK_INFO (Section 7.10)).
+   track properties live in TRACK_INFO (Section 7.11)).
 
    SUBSCRIBE_OK Message {
      Type (i) = 0x0
@@ -1407,7 +1435,7 @@ Table of Contents
    SUBSCRIBE_DROP is required for it.  A subscriber that requested the
    latest group (Group Start = 0) learns the resolved sequence here.
 
-7.12.  SUBSCRIBE_END
+7.13.  SUBSCRIBE_END
 
    A SUBSCRIBE_END message is sent by the publisher to signal that no
    group after a given sequence will be produced.
@@ -1428,7 +1456,7 @@ Table of Contents
    the stream only once every group up to this sequence has been
    accounted for.
 
-7.13.  SUBSCRIBE_DROP
+7.14.  SUBSCRIBE_DROP
 
    A SUBSCRIBE_DROP message is sent by the publisher on the Subscribe
    Stream when groups cannot be served.  It MAY arrive at any point
@@ -1455,7 +1483,7 @@ Table of Contents
    *Error Code*: An application-specific error code.  A value of 0
    indicates no error; the groups are simply unavailable.
 
-7.14.  FETCH
+7.15.  FETCH
 
    FETCH is sent by a subscriber to request a single group from a track.
 
@@ -1497,13 +1525,13 @@ Table of Contents
 
    The publisher responds with FRAME messages directly on the same
    stream — there is no response header.  The subscriber parses them
-   using the track's TRACK_INFO (Section 7.10), which it MUST already
+   using the track's TRACK_INFO (Section 7.11), which it MUST already
    have (see the Track Stream (Section 5.1.4)); the group sequence is
    implicit from the FETCH request.  The publisher FINs the stream after
    the last frame, or resets on error.  There is no FETCH_ERROR message
    — the publisher signals failure by resetting the stream.
 
-7.15.  PROBE
+7.16.  PROBE
 
    PROBE is used to measure the available bitrate of the connection.
 
@@ -1529,7 +1557,7 @@ Table of Contents
       statistics directly.  This field may be deprecated once RTT is
       universally available via the underlying transport API.
 
-7.16.  GOAWAY
+7.17.  GOAWAY
 
    A GOAWAY message is sent to initiate a graceful session shutdown with
    an optional redirect.
@@ -1546,7 +1574,7 @@ Table of Contents
    port are permitted.  If validation fails, the recipient MUST close
    the session without reconnecting.
 
-7.17.  GROUP
+7.18.  GROUP
 
    The GROUP message contains information about a Group, as well as a
    reference to the subscription being served.
@@ -1564,7 +1592,7 @@ Table of Contents
    increase by 1 for each new group.  A subscriber MUST handle gaps,
    potentially caused by congestion.
 
-7.18.  FRAME
+7.19.  FRAME
 
    The FRAME message is a payload within a group.
 
@@ -1576,7 +1604,7 @@ Table of Contents
    }
 
    Timestamp Delta and Duration Delta are present only when the Track's
-   Publisher Timescale (see TRACK_INFO (Section 7.10)) is non-zero.
+   Publisher Timescale (see TRACK_INFO (Section 7.11)) is non-zero.
    When Publisher Timescale is 0, both fields are omitted from the wire
    and the FRAME consists of just Message Length and Payload.
 
@@ -1617,24 +1645,27 @@ Table of Contents
 
    *Payload*: An application-specific payload.  If the Track's Publisher
    Compression is non-zero, the payload is compressed using the
-   negotiated algorithm (see TRACK_INFO (Section 7.10)) and the Message
+   negotiated algorithm (see TRACK_INFO (Section 7.11)) and the Message
    Length describes the compressed size.  A generic library or relay
    MUST NOT inspect or modify the decompressed contents unless otherwise
    negotiated; recompression that preserves the decompressed bytes
-   exactly is allowed (see TRACK_INFO (Section 7.10)).
+   exactly is allowed (see TRACK_INFO (Section 7.11)).
 
 8.  Appendix A: Changelog
 
 8.1.  moq-lite-05
 
-   *  Added Subscriber Count to SUBSCRIBE and SUBSCRIBE_UPDATE, a
-      telescoping count of downstream subscribers.  Encoded as the count
-      minus one (a leaf sends 0); a relay sums the counts of the
-      downstream subscriptions it merges, so a publisher reads its total
-      audience across any number of hops from its single upstream
-      subscription.  It is a subscriber property that fans _in_ like the
-      others, so it refreshes via SUBSCRIBE_UPDATE; relays SHOULD rate-
-      limit count-only updates to absorb subscriber churn.
+   *  Added a SUBSCRIBE_STATS message carrying a telescoping Subscriber
+      Count (count of downstream subscribers, encoded as the count minus
+      one so a leaf sends 0); a relay sums the counts of the downstream
+      subscriptions it merges, so a publisher reads its total audience
+      across any number of hops from its single upstream subscription.
+      It is kept separate from SUBSCRIBE_UPDATE so that refreshing
+      telemetry does not re-echo the subscription's delivery parameters;
+      relays SHOULD rate-limit it to absorb subscriber churn.  This also
+      introduced a Type tag on the subscriber's post-SUBSCRIBE messages
+      (0x0 SUBSCRIBE_UPDATE, 0x1 SUBSCRIBE_STATS) to distinguish them,
+      mirroring the publisher's typed responses.
 
    *  Added a SETUP message, sent once on a unidirectional Setup Stream
       (0x1) at the start of the session and FIN'd immediately.  It

@@ -8,18 +8,18 @@ Intended status: Informational
 Expires: 12 December 2026
 
 
-                     MoQ Subscriber Count Extension
-               draft-lcurley-moq-subscriber-count-latest
+                     MoQ Subscribe Stats Extension
+                draft-lcurley-moq-subscribe-stats-latest
 
 Abstract
 
-   This document defines a SUBSCRIBER_COUNT message for MoQ Transport
-   [moqt].  The message carries the number of subscribers a subscription
-   represents and telescopes up the relay fan-out tree, so a publisher
-   can learn its total downstream audience across any number of relay
-   hops by reading a single value on its upstream subscription.  It is a
-   fire-and-forget telemetry message that consumes no Request ID and
-   elicits no response.
+   This document defines a SUBSCRIBE_STATS message for MoQ Transport
+   [moqt]: fire-and-forget telemetry that a subscriber reports about a
+   subscription without modifying it.  It carries one or more stats that
+   aggregate cheaply up the relay fan-out tree.  This document defines a
+   single stat, Subscriber Count, which telescopes so a publisher can
+   learn its total downstream audience across any number of relay hops
+   by reading one value on its upstream subscription.
 
 Discussion Venues
 
@@ -68,14 +68,16 @@ Table of Contents
    1.  Conventions and Definitions
    2.  Introduction
    3.  Setup Negotiation
-   4.  SUBSCRIBER_COUNT Message
-   5.  Semantics
-   6.  Rate Limiting
-   7.  Security Considerations
-   8.  IANA Considerations
-     8.1.  MOQT Setup Options
-     8.2.  MOQT Message Types
-   9.  Normative References
+   4.  SUBSCRIBE_STATS Message
+   5.  Subscriber Count
+   6.  Semantics
+   7.  Rate Limiting
+   8.  Security Considerations
+   9.  IANA Considerations
+     9.1.  MOQT Setup Options
+     9.2.  MOQT Message Types
+     9.3.  MOQT Message Parameters
+   10. Normative References
    Acknowledgments
    Author's Address
 
@@ -98,37 +100,40 @@ Table of Contents
    individual subscribers behind it, so it cannot count its true
    audience without out-of-band coordination.
 
-   This document defines a SUBSCRIBER_COUNT message that reports, per
-   subscription, how many subscribers it represents.  A relay sets the
-   count on its single upstream subscription to the *sum* of the counts
-   of the downstream subscriptions it aggregates.  Because the count is
-   a sum reduced up the existing subscription tree, it telescopes for
-   free: at the origin, the count on each upstream subscription is the
-   total number of subscribers reachable through that relay,
-   transitively, across any number of hops.
+   This document defines a SUBSCRIBE_STATS message that reports
+   telemetry about a subscription.  A stat is useful here only if it
+   aggregates cheaply up the fan-out tree: a relay merges the stats of
+   the downstream subscriptions it serves into one value on its single
+   upstream subscription.  This document defines a single such stat,
+   *Subscriber Count*, which a relay reports as the *sum* of its
+   downstream counts.  Because the count is a sum reduced up the
+   existing subscription tree, it telescopes for free: at the origin,
+   the count on each upstream subscription is the total number of
+   subscribers reachable through that relay, transitively, across any
+   number of hops.
 
-   The count changes as subscribers join and leave, so it is sent
-   repeatedly over the life of a subscription.  This is pure telemetry:
-   the count never modifies the subscription, and the publisher only
-   observes it.  For that reason it is carried in a dedicated, fire-and-
-   forget message rather than in REQUEST_UPDATE ([moqt] Section 10.9).
-   A REQUEST_UPDATE consumes a Request ID ([moqt] Section 10.1) and
-   obliges the receiver to answer with a REQUEST_OK or REQUEST_ERROR
-   ([moqt] Section 10.9) — a request/response transaction whose purpose
-   is to _modify_ the subscription, which is a poor fit for a value
-   pushed once per second that changes nothing.  The SUBSCRIBER_COUNT
-   message instead rides the subscription's existing request stream,
-   consumes no Request ID, and elicits no response.
+   Stats change as subscribers join and leave, so SUBSCRIBE_STATS is
+   sent repeatedly over the life of a subscription.  This is pure
+   telemetry: it never modifies the subscription, and the publisher only
+   observes it.  For that reason it is a dedicated, fire-and-forget
+   message rather than a parameter on REQUEST_UPDATE ([moqt]
+   Section 10.9).  A REQUEST_UPDATE consumes a Request ID ([moqt]
+   Section 10.1) and obliges the receiver to answer with a REQUEST_OK or
+   REQUEST_ERROR ([moqt] Section 10.9) — a request/response transaction
+   whose purpose is to _modify_ the subscription, which is a poor fit
+   for a value pushed once per second that changes nothing.
+   SUBSCRIBE_STATS instead rides the subscription's existing request
+   stream, consumes no Request ID, and elicits no response.
 
 3.  Setup Negotiation
 
-   The Subscriber Count extension is negotiated during the SETUP
-   exchange as defined in [moqt] Section 9.4.
+   The Subscribe Stats extension is negotiated during the SETUP exchange
+   as defined in [moqt] Section 9.4.
 
    Both endpoints indicate support by including the following Setup
    Option:
 
-   SUBSCRIBER_COUNT Setup Option {
+   SUBSCRIBE_STATS Setup Option {
      Option Key (vi64) = 0xC0117
      Option Value Length (vi64) = 0
    }
@@ -141,49 +146,70 @@ Table of Contents
    Negotiation is mandatory before the message is sent. [moqt]
    (Section 10) requires an endpoint that receives an unknown control
    message type to close the session, so — unlike an optional parameter,
-   which can be ignored — a SUBSCRIBER_COUNT message cannot be sent
-   speculatively.  An endpoint MUST NOT send SUBSCRIBER_COUNT on a hop
+   which can be ignored — a SUBSCRIBE_STATS message cannot be sent
+   speculatively.  An endpoint MUST NOT send SUBSCRIBE_STATS on a hop
    that did not negotiate this extension.
 
-4.  SUBSCRIBER_COUNT Message
+4.  SUBSCRIBE_STATS Message
 
    This document defines a new control message, sent on a subscription's
    request stream ([moqt] Section 3.3) by the endpoint that opened it
    (the subscriber, which for an upstream subscription is the relay).
 
-   SUBSCRIBER_COUNT Message {
+   SUBSCRIBE_STATS Message {
      Type (vi64) = 0xC0117
      Length (16)
-     Subscriber Count (vi64)   ; encoded as count - 1
+     Number of Stats (vi64)
+     Stats (..) ...
    }
 
    The message MUST NOT be the first message on the request stream; it
    follows the SUBSCRIBE ([moqt] Section 10.7) that opened the stream.
    It consumes no Request ID ([moqt] Section 10.1), and the receiver
    MUST NOT respond to it.  A subscriber MAY send it any number of times
-   over the life of the subscription to refresh the count.
+   over the life of the subscription to refresh the stats.
 
-   *Subscriber Count*: The number of subscribers this subscription
-   represents, including the subscriber itself, encoded as the count
-   minus one.  The subscription is the implicit 1, so the wire value is
-   Subscriber Count - 1: a leaf encodes 0, and a relay encodes its
-   summed total minus one.
+   *Number of Stats*: The number of stats that follow.
+
+   *Stats*: Each stat is encoded as a Message Parameter ([moqt]
+   Section 10.2): a Type (drawn from the same "Message Parameters"
+   registry) and a value, where an even Type carries a single varint and
+   an odd Type is length-prefixed ([moqt] Section 1.4.3).  A receiver
+   MUST ignore a stat whose Type it does not recognize, so future stats
+   can be added without a new message type or a wire break.  This
+   document defines one stat, Subscriber Count (Section 5).
+
+5.  Subscriber Count
+
+   SUBSCRIBER_COUNT Stat {
+     Type (vi64) = 0xC0116
+     Value (vi64)              ; Subscriber Count - 1
+   }
+
+   The Type 0xC0116 is even, so per [moqt] Section 1.4.3 the value is a
+   single varint with no length prefix.
+
+   *Value*: The number of subscribers this subscription represents,
+   including the subscriber itself, encoded as the count minus one.  The
+   subscription is the implicit 1, so the wire value is Subscriber Count
+   - 1: a leaf encodes 0, and a relay encodes its summed total minus
+   one.
 
    Encoding count - 1 rather than the count itself makes a count of 0
    impossible to represent on the wire: the minimum encodable value is
    0, which decodes to a count of 1.  A subscription can never report
    fewer subscribers than itself.
 
-   Until a SUBSCRIBER_COUNT message is received for a subscription, its
-   count is 1.  A leaf subscriber that represents only itself therefore
-   need not send the message at all.
+   Until a SUBSCRIBE_STATS carrying this stat is received for a
+   subscription, its count is 1.  A leaf subscriber that represents only
+   itself therefore need not send it at all.
 
-5.  Semantics
+6.  Semantics
 
-   The count is a reduction up the subscription tree.
+   The Subscriber Count is a reduction up the subscription tree.
 
    A *leaf subscriber* (one that is not a relay) represents itself: a
-   count of 1.  It need not send the message to mean this.
+   count of 1.  It need not report the stat to mean this.
 
    A *relay* that aggregates one or more downstream subscriptions for a
    Track into a single upstream subscription sets the count it reports
@@ -191,7 +217,7 @@ Table of Contents
    downstream subscriptions, treating a downstream subscription that has
    not reported as 1.  When a downstream count changes, or a downstream
    subscription is added or removed, the relay recomputes the sum and,
-   if it changed, sends a SUBSCRIBER_COUNT message upstream with the new
+   if it changed, sends a SUBSCRIBE_STATS message upstream with the new
    total.
 
    A relay MUST report at least 1 for any upstream subscription it is
@@ -208,46 +234,45 @@ Table of Contents
    total audience for a Track as the sum of the counts of the
    subscriptions it is serving.
 
-   The message alters no delivery behavior.  It MUST NOT influence
+   SUBSCRIBE_STATS alters no delivery behavior.  It MUST NOT influence
    prioritization, caching, congestion response, or any other
    distribution decision; it is informational telemetry carried
    alongside the subscription.
 
-6.  Rate Limiting
+7.  Rate Limiting
 
-   Subscriber churn can change the count rapidly, and at a busy relay
-   each change would otherwise produce an upstream SUBSCRIBER_COUNT
-   message.
+   Subscriber churn can change a stat rapidly, and at a busy relay each
+   change would otherwise produce an upstream SUBSCRIBE_STATS message.
 
-   A relay SHOULD rate-limit SUBSCRIBER_COUNT messages per subscription,
+   A relay SHOULD rate-limit SUBSCRIBE_STATS messages per subscription,
    coalescing changes that occur within a short window (on the order of
-   a second) and then sending the latest sum.  Because the message
-   carries the current count rather than a delta, a change that reverts
+   a second) and then sending the latest values.  Because each stat
+   carries its current value rather than a delta, a change that reverts
    within the window — a subscriber that joins and leaves, or leaves and
    returns — requires no upstream message at all.
 
    Because the message is independent of REQUEST_UPDATE, this rate
    limiting never delays a genuine subscription change: delivery-
    affecting updates are forwarded according to [moqt] without regard to
-   the count's window.
+   the stats window.
 
-7.  Security Considerations
+8.  Security Considerations
 
    *Audience disclosure.* The Subscriber Count discloses aggregate
    viewership to the publisher and to every relay on the path toward it.
    For some applications the size of an audience is sensitive (for
    example, it can reveal the popularity or reach of content, or that an
    audience has dropped to zero).  Because the extension is negotiated
-   per hop, an endpoint that considers this information sensitive simply
-   does not advertise the SUBSCRIBER_COUNT Setup Option, and no count is
+   per hop, an endpoint that considers a stat sensitive simply does not
+   advertise the SUBSCRIBE_STATS Setup Option, and no stats are
    exchanged on that hop.
 
-   *Untrusted values.* The count is supplied by the subscriber side and
+   *Untrusted values.* Stats are supplied by the subscriber side and
    aggregated by intermediaries, none of which the publisher can fully
    trust.  A malicious or buggy subscriber can report an inflated or
    deflated count, and a malicious relay can report any sum regardless
-   of its actual downstream subscriptions.  The value is therefore
-   advisory: an endpoint MUST NOT use it for any security-sensitive
+   of its actual downstream subscriptions.  Stats are therefore
+   advisory: an endpoint MUST NOT use one for any security-sensitive
    purpose — such as billing, admission control, rate limiting, or
    capacity planning that affects other subscribers — without
    independent verification.  A relay aggregates the values it receives
@@ -255,8 +280,8 @@ Table of Contents
 
    *Churn amplification.* A subscriber that rapidly joins and leaves
    could attempt to amplify control traffic toward the origin by forcing
-   repeated count updates.  The rate-limiting in Rate Limiting
-   (Section 6) bounds this: the upstream SUBSCRIBER_COUNT rate per
+   repeated stat updates.  The rate-limiting in Rate Limiting
+   (Section 7) bounds this: the upstream SUBSCRIBE_STATS rate per
    subscription is capped regardless of downstream churn, and reverts
    within the window are suppressed entirely.  Because the message
    consumes no Request ID and elicits no response, this churn cannot
@@ -266,11 +291,11 @@ Table of Contents
    This extension introduces no other security considerations beyond
    those described in [moqt].
 
-8.  IANA Considerations
+9.  IANA Considerations
 
    This document requests the following registrations.
 
-8.1.  MOQT Setup Options
+9.1.  MOQT Setup Options
 
    This document requests a registration in the "MOQT Setup Options"
    registry ([moqt] Section 15.4), whose policy is Specification
@@ -281,15 +306,15 @@ Table of Contents
    other extensions; it also avoids the greasing pattern (0x7f * N +
    0x9D).
 
-              +=========+==================+===============+
-              | Value   | Name             | Reference     |
-              +=========+==================+===============+
-              | 0xC0117 | SUBSCRIBER_COUNT | This Document |
-              +---------+------------------+---------------+
+               +=========+=================+===============+
+               | Value   | Name            | Reference     |
+               +=========+=================+===============+
+               | 0xC0117 | SUBSCRIBE_STATS | This Document |
+               +---------+-----------------+---------------+
 
-                                 Table 1
+                                  Table 1
 
-8.2.  MOQT Message Types
+9.2.  MOQT Message Types
 
    This document registers a control message type. [moqt] does not yet
    establish an IANA registry for message types, so this is a
@@ -297,7 +322,7 @@ Table of Contents
    be high and distinctive to avoid the low ranges [moqt] assigns and to
    minimize collisions with provisional registrations by other
    extensions, and it avoids the greasing pattern (0x7f * N + 0x9D).
-   This is the same value as the SUBSCRIBER_COUNT Setup Option above;
+   This is the same value as the SUBSCRIBE_STATS Setup Option above;
    Setup Options and message types are independent namespaces, so the
    shared value is unambiguous.
 
@@ -306,15 +331,34 @@ Table of Contents
    stream.  The message is not marked "First": it never opens a request
    stream.
 
-         +=========+==================+=========+===============+
-         | Value   | Name             | Stream  | Reference     |
-         +=========+==================+=========+===============+
-         | 0xC0117 | SUBSCRIBER_COUNT | Request | This Document |
-         +---------+------------------+---------+---------------+
+          +=========+=================+=========+===============+
+          | Value   | Name            | Stream  | Reference     |
+          +=========+=================+=========+===============+
+          | 0xC0117 | SUBSCRIBE_STATS | Request | This Document |
+          +---------+-----------------+---------+---------------+
 
-                                 Table 2
+                                  Table 2
 
-9.  Normative References
+9.3.  MOQT Message Parameters
+
+   This document requests a registration in the "Message Parameters"
+   registry ([moqt] Section 15.7), used here to carry stats inside
+   SUBSCRIBE_STATS.  The value is *even* so that, per the Key-Value-Pair
+   encoding ([moqt] Section 1.4.3), the count is carried as a single
+   varint with no length prefix.  A high, distinctive value is chosen to
+   avoid the low ranges reserved by [moqt] and to minimize collisions
+   with provisional registrations by other extensions; it also avoids
+   the greasing pattern (0x7f * N + 0x9D).
+
+              +=========+==================+===============+
+              | Value   | Name             | Reference     |
+              +=========+==================+===============+
+              | 0xC0116 | SUBSCRIBER_COUNT | This Document |
+              +---------+------------------+---------------+
+
+                                 Table 3
+
+10.  Normative References
 
    [moqt]     Nandakumar, S., Vasiliev, V., Swett, I., and A. Frindell,
               "Media over QUIC Transport", Work in Progress, Internet-
