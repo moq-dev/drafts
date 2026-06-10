@@ -1179,10 +1179,10 @@ Together these allow a relay cluster to detect and avoid routing loops, and allo
             <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1">
-                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-moq-setup-options" class="internal xref">MoQ Setup Options</a></p>
+                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-moqt-setup-options" class="internal xref">MOQT Setup Options</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.2">
-                <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="auto internal xref">8.2</a>.  <a href="#name-moq-key-value-pair-types" class="internal xref">MoQ Key-Value-Pair Types</a></p>
+                <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="auto internal xref">8.2</a>.  <a href="#name-moqt-message-parameters" class="internal xref">MOQT Message Parameters</a></p>
 </li>
             </ul>
 </li>
@@ -1314,7 +1314,8 @@ The relay's own Hop ID is therefore always the last entry of the list it sends.<
             <p id="section-5.1-3.2.1">Otherwise the relay <span class="bcp14">MAY</span> forward it downstream, appending its own Hop ID as described above.<a href="#section-5.1-3.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-5.1-4">When bridging from a peer that did not negotiate this extension, a relay <span class="bcp14">MAY</span> synthesize a single leading <code>0</code> ("unknown hop") entry to preserve an approximate path length, or <span class="bcp14">MAY</span> omit it; this choice is deployment-specific.<a href="#section-5.1-4" class="pilcrow">¶</a></p>
+<p id="section-5.1-4">When bridging from a peer that did not negotiate this extension, a relay <span class="bcp14">SHOULD</span> synthesize a single leading <code>0</code> ("unknown hop") entry rather than omitting it.
+Counting the bridged hop keeps path lengths comparable, so that the advisory path selection in the following section behaves consistently across relays that bridge the same non-supporting upstream.<a href="#section-5.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="path-selection">
@@ -1350,7 +1351,8 @@ EXCLUDE_HOP Parameter {
 </div>
 <p id="section-6-4"><strong>Hop ID</strong>:
 One or more Hop IDs to exclude, in any order.
-The number of entries is determined by consuming Hop IDs until <code>Length</code> bytes have been read; a receiver <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION if the entries do not exactly fill <code>Length</code>, or if <code>Length</code> is 0.<a href="#section-6-4" class="pilcrow">¶</a></p>
+The number of entries is determined by consuming Hop IDs until <code>Length</code> bytes have been read; a receiver <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION if the entries do not exactly fill <code>Length</code>.
+An empty list (<code>Length</code> 0) is permitted and means "exclude nothing"; like an empty HOP_PATH it is a harmless no-op and a receiver <span class="bcp14">MUST NOT</span> treat it as an error.<a href="#section-6-4" class="pilcrow">¶</a></p>
 <p id="section-6-5">A relay that receives a SUBSCRIBE_NAMESPACE carrying EXCLUDE_HOP <span class="bcp14">SHOULD NOT</span> send, on that session, any PUBLISH_NAMESPACE whose HOP_PATH contains any of the listed Hop IDs (including the implicit final entry the relay would itself append).
 The exclusion is scoped to the namespace subscription it accompanies.<a href="#section-6-5" class="pilcrow">¶</a></p>
 <p id="section-6-6">A relay that receives EXCLUDE_HOP without having negotiated the Relay Hops extension ignores it as an unknown parameter, which is the safe default (it simply does not perform the exclusion).<a href="#section-6-6" class="pilcrow">¶</a></p>
@@ -1378,12 +1380,12 @@ Implementations <span class="bcp14">SHOULD</span> bound the number of excluded H
 <p id="section-8-1">This document requests the following registrations.
 High, distinctive values are requested to avoid the low ranges reserved by <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> and to minimize collisions with provisional registrations by other extensions; they also avoid the greasing pattern (<code>0x7f * N + 0x9D</code>).
 The two parameter Types are odd so that each is length-prefixed (see <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 2.5).<a href="#section-8-1" class="pilcrow">¶</a></p>
-<div id="moq-setup-options">
+<div id="moqt-setup-options">
 <section id="section-8.1">
-        <h3 id="name-moq-setup-options">
-<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-moq-setup-options" class="section-name selfRef">MoQ Setup Options</a>
+        <h3 id="name-moqt-setup-options">
+<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-moqt-setup-options" class="section-name selfRef">MOQT Setup Options</a>
         </h3>
-<p id="section-8.1-1">This document requests a registration in the "MoQ Setup Options" registry (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 15.4), whose policy is Specification Required.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
+<p id="section-8.1-1">This document requests a registration in the "MOQT Setup Options" registry (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 15.4), whose policy is Specification Required.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
 <table class="center" id="table-1">
           <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
 <thead>
@@ -1403,12 +1405,13 @@ The two parameter Types are odd so that each is length-prefixed (see <span>[<a h
         </table>
 </section>
 </div>
-<div id="moq-key-value-pair-types">
+<div id="moqt-message-parameters">
 <section id="section-8.2">
-        <h3 id="name-moq-key-value-pair-types">
-<a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-moq-key-value-pair-types" class="section-name selfRef">MoQ Key-Value-Pair Types</a>
+        <h3 id="name-moqt-message-parameters">
+<a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-moqt-message-parameters" class="section-name selfRef">MOQT Message Parameters</a>
         </h3>
-<p id="section-8.2-1">This document requests registrations in the "MoQ Key-Value-Pair Types" registry (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 15), used for message parameters and object/track properties.<a href="#section-8.2-1" class="pilcrow">¶</a></p>
+<p id="section-8.2-1">This document requests registrations in the "MOQT Message Parameters" registry (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 15.7).
+HOP_PATH and EXCLUDE_HOP are message parameters carried in PUBLISH_NAMESPACE and SUBSCRIBE_NAMESPACE respectively.<a href="#section-8.2-1" class="pilcrow">¶</a></p>
 <table class="center" id="table-2">
           <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
 <thead>

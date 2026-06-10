@@ -74,9 +74,9 @@ Table of Contents
    6.  Relay Behavior
    7.  Security Considerations
    8.  IANA Considerations
-     8.1.  MoQ Setup Options
-     8.2.  MoQ Key-Value-Pair Types
-     8.3.  MoQ Compression Algorithms
+     8.1.  MOQT Setup Options
+     8.2.  MOQT Properties
+     8.3.  MOQT Compression Algorithms
    9.  Normative References
    Acknowledgments
    Author's Address
@@ -247,9 +247,9 @@ Table of Contents
    0x9D).  The property Type is even so that its value is a bare varint
    with no length prefix (see [moqt] Section 2.5).
 
-8.1.  MoQ Setup Options
+8.1.  MOQT Setup Options
 
-   This document requests a registration in the "MoQ Setup Options"
+   This document requests a registration in the "MOQT Setup Options"
    registry ([moqt] Section 15.4), whose policy is Specification
    Required.
 
@@ -261,11 +261,10 @@ Table of Contents
 
                                   Table 2
 
-8.2.  MoQ Key-Value-Pair Types
+8.2.  MOQT Properties
 
-   This document requests a registration in the "MoQ Key-Value-Pair
-   Types" registry ([moqt] Section 15), used for message parameters and
-   object/track properties.
+   This document requests a registration in the "MOQT Properties"
+   registry ([moqt] Section 15.8), used for object and track properties.
 
              +=========+=============+=======+===============+
              | Value   | Name        | Scope | Reference     |
@@ -275,9 +274,9 @@ Table of Contents
 
                                   Table 3
 
-8.3.  MoQ Compression Algorithms
+8.3.  MOQT Compression Algorithms
 
-   This document requests a new "MoQ Compression Algorithms" registry,
+   This document requests a new "MOQT Compression Algorithms" registry,
    with a registration policy of Specification Required.  The initial
    contents are:
 

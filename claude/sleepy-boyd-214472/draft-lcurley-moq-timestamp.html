@@ -1171,10 +1171,10 @@ Exposing media time to the transport lets relays make consistent age-based decis
             <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1">
-                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-moq-setup-options" class="internal xref">MoQ Setup Options</a></p>
+                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-moqt-setup-options" class="internal xref">MOQT Setup Options</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.2">
-                <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="auto internal xref">8.2</a>.  <a href="#name-moq-key-value-pair-types" class="internal xref">MoQ Key-Value-Pair Types</a></p>
+                <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="auto internal xref">8.2</a>.  <a href="#name-moqt-properties" class="internal xref">MOQT Properties</a></p>
 </li>
             </ul>
 </li>
@@ -1342,12 +1342,12 @@ Because age-based dropping only affects which objects a live subscription receiv
 <p id="section-8-1">This document requests the following registrations.
 High, distinctive values are requested to avoid the low ranges reserved by <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> and to minimize collisions with provisional registrations by other extensions; they also avoid the greasing pattern (<code>0x7f * N + 0x9D</code>).
 The three property Types are even so that each value is a bare varint with no length prefix (see <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 2.5).<a href="#section-8-1" class="pilcrow">¶</a></p>
-<div id="moq-setup-options">
+<div id="moqt-setup-options">
 <section id="section-8.1">
-        <h3 id="name-moq-setup-options">
-<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-moq-setup-options" class="section-name selfRef">MoQ Setup Options</a>
+        <h3 id="name-moqt-setup-options">
+<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-moqt-setup-options" class="section-name selfRef">MOQT Setup Options</a>
         </h3>
-<p id="section-8.1-1">This document requests a registration in the "MoQ Setup Options" registry (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 15.4), whose policy is Specification Required.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
+<p id="section-8.1-1">This document requests a registration in the "MOQT Setup Options" registry (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 15.4), whose policy is Specification Required.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
 <table class="center" id="table-1">
           <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
 <thead>
@@ -1367,12 +1367,12 @@ The three property Types are even so that each value is a bare varint with no le
         </table>
 </section>
 </div>
-<div id="moq-key-value-pair-types">
+<div id="moqt-properties">
 <section id="section-8.2">
-        <h3 id="name-moq-key-value-pair-types">
-<a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-moq-key-value-pair-types" class="section-name selfRef">MoQ Key-Value-Pair Types</a>
+        <h3 id="name-moqt-properties">
+<a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-moqt-properties" class="section-name selfRef">MOQT Properties</a>
         </h3>
-<p id="section-8.2-1">This document requests registrations in the "MoQ Key-Value-Pair Types" registry (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 15), used for message parameters and object/track properties.<a href="#section-8.2-1" class="pilcrow">¶</a></p>
+<p id="section-8.2-1">This document requests registrations in the "MOQT Properties" registry (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 15.8), used for object and track properties.<a href="#section-8.2-1" class="pilcrow">¶</a></p>
 <table class="center" id="table-2">
           <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
 <thead>

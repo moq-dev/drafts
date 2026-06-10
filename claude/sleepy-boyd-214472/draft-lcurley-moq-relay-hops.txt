@@ -76,8 +76,8 @@ Table of Contents
    6.  EXCLUDE_HOP Parameter
    7.  Security Considerations
    8.  IANA Considerations
-     8.1.  MoQ Setup Options
-     8.2.  MoQ Key-Value-Pair Types
+     8.1.  MOQT Setup Options
+     8.2.  MOQT Message Parameters
    9.  Normative References
    Acknowledgments
    Author's Address
@@ -212,9 +212,11 @@ Table of Contents
       Hop ID as described above.
 
    When bridging from a peer that did not negotiate this extension, a
-   relay MAY synthesize a single leading 0 ("unknown hop") entry to
-   preserve an approximate path length, or MAY omit it; this choice is
-   deployment-specific.
+   relay SHOULD synthesize a single leading 0 ("unknown hop") entry
+   rather than omitting it.  Counting the bridged hop keeps path lengths
+   comparable, so that the advisory path selection in the following
+   section behaves consistently across relays that bridge the same non-
+   supporting upstream.
 
 5.2.  Path Selection
 
@@ -255,8 +257,10 @@ Table of Contents
    *Hop ID*: One or more Hop IDs to exclude, in any order.  The number
    of entries is determined by consuming Hop IDs until Length bytes have
    been read; a receiver MUST close the session with a
-   PROTOCOL_VIOLATION if the entries do not exactly fill Length, or if
-   Length is 0.
+   PROTOCOL_VIOLATION if the entries do not exactly fill Length.  An
+   empty list (Length 0) is permitted and means "exclude nothing"; like
+   an empty HOP_PATH it is a harmless no-op and a receiver MUST NOT
+   treat it as an error.
 
    A relay that receives a SUBSCRIBE_NAMESPACE carrying EXCLUDE_HOP
    SHOULD NOT send, on that session, any PUBLISH_NAMESPACE whose
@@ -299,9 +303,9 @@ Table of Contents
    0x9D).  The two parameter Types are odd so that each is length-
    prefixed (see [moqt] Section 2.5).
 
-8.1.  MoQ Setup Options
+8.1.  MOQT Setup Options
 
-   This document requests a registration in the "MoQ Setup Options"
+   This document requests a registration in the "MOQT Setup Options"
    registry ([moqt] Section 15.4), whose policy is Specification
    Required.
 
@@ -313,11 +317,12 @@ Table of Contents
 
                                  Table 1
 
-8.2.  MoQ Key-Value-Pair Types
+8.2.  MOQT Message Parameters
 
-   This document requests registrations in the "MoQ Key-Value-Pair
-   Types" registry ([moqt] Section 15), used for message parameters and
-   object/track properties.
+   This document requests registrations in the "MOQT Message Parameters"
+   registry ([moqt] Section 15.7).  HOP_PATH and EXCLUDE_HOP are message
+   parameters carried in PUBLISH_NAMESPACE and SUBSCRIBE_NAMESPACE
+   respectively.
 
       +=========+=============+=====================+===============+
       | Value   | Name        | Carried In          | Reference     |
