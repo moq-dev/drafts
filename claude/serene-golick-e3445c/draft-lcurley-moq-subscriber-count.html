@@ -7,8 +7,9 @@
 <title>MoQ Subscriber Count Extension</title>
 <meta content="Luke Curley" name="author">
 <meta content="
-       This document defines a Subscriber Count parameter for MoQ Transport  .
-The parameter carries the number of subscribers a subscription represents and telescopes up the relay fan-out tree, so a publisher can learn its total downstream audience across any number of relay hops by reading a single value on its upstream subscription. 
+       This document defines a SUBSCRIBER_COUNT message for MoQ Transport  .
+The message carries the number of subscribers a subscription represents and telescopes up the relay fan-out tree, so a publisher can learn its total downstream audience across any number of relay hops by reading a single value on its upstream subscription.
+It is a fire-and-forget telemetry message that consumes no Request ID and elicits no response. 
     " name="description">
 <meta content="xml2rfc 3.33.0" name="generator">
 <meta content="draft-lcurley-moq-subscriber-count-latest" name="ietf.draft">
@@ -1077,8 +1078,9 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <h1 id="title">MoQ Subscriber Count Extension</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">This document defines a Subscriber Count parameter for MoQ Transport <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>.
-The parameter carries the number of subscribers a subscription represents and telescopes up the relay fan-out tree, so a publisher can learn its total downstream audience across any number of relay hops by reading a single value on its upstream subscription.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">This document defines a SUBSCRIBER_COUNT message for MoQ Transport <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>.
+The message carries the number of subscribers a subscription represents and telescopes up the relay fan-out tree, so a publisher can learn its total downstream audience across any number of relay hops by reading a single value on its upstream subscription.
+It is a fire-and-forget telemetry message that consumes no Request ID and elicits no response.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-discussion-venues">
@@ -1149,7 +1151,7 @@ The parameter carries the number of subscribers a subscription represents and te
             <p id="section-toc.1-1.3.1" class="keepWithNext"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-setup-negotiation" class="internal xref">Setup Negotiation</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
-            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-subscriber-count-parameter" class="internal xref">Subscriber Count Parameter</a></p>
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-subscriber_count-message" class="internal xref">SUBSCRIBER_COUNT Message</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
             <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-semantics" class="internal xref">Semantics</a></p>
@@ -1167,7 +1169,7 @@ The parameter carries the number of subscribers a subscription represents and te
                 <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-moqt-setup-options" class="internal xref">MOQT Setup Options</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.2">
-                <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="auto internal xref">8.2</a>.  <a href="#name-moqt-message-parameters" class="internal xref">MOQT Message Parameters</a></p>
+                <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="auto internal xref">8.2</a>.  <a href="#name-moqt-message-types" class="internal xref">MOQT Message Types</a></p>
 </li>
             </ul>
 </li>
@@ -1203,13 +1205,14 @@ appear in all capitals, as shown here.<a href="#section-1-1" class="pilcrow">¶<
 <p id="section-2-1">A publisher in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> often wants to know how many subscribers are receiving a Track.
 This is straightforward when a subscriber connects directly, but <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> is designed around relays: a relay aggregates many downstream subscriptions for the same Track into a single upstream subscription toward the origin (its "fan-out" tree).
 The origin sees one upstream subscription per relay, not the individual subscribers behind it, so it cannot count its true audience without out-of-band coordination.<a href="#section-2-1" class="pilcrow">¶</a></p>
-<p id="section-2-2">This document defines a Subscriber Count parameter that rides on the subscription itself.
-Each subscription reports how many subscribers it represents.
+<p id="section-2-2">This document defines a SUBSCRIBER_COUNT message that reports, per subscription, how many subscribers it represents.
 A relay sets the count on its single upstream subscription to the <strong>sum</strong> of the counts of the downstream subscriptions it aggregates.
 Because the count is a sum reduced up the existing subscription tree, it telescopes for free: at the origin, the count on each upstream subscription is the total number of subscribers reachable through that relay, transitively, across any number of hops.<a href="#section-2-2" class="pilcrow">¶</a></p>
-<p id="section-2-3">The count is a property of the subscriber side of the subscription.
-In <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> a relay already merges subscriber-supplied parameters when it aggregates downstream subscriptions (subscriber properties fan <em>in</em>), so this parameter follows the existing aggregation path rather than introducing a new one.
-It changes as subscribers join and leave and is refreshed with REQUEST_UPDATE (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10.9).<a href="#section-2-3" class="pilcrow">¶</a></p>
+<p id="section-2-3">The count changes as subscribers join and leave, so it is sent repeatedly over the life of a subscription.
+This is pure telemetry: the count never modifies the subscription, and the publisher only observes it.
+For that reason it is carried in a dedicated, fire-and-forget message rather than in REQUEST_UPDATE (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10.9).
+A REQUEST_UPDATE consumes a Request ID (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10.1) and obliges the receiver to answer with a REQUEST_OK or REQUEST_ERROR (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10.9) — a request/response transaction whose purpose is to <em>modify</em> the subscription, which is a poor fit for a value pushed once per second that changes nothing.
+The SUBSCRIBER_COUNT message instead rides the subscription's existing request stream, consumes no Request ID, and elicits no response.<a href="#section-2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="setup-negotiation">
@@ -1228,34 +1231,37 @@ SUBSCRIBER_COUNT Setup Option {
 </pre><a href="#section-3-3" class="pilcrow">¶</a>
 </div>
 <p id="section-3-4">The extension is available on a hop only if both endpoints on that hop included this option.
-The extension is negotiated independently on each hop: a relay <span class="bcp14">MAY</span> support it upstream but not downstream, or vice versa, and <span class="bcp14">MUST NOT</span> forward the parameter onto a hop that did not negotiate it.<a href="#section-3-4" class="pilcrow">¶</a></p>
-<p id="section-3-5">This extension only adds an optional parameter to existing messages, so a peer that receives the parameter without having negotiated the extension <span class="bcp14">MUST</span> ignore it rather than treating it as an error.
-Ignoring an un-negotiated count simply collapses that subscription's contribution to the default of <code>1</code> (see <a href="#semantics" class="auto internal xref">Section 5</a>); it does not break delivery.<a href="#section-3-5" class="pilcrow">¶</a></p>
+The extension is negotiated independently on each hop: a relay <span class="bcp14">MAY</span> support it upstream but not downstream, or vice versa.<a href="#section-3-4" class="pilcrow">¶</a></p>
+<p id="section-3-5">Negotiation is mandatory before the message is sent.
+<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> (Section 10) requires an endpoint that receives an unknown control message type to close the session, so — unlike an optional parameter, which can be ignored — a SUBSCRIBER_COUNT message cannot be sent speculatively.
+An endpoint <span class="bcp14">MUST NOT</span> send SUBSCRIBER_COUNT on a hop that did not negotiate this extension.<a href="#section-3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="subscriber-count-parameter">
+<div id="subscribercount-message">
 <section id="section-4">
-      <h2 id="name-subscriber-count-parameter">
-<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-subscriber-count-parameter" class="section-name selfRef">Subscriber Count Parameter</a>
+      <h2 id="name-subscriber_count-message">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-subscriber_count-message" class="section-name selfRef">SUBSCRIBER_COUNT Message</a>
       </h2>
-<p id="section-4-1">This document defines a new parameter for use in the Parameters field of the SUBSCRIBE (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10.7) and REQUEST_UPDATE (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10.9) messages, encoded as a Key-Value-Pair (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 1.4.3).<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-1">This document defines a new control message, sent on a subscription's request stream (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 3.3) by the endpoint that opened it (the subscriber, which for an upstream subscription is the relay).<a href="#section-4-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4-2">
 <pre>
-SUBSCRIBER_COUNT Parameter {
-  Type (vi64) = 0xC0116
-  Value (vi64)              ; Subscriber Count - 1
+SUBSCRIBER_COUNT Message {
+  Type (vi64) = 0xC0117
+  Length (16)
+  Subscriber Count (vi64)   ; encoded as count - 1
 }
 </pre><a href="#section-4-2" class="pilcrow">¶</a>
 </div>
-<p id="section-4-3">The Type <code>0xC0116</code> is even, so per <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 1.4.3 the Value is a single varint with no length prefix.<a href="#section-4-3" class="pilcrow">¶</a></p>
-<p id="section-4-4"><strong>Value</strong>:
+<p id="section-4-3">The message <span class="bcp14">MUST NOT</span> be the first message on the request stream; it follows the SUBSCRIBE (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10.7) that opened the stream.
+It consumes no Request ID (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10.1), and the receiver <span class="bcp14">MUST NOT</span> respond to it.
+A subscriber <span class="bcp14">MAY</span> send it any number of times over the life of the subscription to refresh the count.<a href="#section-4-3" class="pilcrow">¶</a></p>
+<p id="section-4-4"><strong>Subscriber Count</strong>:
 The number of subscribers this subscription represents, including the subscriber itself, encoded as the count minus one.
 The subscription is the implicit <code>1</code>, so the wire value is <code>Subscriber Count - 1</code>: a leaf encodes <code>0</code>, and a relay encodes its summed total minus one.<a href="#section-4-4" class="pilcrow">¶</a></p>
 <p id="section-4-5">Encoding <code>count - 1</code> rather than the count itself makes a count of <code>0</code> impossible to represent on the wire: the minimum encodable value is <code>0</code>, which decodes to a count of <code>1</code>.
 A subscription can never report fewer subscribers than itself.<a href="#section-4-5" class="pilcrow">¶</a></p>
-<p id="section-4-6">A subscriber <span class="bcp14">MAY</span> include this parameter in SUBSCRIBE and in any REQUEST_UPDATE.
-If the parameter is absent, the wire value is treated as <code>0</code>, so the count for that subscription is <code>1</code>.
-A leaf subscriber therefore reports <code>1</code>, whether by sending a wire value of <code>0</code> or by omitting the parameter.<a href="#section-4-6" class="pilcrow">¶</a></p>
+<p id="section-4-6">Until a SUBSCRIBER_COUNT message is received for a subscription, its count is <code>1</code>.
+A leaf subscriber that represents only itself therefore need not send the message at all.<a href="#section-4-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="semantics">
@@ -1265,15 +1271,15 @@ A leaf subscriber therefore reports <code>1</code>, whether by sending a wire va
       </h2>
 <p id="section-5-1">The count is a reduction up the subscription tree.<a href="#section-5-1" class="pilcrow">¶</a></p>
 <p id="section-5-2">A <strong>leaf subscriber</strong> (one that is not a relay) represents itself: a count of <code>1</code>.
-It <span class="bcp14">MAY</span> omit the parameter to mean the same thing.<a href="#section-5-2" class="pilcrow">¶</a></p>
-<p id="section-5-3">A <strong>relay</strong> that aggregates one or more downstream subscriptions for a Track into a single upstream subscription sets the SUBSCRIBER_COUNT on that upstream subscription to the <strong>sum</strong> of the counts of the downstream subscriptions, treating an absent downstream parameter as <code>1</code>.
-When a downstream count changes, or a downstream subscription is added or removed, the relay recomputes the sum and, if it changed, refreshes the upstream value with REQUEST_UPDATE.<a href="#section-5-3" class="pilcrow">¶</a></p>
+It need not send the message to mean this.<a href="#section-5-2" class="pilcrow">¶</a></p>
+<p id="section-5-3">A <strong>relay</strong> that aggregates one or more downstream subscriptions for a Track into a single upstream subscription sets the count it reports on that upstream subscription to the <strong>sum</strong> of the counts of the downstream subscriptions, treating a downstream subscription that has not reported as <code>1</code>.
+When a downstream count changes, or a downstream subscription is added or removed, the relay recomputes the sum and, if it changed, sends a SUBSCRIBER_COUNT message upstream with the new total.<a href="#section-5-3" class="pilcrow">¶</a></p>
 <p id="section-5-4">A relay <span class="bcp14">MUST</span> report at least <code>1</code> for any upstream subscription it is holding open, even if it currently has no live downstream subscribers (for example, a subscription briefly retained for reuse).
 The <code>count - 1</code> encoding enforces this floor automatically: a sum of <code>0</code> still encodes a wire value of <code>0</code>, which decodes upstream as <code>1</code>.
 A held subscription cannot represent fewer subscribers than itself.<a href="#section-5-4" class="pilcrow">¶</a></p>
-<p id="section-5-5">Because each relay reports the sum of its subtree, the value telescopes: at the origin, the SUBSCRIBER_COUNT on a given upstream subscription is the total number of leaf subscribers reachable through that subscription, across any number of relay hops.
+<p id="section-5-5">Because each relay reports the sum of its subtree, the value telescopes: at the origin, the count on a given upstream subscription is the total number of leaf subscribers reachable through that subscription, across any number of relay hops.
 A publisher reads its total audience for a Track as the sum of the counts of the subscriptions it is serving.<a href="#section-5-5" class="pilcrow">¶</a></p>
-<p id="section-5-6">This parameter alters no delivery behavior.
+<p id="section-5-6">The message alters no delivery behavior.
 It <span class="bcp14">MUST NOT</span> influence prioritization, caching, congestion response, or any other distribution decision; it is informational telemetry carried alongside the subscription.<a href="#section-5-6" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1282,10 +1288,10 @@ It <span class="bcp14">MUST NOT</span> influence prioritization, caching, conges
       <h2 id="name-rate-limiting">
 <a href="#section-6" class="section-number selfRef">6. </a><a href="#name-rate-limiting" class="section-name selfRef">Rate Limiting</a>
       </h2>
-<p id="section-6-1">Subscriber churn can change the count rapidly, and at a busy relay each change would otherwise produce an upstream REQUEST_UPDATE.<a href="#section-6-1" class="pilcrow">¶</a></p>
-<p id="section-6-2">A relay <span class="bcp14">SHOULD</span> rate-limit REQUEST_UPDATE messages whose only change is the SUBSCRIBER_COUNT, coalescing changes that occur within a short window (on the order of a second) and then forwarding the latest sum.
-Because the parameter carries the current count rather than a delta, a change that reverts within the window — a subscriber that joins and leaves, or leaves and returns — requires no upstream message at all.<a href="#section-6-2" class="pilcrow">¶</a></p>
-<p id="section-6-3">A relay <span class="bcp14">MUST NOT</span> coalesce a SUBSCRIBER_COUNT change with, or delay it behind, a REQUEST_UPDATE that also changes delivery-affecting fields; those are forwarded according to <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> without additional delay.<a href="#section-6-3" class="pilcrow">¶</a></p>
+<p id="section-6-1">Subscriber churn can change the count rapidly, and at a busy relay each change would otherwise produce an upstream SUBSCRIBER_COUNT message.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">A relay <span class="bcp14">SHOULD</span> rate-limit SUBSCRIBER_COUNT messages per subscription, coalescing changes that occur within a short window (on the order of a second) and then sending the latest sum.
+Because the message carries the current count rather than a delta, a change that reverts within the window — a subscriber that joins and leaves, or leaves and returns — requires no upstream message at all.<a href="#section-6-2" class="pilcrow">¶</a></p>
+<p id="section-6-3">Because the message is independent of REQUEST_UPDATE, this rate limiting never delays a genuine subscription change: delivery-affecting updates are forwarded according to <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> without regard to the count's window.<a href="#section-6-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="security-considerations">
@@ -1304,7 +1310,8 @@ The value is therefore advisory: an endpoint <span class="bcp14">MUST NOT</span>
 A relay aggregates the values it receives but cannot attest to the honesty of its downstream peers.<a href="#section-7-2" class="pilcrow">¶</a></p>
 <p id="section-7-3"><strong>Churn amplification.</strong>
 A subscriber that rapidly joins and leaves could attempt to amplify control traffic toward the origin by forcing repeated count updates.
-The rate-limiting in <span><a href="#rate-limiting" class="internal xref">Rate Limiting</a> (<a href="#rate-limiting" class="auto internal xref">Section 6</a>)</span> bounds this: the upstream message rate per subscription is capped regardless of downstream churn, and reverts within the window are suppressed entirely.<a href="#section-7-3" class="pilcrow">¶</a></p>
+The rate-limiting in <span><a href="#rate-limiting" class="internal xref">Rate Limiting</a> (<a href="#rate-limiting" class="auto internal xref">Section 6</a>)</span> bounds this: the upstream SUBSCRIBER_COUNT rate per subscription is capped regardless of downstream churn, and reverts within the window are suppressed entirely.
+Because the message consumes no Request ID and elicits no response, this churn cannot exhaust an identifier space or force the origin into matching replies.<a href="#section-7-3" class="pilcrow">¶</a></p>
 <p id="section-7-4">This extension introduces no other security considerations beyond those described in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>.<a href="#section-7-4" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1341,27 +1348,30 @@ A high, distinctive value is chosen to avoid the low ranges reserved by <span>[<
         </table>
 </section>
 </div>
-<div id="moqt-message-parameters">
+<div id="moqt-message-types">
 <section id="section-8.2">
-        <h3 id="name-moqt-message-parameters">
-<a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-moqt-message-parameters" class="section-name selfRef">MOQT Message Parameters</a>
+        <h3 id="name-moqt-message-types">
+<a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-moqt-message-types" class="section-name selfRef">MOQT Message Types</a>
         </h3>
-<p id="section-8.2-1">This document requests a registration in the "Message Parameters" registry (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 15.7).
-The value is <strong>even</strong> so that, per the Key-Value-Pair encoding (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 1.4.3), the count is carried as a single varint with no length prefix.
-A high, distinctive value is chosen to avoid the low ranges reserved by <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> and to minimize collisions with provisional registrations by other extensions; it also avoids the greasing pattern (<code>0x7f * N + 0x9D</code>).<a href="#section-8.2-1" class="pilcrow">¶</a></p>
+<p id="section-8.2-1">This document registers a control message type.
+<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> does not yet establish an IANA registry for message types, so this is a provisional codepoint pending such a registry; the value is chosen to be high and distinctive to avoid the low ranges <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> assigns and to minimize collisions with provisional registrations by other extensions, and it avoids the greasing pattern (<code>0x7f * N + 0x9D</code>).
+This is the same value as the SUBSCRIBER_COUNT Setup Option above; Setup Options and message types are independent namespaces, so the shared value is unambiguous.<a href="#section-8.2-1" class="pilcrow">¶</a></p>
+<p id="section-8.2-2">The Stream column has the meaning defined by <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10: "Request" indicates the message is carried on a bidirectional request stream. The message is not marked "First": it never opens a request stream.<a href="#section-8.2-2" class="pilcrow">¶</a></p>
 <table class="center" id="table-2">
           <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
 <thead>
             <tr>
               <th class="text-left" rowspan="1" colspan="1">Value</th>
               <th class="text-left" rowspan="1" colspan="1">Name</th>
+              <th class="text-left" rowspan="1" colspan="1">Stream</th>
               <th class="text-left" rowspan="1" colspan="1">Reference</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td class="text-left" rowspan="1" colspan="1">0xC0116</td>
+              <td class="text-left" rowspan="1" colspan="1">0xC0117</td>
               <td class="text-left" rowspan="1" colspan="1">SUBSCRIBER_COUNT</td>
+              <td class="text-left" rowspan="1" colspan="1">Request</td>
               <td class="text-left" rowspan="1" colspan="1">This Document</td>
             </tr>
           </tbody>
