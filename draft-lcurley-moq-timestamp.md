@@ -43,6 +43,9 @@ A relay frequently needs a notion of *when* an object is meant to be presented:
 - **Consistent expiration across hops**: every relay on a path should make the same drop decision for the same object. A timestamp embedded in the object is identical at every hop; a wall-clock arrival time is not.
 - **Synchronization hints**: a subscriber can align objects from multiple tracks (e.g. audio and video) using a shared media timeline without first decoding each container.
 
+MoQ also demultiplexes media into many independent tracks — audio, video, captions, metadata, and more — so a timestamp is needed on nearly every track.
+Re-implementing per-object timestamping inside each application's container format, for every track, is repetitive and error-prone; standardizing it at the transport lets one implementation serve every track and lets relays use it directly.
+
 This extension exposes media time to the transport with three Key-Value-Pairs ({{moqt}} Section 2.5): a track-level **Timescale**, an object-level **Timestamp**, and an optional object-level **Duration**.
 The transport does not interpret the *meaning* of the timeline (it is still the application's clock); it only uses the timestamp for relative age comparisons.
 
@@ -81,6 +84,10 @@ Common values include `1000` (milliseconds), `1000000` (microseconds), `48000` (
 A value of `0`, or the absence of the property, means the track has no media timeline: Timestamp and Duration properties, if present, MUST be ignored, and a relay MUST fall back to wall-clock arrival time for any age-based decision.
 
 The Timescale is fixed for the lifetime of the track and MUST NOT change.
+
+The Timescale is required to interpret the units of every Timestamp and Duration, so a receiver cannot resolve an object's timing until it has the track's properties.
+Those properties are delivered in SUBSCRIBE_OK or TRACK_STATUS ({{moqt}} Section 12), so a receiver that begins receiving objects before it has them MUST buffer the timing (or treat it as unknown) until the Timescale arrives.
+A relay that has not yet learned the Timescale MUST fall back to wall-clock arrival time for any age-based decision.
 
 
 # TIMESTAMP Object Property
@@ -125,7 +132,7 @@ DURATION Object Property {
 The presentation duration of the object, expressed in the track's Timescale.
 A value of `0`, or the absence of the property, means the duration is unknown; the object is presented until the next object begins.
 
-Duration is an application-level hint and is not used by the transport for delivery or dropping decisions.
+Duration is primarily an application-level presentation hint, but a relay MAY also use it to refine age-based dropping: an object's Timestamp plus its Duration marks the end of its presentation interval, which is a more precise "this object is now in the past" signal than the Timestamp alone (for example, the last object of a group has no following object to bound it). A relay MUST NOT rely on Duration being present; when it is absent, the relay falls back to comparing Timestamps as in [Age-Based Dropping](#age-based-dropping).
 
 
 # Security Considerations
