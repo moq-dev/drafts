@@ -163,9 +163,6 @@ This keep-alive operates at the WebSocket layer and is separate from the QMux `m
 QMux datagrams are supported.
 They are negotiated and encoded exactly as in [qmux]: an endpoint advertises the datagram transport parameter and carries QMux DATAGRAM frames inside binary messages, like any other frame ({{framing}}).
 
-A WebSocket connection is reliable and ordered, so DATAGRAM frames carried over this binding are delivered reliably and in order rather than with the best-effort, drop-on-congestion semantics of the QUIC datagram extension.
-This difference is inherent to running over a reliable byte-stream transport and applies equally to QMux over TCP or TLS; an application that depends on datagrams being droppable over native QUIC needs to account for it.
-
 
 # Connection Close {#close}
 An endpoint terminates a QMux-over-WebSocket connection by sending a WebSocket Close frame [RFC6455] and then closing the underlying transport.
