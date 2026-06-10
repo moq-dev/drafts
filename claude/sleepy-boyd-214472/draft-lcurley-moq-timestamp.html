@@ -1221,8 +1221,10 @@ A relay frequently needs a notion of <em>when</em> an object is meant to be pres
           <p id="section-2-3.3.1"><strong>Synchronization hints</strong>: a subscriber can align objects from multiple tracks (e.g. audio and video) using a shared media timeline without first decoding each container.<a href="#section-2-3.3.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-2-4">This extension exposes media time to the transport with three Key-Value-Pairs (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 2.5): a track-level <strong>Timescale</strong>, an object-level <strong>Timestamp</strong>, and an optional object-level <strong>Duration</strong>.
-The transport does not interpret the <em>meaning</em> of the timeline (it is still the application's clock); it only uses the timestamp for relative age comparisons.<a href="#section-2-4" class="pilcrow">¶</a></p>
+<p id="section-2-4">MoQ also demultiplexes media into many independent tracks — audio, video, captions, metadata, and more — so a timestamp is needed on nearly every track.
+Re-implementing per-object timestamping inside each application's container format, for every track, is repetitive and error-prone; standardizing it at the transport lets one implementation serve every track and lets relays use it directly.<a href="#section-2-4" class="pilcrow">¶</a></p>
+<p id="section-2-5">This extension exposes media time to the transport with three Key-Value-Pairs (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 2.5): a track-level <strong>Timescale</strong>, an object-level <strong>Timestamp</strong>, and an optional object-level <strong>Duration</strong>.
+The transport does not interpret the <em>meaning</em> of the timeline (it is still the application's clock); it only uses the timestamp for relative age comparisons.<a href="#section-2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="setup-negotiation">
@@ -1266,6 +1268,9 @@ The number of timestamp units per second.
 Common values include <code>1000</code> (milliseconds), <code>1000000</code> (microseconds), <code>48000</code> (a typical audio sample rate), and <code>90000</code> (the RTP video clock).
 A value of <code>0</code>, or the absence of the property, means the track has no media timeline: Timestamp and Duration properties, if present, <span class="bcp14">MUST</span> be ignored, and a relay <span class="bcp14">MUST</span> fall back to wall-clock arrival time for any age-based decision.<a href="#section-4-3" class="pilcrow">¶</a></p>
 <p id="section-4-4">The Timescale is fixed for the lifetime of the track and <span class="bcp14">MUST NOT</span> change.<a href="#section-4-4" class="pilcrow">¶</a></p>
+<p id="section-4-5">The Timescale is required to interpret the units of every Timestamp and Duration, so a receiver cannot resolve an object's timing until it has the track's properties.
+Those properties are delivered in SUBSCRIBE_OK or TRACK_STATUS (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 12), so a receiver that begins receiving objects before it has them <span class="bcp14">MUST</span> buffer the timing (or treat it as unknown) until the Timescale arrives.
+A relay that has not yet learned the Timescale <span class="bcp14">MUST</span> fall back to wall-clock arrival time for any age-based decision.<a href="#section-4-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="timestamp-object-property">
@@ -1320,7 +1325,7 @@ DURATION Object Property {
 <p id="section-6-3"><strong>Value</strong>:
 The presentation duration of the object, expressed in the track's Timescale.
 A value of <code>0</code>, or the absence of the property, means the duration is unknown; the object is presented until the next object begins.<a href="#section-6-3" class="pilcrow">¶</a></p>
-<p id="section-6-4">Duration is an application-level hint and is not used by the transport for delivery or dropping decisions.<a href="#section-6-4" class="pilcrow">¶</a></p>
+<p id="section-6-4">Duration is primarily an application-level presentation hint, but a relay <span class="bcp14">MAY</span> also use it to refine age-based dropping: an object's Timestamp plus its Duration marks the end of its presentation interval, which is a more precise "this object is now in the past" signal than the Timestamp alone (for example, the last object of a group has no following object to bound it). A relay <span class="bcp14">MUST NOT</span> rely on Duration being present; when it is absent, the relay falls back to comparing Timestamps as in <span><a href="#age-based-dropping" class="internal xref">Age-Based Dropping</a> (<a href="#age-based-dropping" class="auto internal xref">Section 5.1</a>)</span>.<a href="#section-6-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="security-considerations">
