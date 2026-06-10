@@ -87,7 +87,11 @@ COMPRESSION Track Property {
 The Algorithm identifier the publisher recommends for this track's payloads.
 The absence of the property, or a value of `none` (0), means the track is not marked for compression and its payloads are always transmitted verbatim.
 
-The property is fixed for the lifetime of the track and MUST NOT change; a relay forwards it unchanged.
+The property is fixed for the lifetime of the track and MUST NOT change.
+A relay MUST forward it unchanged on every hop, including a hop that has not negotiated the extension: there it is simply an ignored unknown Key-Value-Pair, but forwarding it lets a further-downstream hop that does negotiate the extension still act on the publisher's signal.
+
+Compression is enabled only by the combination of this track property and the extension being negotiated on a hop.
+A publisher MUST NOT compress object payloads on a track that does not carry the COMPRESSION property, and there is no way to enable compression on a per-object basis: the property governs the whole track, and on a compressing hop every non-empty payload is compressed.
 
 Whether payloads are actually compressed is decided per hop:
 
