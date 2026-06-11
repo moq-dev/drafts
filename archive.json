@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-06-09T02:26:01.850089+00:00",
+  "timestamp": "2026-06-11T02:48:46.983625+00:00",
   "repo": "moq-dev/drafts",
   "labels": [
     {
@@ -2108,20 +2108,993 @@
       "id": "PR_kwDOLz_x-M7kKx0A",
       "title": "moq-lite-05: add Path Setup Parameter for URI-less transports",
       "url": "https://github.com/moq-dev/drafts/pull/27",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "kixelated",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "## What\n\nAdds a `Path` Setup Parameter (`0x2`) to moq-lite, letting a client convey the request path it wants to reach (origin / relay / virtual host) at connection setup. Modeled on the PATH parameter from [draft-ietf-moq-transport-18](https://www.ietf.org/archive/id/draft-ietf-moq-transport-18.txt).\n\n## Why\n\nTwo of moq-lite's four transport bindings \u2014 bare QUIC (binding 1) and Qmux-over-TCP/TLS (binding 3) \u2014 negotiate only an ALPN token and have **no request URI**. Without this parameter, a client on those transports has no way to indicate which path it wants, so a server cannot route the session before broadcasts are exchanged. The URI-bearing bindings (WebTransport's CONNECT path, WebSocket's request URI) already carry it in their handshake.\n\n## Details\n\n- New parameter in the Setup Parameter registry: `0x2 | Path | Path (s)`.\n- Value is a non-empty UTF-8 URI path beginning with `/` ([RFC3986], added as a normative reference).\n- **Client-only.** SETUP is bidirectional in moq-lite, so the asymmetry is stated explicitly: a server MUST NOT send it; a client that receives one closes with `PROTOCOL_VIOLATION`.\n- **Required** on bindings 1 and 3; **forbidden** on bindings 2 and 4 (which carry the path in their handshake URI) \u2014 a server receiving it there closes with `PROTOCOL_VIOLATION`.\n- Empty/malformed path \u2192 `PROTOCOL_VIOLATION`; unrecognized/unsupported path \u2192 session close. Uses moq-lite's existing generic error handling rather than introducing dedicated `INVALID_PATH`/`MALFORMED_PATH` codes.\n- Relays MUST NOT forward it (per-hop, like other negotiated capabilities).\n- Pointer added in the Session section.\n\n## Reviewer notes\n\n- The original request was \"native QUIC only,\" but the underlying reason PATH exists (\"no handshake URI\") applies equally to Qmux-over-TCP/TLS. Scope was deliberately extended to both URI-less bindings (1 and 3) so TCP/TLS sessions aren't left unable to specify a path.\n- Spec/doc change only \u2014 not built locally (requires the i-d-template toolchain).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
       "createdAt": "2026-06-09T01:38:13Z",
-      "updatedAt": "2026-06-09T01:40:05Z",
+      "updatedAt": "2026-06-09T16:35:40Z",
       "baseRepository": "moq-dev/drafts",
       "baseRefName": "main",
       "baseRefOid": "a5b185a38dffa8fbd71bf35b456ef8150d5f5e56",
       "headRepository": "moq-dev/drafts",
       "headRefName": "claude/exciting-varahamihira-cc9460",
       "headRefOid": "d61341fdf0ecd1a2d17a0292653f8ba96ae64246",
+      "closedAt": "2026-06-09T16:35:40Z",
+      "mergedAt": "2026-06-09T16:35:40Z",
+      "mergedBy": "kixelated",
+      "mergeCommit": {
+        "oid": "d1174e6e6addc55330ee69ae9a290376e5e51425"
+      },
+      "comments": [
+        {
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "body": "<!-- This is an auto-generated comment: summarize by coderabbit.ai -->\n<!-- review_stack_entry_start -->\n\n[![Review Change Stack](https://storage.googleapis.com/coderabbit_public_assets/review-stack-in-coderabbit-ui.svg)](https://app.coderabbit.ai/change-stack/moq-dev/drafts/pull/27?utm_source=github_walkthrough&utm_medium=github&utm_campaign=change_stack)\n\n<!-- review_stack_entry_end -->\nNo actionable comments were generated in the recent review. \ud83c\udf89\n\n<details>\n<summary>\u2139\ufe0f Recent review info</summary>\n\n<details>\n<summary>\u2699\ufe0f Run configuration</summary>\n\n**Configuration used**: Organization UI\n\n**Review profile**: CHILL\n\n**Plan**: Pro\n\n**Run ID**: `ab32403f-cf2d-442f-bdf5-97715228ed72`\n\n</details>\n\n<details>\n<summary>\ud83d\udce5 Commits</summary>\n\nReviewing files that changed from the base of the PR and between a5b185a38dffa8fbd71bf35b456ef8150d5f5e56 and d61341fdf0ecd1a2d17a0292653f8ba96ae64246.\n\n</details>\n\n<details>\n<summary>\ud83d\udcd2 Files selected for processing (1)</summary>\n\n* `draft-lcurley-moq-lite.md`\n\n</details>\n\n</details>\n\n---\n<!-- walkthrough_start -->\n\n## Walkthrough\n\nThis pull request adds a Path Parameter capability to the MOQ Lite SETUP protocol. The change introduces a new mechanism for client-to-server communication of request paths in protocol bindings that do not define their own request URI (such as ALPN-only QUIC and Qmux over TCP/TLS). The implementation includes a normative reference to RFC3986, a parameter table entry defining Path as parameter ID 0x2 with string value type, and a complete specification section detailing encoding constraints, required presence/absence by binding type, error-handling behavior, and relay forwarding rules.\n\n<!-- walkthrough_end -->\n<!-- pre_merge_checks_walkthrough_start -->\n\n<details>\n<summary>\ud83d\udea5 Pre-merge checks | \u2705 5</summary>\n\n<details>\n<summary>\u2705 Passed checks (5 passed)</summary>\n\n|         Check name         | Status   | Explanation                                                                                                                                        |\n| :------------------------: | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |\n|         Title check        | \u2705 Passed | The title accurately and concisely describes the main change: adding a Path Setup Parameter to moq-lite for transports without request URIs.       |\n|      Description check     | \u2705 Passed | The description is detailed and directly related to the changeset, explaining the what, why, and technical details of the Path parameter addition. |\n|     Docstring Coverage     | \u2705 Passed | No functions found in the changed files to evaluate docstring coverage. Skipping docstring coverage check.                                         |\n|     Linked Issues check    | \u2705 Passed | Check skipped because no linked issues were found for this pull request.                                                                           |\n| Out of Scope Changes check | \u2705 Passed | Check skipped because no linked issues were found for this pull request.                                                                           |\n\n</details>\n\n<sub>\u270f\ufe0f Tip: You can configure your own custom pre-merge checks in the settings.</sub>\n\n</details>\n\n<!-- pre_merge_checks_walkthrough_end -->\n<!-- finishing_touch_checkbox_start -->\n\n<details>\n<summary>\u2728 Finishing Touches</summary>\n\n<details>\n<summary>\u2728 Simplify code</summary>\n\n- [ ] <!-- {\"checkboxId\": \"f120d606-b0e2-4b7d-8316-181794555b43\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Create PR with simplified code\n- [ ] <!-- {\"checkboxId\": \"9a4e3077-58f6-4eba-b7ee-62e936ea00ea\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Commit simplified code in branch `claude/exciting-varahamihira-cc9460`\n\n</details>\n\n</details>\n\n<!-- finishing_touch_checkbox_end -->\n<!-- tips_start -->\n\n---\n\nThanks for using [CodeRabbit](https://coderabbit.ai?utm_source=oss&utm_medium=github&utm_campaign=moq-dev/drafts&utm_content=27)! It's free for OSS, and your support helps us grow. If you like it, consider giving us a shout-out.\n\n<details>\n<summary>\u2764\ufe0f Share</summary>\n\n- [X](https://twitter.com/intent/tweet?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A&url=https%3A//coderabbit.ai)\n- [Mastodon](https://mastodon.social/share?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A%20https%3A%2F%2Fcoderabbit.ai)\n- [Reddit](https://www.reddit.com/submit?title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&text=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code.%20Check%20it%20out%3A%20https%3A//coderabbit.ai)\n- [LinkedIn](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcoderabbit.ai&mini=true&title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&summary=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code)\n\n</details>\n\n\n<sub>Comment `@coderabbitai help` to get the list of available commands and usage tips.</sub>\n\n<!-- tips_end -->\n<!-- internal state start -->\n\n\n<!-- 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 -->\n\n<!-- internal state end -->",
+          "createdAt": "2026-06-09T01:40:05Z",
+          "updatedAt": "2026-06-09T01:40:05Z"
+        }
+      ],
+      "reviews": []
+    },
+    {
+      "number": 28,
+      "id": "PR_kwDOLz_x-M7kd7J4",
+      "title": "moq-lite: add Path Setup Parameter for URI-less transports",
+      "url": "https://github.com/moq-dev/drafts/pull/28",
+      "state": "MERGED",
+      "author": "kixelated",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "## What\n\nAdds a `Path` Setup Parameter (`0x2`) to moq-lite, letting a client convey the request path it wants to reach (origin / relay / virtual host) at connection setup. Modeled on the PATH parameter from [draft-ietf-moq-transport-18](https://www.ietf.org/archive/id/draft-ietf-moq-transport-18.txt).\n\n## Why\n\nTwo of moq-lite's four transport bindings \u2014 bare QUIC (binding 1) and Qmux-over-TCP/TLS (binding 3) \u2014 negotiate only an ALPN token and have **no request URI**. Without this parameter, a client on those transports has no way to indicate which path it wants, so a server cannot route the session before broadcasts are exchanged. The URI-bearing bindings (WebTransport's CONNECT path, WebSocket's request URI) already carry it in their handshake.\n\n## Details\n\n- New parameter in the Setup Parameter registry: `0x2 | Path | Path (s)`.\n- Value is a non-empty UTF-8 URI path beginning with `/` ([RFC3986], added as a normative reference).\n- **Client-only.** SETUP is bidirectional in moq-lite, so the asymmetry is stated explicitly: a server MUST NOT send it; a client that receives one closes with `PROTOCOL_VIOLATION`.\n- **Required** on bindings 1 and 3; **forbidden** on bindings 2 and 4 (which carry the path in their handshake URI) \u2014 a server receiving it there closes with `PROTOCOL_VIOLATION`.\n- Empty/malformed path \u2192 `PROTOCOL_VIOLATION`; unrecognized/unsupported path \u2192 session close. Uses moq-lite's existing generic error handling rather than introducing dedicated `INVALID_PATH`/`MALFORMED_PATH` codes.\n- Relays MUST NOT forward it (per-hop, like other negotiated capabilities).\n- Pointer added in the Session section.\n\n## Reviewer notes\n\n- The original request was \"native QUIC only,\" but the underlying reason PATH exists (\"no handshake URI\") applies equally to Qmux-over-TCP/TLS. Scope was deliberately extended to both URI-less bindings (1 and 3) so TCP/TLS sessions aren't left unable to specify a path.\n- Spec/doc change only \u2014 not built locally (requires the i-d-template toolchain).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+      "createdAt": "2026-06-09T16:36:17Z",
+      "updatedAt": "2026-06-09T18:28:17Z",
+      "baseRepository": "moq-dev/drafts",
+      "baseRefName": "main",
+      "baseRefOid": "d1174e6e6addc55330ee69ae9a290376e5e51425",
+      "headRepository": "moq-dev/drafts",
+      "headRefName": "claude/thirsty-spence-98309b",
+      "headRefOid": "aac5801db0bde7445edb0d5c55be96487f1771ff",
+      "closedAt": "2026-06-09T18:28:17Z",
+      "mergedAt": "2026-06-09T18:28:17Z",
+      "mergedBy": "kixelated",
+      "mergeCommit": {
+        "oid": "bacaaa249da753fbb0909cb7fca6189bfad60ed5"
+      },
+      "comments": [
+        {
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "body": "<!-- This is an auto-generated comment: summarize by coderabbit.ai -->\n<!-- review_stack_entry_start -->\n\n[![Review Change Stack](https://storage.googleapis.com/coderabbit_public_assets/review-stack-in-coderabbit-ui.svg)](https://app.coderabbit.ai/change-stack/moq-dev/drafts/pull/28?utm_source=github_walkthrough&utm_medium=github&utm_campaign=change_stack)\n\n<!-- review_stack_entry_end -->\n<!-- This is an auto-generated comment: rate limited by coderabbit.ai -->\n\n> [!WARNING]\n> ## Review limit reached\n> \n> `@kixelated`, we couldn't start this review because you've reached your PR review rate limit.\n> \n> More reviews will be available in 55 minutes and 40 seconds. [Learn how PR review limits work](https://docs.coderabbit.ai/management/plans#fair-usage-limits-policy).\n> \n> Your organization has run out of usage credits. Purchase more in the [billing tab](https://app.coderabbit.ai/settings/subscription?tab=usage&tenantId=43a3cc7a-9a22-46cb-854d-dec79a791215).\n> \n> <details>\n> <summary>\u231b How to resolve this issue?</summary>\n> \n> After more reviews become available, a review can be triggered using the `@coderabbitai review` command as a PR comment. Alternatively, push new commits to this PR.\n> \n> We recommend that you space out your commits to avoid hitting the rate limit.\n> \n> </details>\n> \n> \n> <details>\n> <summary>\ud83d\udea6 How do rate limits work?</summary>\n> \n> CodeRabbit enforces hourly rate limits for each developer per organization.\n> \n> Our paid plans include higher PR review limits than trial, open-source, and free plans. In all cases, reviews become available again over time. During sustained high-volume PR review activity, CodeRabbit may temporarily slow when the next review becomes available.\n> \n> Please see our [Fair Usage Limits Policy](https://docs.coderabbit.ai/management/plans#fair-usage-limits-policy) for further information.\n> \n> </details>\n> \n> <details>\n> <summary>\u2139\ufe0f Review info</summary>\n> \n> <details>\n> <summary>\u2699\ufe0f Run configuration</summary>\n> \n> **Configuration used**: Organization UI\n> \n> **Review profile**: CHILL\n> \n> **Plan**: Pro\n> \n> **Run ID**: `85072db1-3daa-4696-93fb-3cedbeb2543b`\n> \n> </details>\n> \n> <details>\n> <summary>\ud83d\udce5 Commits</summary>\n> \n> Reviewing files that changed from the base of the PR and between 9bb3b3c042c0e0885aa3f1fe719de6274c8d6805 and aac5801db0bde7445edb0d5c55be96487f1771ff.\n> \n> </details>\n> \n> <details>\n> <summary>\ud83d\udcd2 Files selected for processing (1)</summary>\n> \n> * `draft-lcurley-moq-lite.md`\n> \n> </details>\n> \n> </details>\n\n<!-- end of auto-generated comment: rate limited by coderabbit.ai -->\n\n<!-- walkthrough_start -->\n\n## Walkthrough\n\nThis PR updates the MOQ Lite protocol specification to support request path negotiation on ALPN-only bindings. It adds RFC3986 as a normative reference, clarifies that ALPN bindings lack a request URI and must receive the path via a new SETUP parameter, defines the Path parameter (0x2) in the SETUP table, and provides comprehensive specification of the parameter's format (non-empty UTF-8 URI path starting with `/`), usage requirements (exactly once on ALPN bindings, forbidden on others), and relay restrictions.\n\n<!-- walkthrough_end -->\n<!-- pre_merge_checks_walkthrough_start -->\n\n<details>\n<summary>\ud83d\udea5 Pre-merge checks | \u2705 5</summary>\n\n<details>\n<summary>\u2705 Passed checks (5 passed)</summary>\n\n|         Check name         | Status   | Explanation                                                                                                                                                                                                               |\n| :------------------------: | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |\n|         Title check        | \u2705 Passed | The title directly and accurately summarizes the main change: introducing a Path Setup Parameter for transports (QUIC and Qmux-over-TCP/TLS) that lack a request URI in their handshake.                                  |\n|      Description check     | \u2705 Passed | The description thoroughly explains what is being added (Path parameter 0x2), why it is needed (URI-less transports cannot convey path), how it works, and relevant implementation details that align with the changeset. |\n|     Docstring Coverage     | \u2705 Passed | No functions found in the changed files to evaluate docstring coverage. Skipping docstring coverage check.                                                                                                                |\n|     Linked Issues check    | \u2705 Passed | Check skipped because no linked issues were found for this pull request.                                                                                                                                                  |\n| Out of Scope Changes check | \u2705 Passed | Check skipped because no linked issues were found for this pull request.                                                                                                                                                  |\n\n</details>\n\n<sub>\u270f\ufe0f Tip: You can configure your own custom pre-merge checks in the settings.</sub>\n\n</details>\n\n<!-- pre_merge_checks_walkthrough_end -->\n<!-- finishing_touch_checkbox_start -->\n\n<details>\n<summary>\u2728 Finishing Touches</summary>\n\n<details>\n<summary>\u2728 Simplify code</summary>\n\n- [ ] <!-- {\"checkboxId\": \"f120d606-b0e2-4b7d-8316-181794555b43\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Create PR with simplified code\n- [ ] <!-- {\"checkboxId\": \"9a4e3077-58f6-4eba-b7ee-62e936ea00ea\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Commit simplified code in branch `claude/thirsty-spence-98309b`\n\n</details>\n\n</details>\n\n<!-- finishing_touch_checkbox_end -->\n<!-- tips_start -->\n\n---\n\nThanks for using [CodeRabbit](https://coderabbit.ai?utm_source=oss&utm_medium=github&utm_campaign=moq-dev/drafts&utm_content=28)! It's free for OSS, and your support helps us grow. If you like it, consider giving us a shout-out.\n\n<details>\n<summary>\u2764\ufe0f Share</summary>\n\n- [X](https://twitter.com/intent/tweet?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A&url=https%3A//coderabbit.ai)\n- [Mastodon](https://mastodon.social/share?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A%20https%3A%2F%2Fcoderabbit.ai)\n- [Reddit](https://www.reddit.com/submit?title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&text=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code.%20Check%20it%20out%3A%20https%3A//coderabbit.ai)\n- [LinkedIn](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcoderabbit.ai&mini=true&title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&summary=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code)\n\n</details>\n\n\n<sub>Comment `@coderabbitai help` to get the list of available commands and usage tips.</sub>\n\n<!-- tips_end -->\n<!-- internal state start -->\n\n\n<!-- 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= -->\n\n<!-- internal state end -->",
+          "createdAt": "2026-06-09T16:38:57Z",
+          "updatedAt": "2026-06-09T16:40:44Z"
+        },
+        {
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Addressed the CodeRabbit nitpick in 353423f: reworded the Path Parameter section to consistently describe it as per-hop setup metadata (removed the \"not a capability\" framing and changed \"like every other negotiated capability\" to \"like other per-hop setup metadata\").",
+          "createdAt": "2026-06-09T16:40:01Z",
+          "updatedAt": "2026-06-09T16:40:01Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABCd-uNA",
+          "commit": {
+            "abbreviatedOid": "9bb3b3c"
+          },
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "\n\n<details>\n<summary>\ud83e\uddf9 Nitpick comments (1)</summary><blockquote>\n\n<details>\n<summary>draft-lcurley-moq-lite.md (1)</summary><blockquote>\n\n`618-631`: _\u26a1 Quick win_\n\n**Clarify capability wording to avoid normative ambiguity.**\n\nThis section says the Path Parameter is \u201cnot a capability\u201d (Line 618) but then describes relay behavior \u201clike every other negotiated capability\u201d (Line 630). Please align wording so it\u2019s consistently treated as per-hop setup metadata, not a negotiated capability.\n\n<details>\n<summary>\u270f\ufe0f Suggested wording tweak</summary>\n\n```diff\n-The Path Parameter carries the request path the client wishes to reach, equivalent to the path component of a moq-lite URI.\n+The Path Parameter carries the request path the client wishes to reach, equivalent to the path component of a moq-lite URI.\n@@\n-Unlike the other Setup Parameters it is not a capability \u2014 it is connection metadata that rides along in SETUP because that is the first client-to-server message of the session.\n+Unlike capability-style Setup Parameters, Path is connection metadata carried in SETUP because that is the first client-to-server message of the session.\n@@\n-A relay MUST NOT forward the Path Parameter; like every other negotiated capability it applies only to this hop (see [Session](`#session`)).\n+A relay MUST NOT forward the Path Parameter; it is strictly hop-scoped setup metadata (see [Session](`#session`)).\n```\n</details>\n\n<details>\n<summary>\ud83e\udd16 Prompt for AI Agents</summary>\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn `@draft-lcurley-moq-lite.md` around lines 618 - 631, Edit the Path Parameter\nwording to consistently treat it as per-hop setup metadata rather than a\nnegotiated capability: change the sentence that currently says \u201cUnlike the other\nSetup Parameters it is not a capability\u201d to clearly state it is per-hop setup\nmetadata carried in SETUP, and replace \u201clike every other negotiated capability\u201d\nwith wording such as \u201clike other per-hop setup parameters\u201d or \u201clike other setup\nmetadata that applies only to this hop\u201d so the Path Parameter, SETUP handling\nrules, and the reference to the Session section all consistently describe it as\nper-hop setup metadata (keep references to the Path Parameter, SETUP, and\nSession intact).\n```\n\n</details>\n\n<!-- cr-comment:v1:3207ac2ef1b0d9177a2424ed -->\n\n</blockquote></details>\n\n</blockquote></details>\n\n<details>\n<summary>\ud83e\udd16 Prompt for all review comments with AI agents</summary>\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nNitpick comments:\nIn `@draft-lcurley-moq-lite.md`:\n- Around line 618-631: Edit the Path Parameter wording to consistently treat it\nas per-hop setup metadata rather than a negotiated capability: change the\nsentence that currently says \u201cUnlike the other Setup Parameters it is not a\ncapability\u201d to clearly state it is per-hop setup metadata carried in SETUP, and\nreplace \u201clike every other negotiated capability\u201d with wording such as \u201clike\nother per-hop setup parameters\u201d or \u201clike other setup metadata that applies only\nto this hop\u201d so the Path Parameter, SETUP handling rules, and the reference to\nthe Session section all consistently describe it as per-hop setup metadata (keep\nreferences to the Path Parameter, SETUP, and Session intact).\n```\n\n</details>\n\n---\n\n<details>\n<summary>\u2139\ufe0f Review info</summary>\n\n<details>\n<summary>\u2699\ufe0f Run configuration</summary>\n\n**Configuration used**: Organization UI\n\n**Review profile**: CHILL\n\n**Plan**: Pro\n\n**Run ID**: `a3d18981-7158-42b8-900e-2121c57ea201`\n\n</details>\n\n<details>\n<summary>\ud83d\udce5 Commits</summary>\n\nReviewing files that changed from the base of the PR and between d1174e6e6addc55330ee69ae9a290376e5e51425 and 9bb3b3c042c0e0885aa3f1fe719de6274c8d6805.\n\n</details>\n\n<details>\n<summary>\ud83d\udcd2 Files selected for processing (1)</summary>\n\n* `draft-lcurley-moq-lite.md`\n\n</details>\n\n</details>\n\n<!-- This is an auto-generated comment by CodeRabbit for review status -->",
+          "createdAt": "2026-06-09T16:39:00Z",
+          "updatedAt": "2026-06-09T16:39:00Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 29,
+      "id": "PR_kwDOLz_x-M7klwWp",
+      "title": "Add QMux over WebSocket draft",
+      "url": "https://github.com/moq-dev/drafts/pull/29",
+      "state": "MERGED",
+      "author": "kixelated",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "## What\n\nAdds a new standalone Internet-Draft, `draft-lcurley-qmux-websocket.md`, specifying how to run QMux over WebSocket.\n\n## Why\n\nQMux [draft-ietf-quic-qmux-01](https://www.ietf.org/archive/id/draft-ietf-quic-qmux-01.txt) defines bindings over TCP and TLS but deliberately leaves out WebSocket (out of QUIC WG charter scope). moq-lite already depends on a WebSocket binding, and `moq-dev/web-transport`'s `rs/qmux` crate implements one. This hoists that mapping into a reusable, application-agnostic spec that moq-lite (and any other QUIC-over-QMux application) can reference instead of inlining it.\n\n## Key design points\n\n- **Record framing** \u2014 one WebSocket binary message carries exactly one QMux Record's `Frames`; the Record `Size` field is omitted because the WS message boundary already delimits it. This depends on the Record layer introduced in qmux-01.\n- **Negotiation** \u2014 `Sec-WebSocket-Protocol` carries the application ALPN alone (e.g. `moq-transport-18`), identical to native QUIC. The QMux version is *implied by the application protocol*, matching the QMux-over-TLS convention rather than carrying a version token on the wire.\n- **Version scope** \u2014 targets `qmux-01` only; qmux-00 and the legacy `webtransport` wire format are intentionally not documented.\n- **Message types / keep-alive / datagrams** \u2014 text messages forbidden; keep-alive via WebSocket Ping/Pong (WebSocket has no built-in idle timeout); datagrams unavailable on a reliable, ordered transport.\n\n## Notes for reviewers\n\n- Builds cleanly via the repo's `make draft-lcurley-qmux-websocket.txt` (kramdown-rfc \u2192 xml2rfc).\n- moq-lite's existing \"Qmux over WebSocket\" subsection is **left untouched** in this PR; a follow-up can repoint it at this draft.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+      "createdAt": "2026-06-09T22:38:32Z",
+      "updatedAt": "2026-06-10T02:53:03Z",
+      "baseRepository": "moq-dev/drafts",
+      "baseRefName": "main",
+      "baseRefOid": "bacaaa249da753fbb0909cb7fca6189bfad60ed5",
+      "headRepository": "moq-dev/drafts",
+      "headRefName": "claude/gifted-jennings-9c151c",
+      "headRefOid": "e04a0edc65388be72ed45a21f85d315e4c3090c3",
+      "closedAt": "2026-06-10T02:53:03Z",
+      "mergedAt": "2026-06-10T02:53:02Z",
+      "mergedBy": "kixelated",
+      "mergeCommit": {
+        "oid": "80308a37daa1b0474c4ba35b863ee36191f1197e"
+      },
+      "comments": [
+        {
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "body": "<!-- This is an auto-generated comment: summarize by coderabbit.ai -->\n<!-- review_stack_entry_start -->\n\n[![Review Change Stack](https://storage.googleapis.com/coderabbit_public_assets/review-stack-in-coderabbit-ui.svg)](https://app.coderabbit.ai/change-stack/moq-dev/drafts/pull/29?utm_source=github_walkthrough&utm_medium=github&utm_campaign=change_stack)\n\n<!-- review_stack_entry_end -->\n<!-- This is an auto-generated comment: rate limited by coderabbit.ai -->\n\n> [!WARNING]\n> ## Review limit reached\n> \n> `@kixelated`, we couldn't start this review because you've reached your PR review rate limit.\n> \n> More reviews will be available in 44 minutes and 27 seconds. [Learn how PR review limits work](https://docs.coderabbit.ai/management/plans#fair-usage-limits-policy).\n> \n> Your organization has run out of usage credits. Purchase more in the [billing tab](https://app.coderabbit.ai/settings/subscription?tab=usage&tenantId=43a3cc7a-9a22-46cb-854d-dec79a791215).\n> \n> <details>\n> <summary>\u231b How to resolve this issue?</summary>\n> \n> After more reviews become available, a review can be triggered using the `@coderabbitai review` command as a PR comment. Alternatively, push new commits to this PR.\n> \n> We recommend that you space out your commits to avoid hitting the rate limit.\n> \n> </details>\n> \n> \n> <details>\n> <summary>\ud83d\udea6 How do rate limits work?</summary>\n> \n> CodeRabbit enforces hourly rate limits for each developer per organization.\n> \n> Our paid plans include higher PR review limits than trial, open-source, and free plans. In all cases, reviews become available again over time. During sustained high-volume PR review activity, CodeRabbit may temporarily slow when the next review becomes available.\n> \n> Please see our [Fair Usage Limits Policy](https://docs.coderabbit.ai/management/plans#fair-usage-limits-policy) for further information.\n> \n> </details>\n> \n> <details>\n> <summary>\u2139\ufe0f Review info</summary>\n> \n> <details>\n> <summary>\u2699\ufe0f Run configuration</summary>\n> \n> **Configuration used**: Organization UI\n> \n> **Review profile**: CHILL\n> \n> **Plan**: Pro\n> \n> **Run ID**: `3800e4be-3284-47f0-823a-db84234d9b14`\n> \n> </details>\n> \n> <details>\n> <summary>\ud83d\udce5 Commits</summary>\n> \n> Reviewing files that changed from the base of the PR and between c50e4db0b65887feaaf60bc5bd939e0ccc535366 and e04a0edc65388be72ed45a21f85d315e4c3090c3.\n> \n> </details>\n> \n> <details>\n> <summary>\ud83d\udcd2 Files selected for processing (1)</summary>\n> \n> * `draft-lcurley-qmux-websocket.md`\n> \n> </details>\n> \n> </details>\n\n<!-- end of auto-generated comment: rate limited by coderabbit.ai -->\n\n<!-- walkthrough_start -->\n\n## Walkthrough\n\nThis pull request introduces a new IETF draft document `draft-lcurley-qmux-websocket.md` that specifies how to carry QMux Record and Frame semantics over WebSocket binary messages. The specification defines WebSocket connection establishment using subprotocol negotiation to select the application protocol identifier (replacing TLS ALPN), transport framing rules that collapse QMux Records onto WebSocket message boundaries, message composition and type handling (binary messages permitted; text messages treated as errors), required first-frame behavior (QX_TRANSPORT_PARAMETERS), keep-alive guidance via WebSocket Ping/Pong, explicit prohibition of QMux datagram negotiation and DATAGRAM frames, connection closure behavior (WebSocket Close plus optional QMux CONNECTION_CLOSE), and inherited security considerations from QMux, WebSocket, and TLS.\n\n<!-- walkthrough_end -->\n<!-- pre_merge_checks_walkthrough_start -->\n\n<details>\n<summary>\ud83d\udea5 Pre-merge checks | \u2705 5</summary>\n\n<details>\n<summary>\u2705 Passed checks (5 passed)</summary>\n\n|         Check name         | Status   | Explanation                                                                                                                                                           |\n| :------------------------: | :------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------- |\n|         Title check        | \u2705 Passed | The title accurately and concisely summarizes the main change: adding a new IETF draft specification for QMux over WebSocket.                                         |\n|      Description check     | \u2705 Passed | The description is comprehensive and directly related to the changeset, explaining the what, why, and key design points of the QMux over WebSocket draft being added. |\n|     Docstring Coverage     | \u2705 Passed | No functions found in the changed files to evaluate docstring coverage. Skipping docstring coverage check.                                                            |\n|     Linked Issues check    | \u2705 Passed | Check skipped because no linked issues were found for this pull request.                                                                                              |\n| Out of Scope Changes check | \u2705 Passed | Check skipped because no linked issues were found for this pull request.                                                                                              |\n\n</details>\n\n<sub>\u270f\ufe0f Tip: You can configure your own custom pre-merge checks in the settings.</sub>\n\n</details>\n\n<!-- pre_merge_checks_walkthrough_end -->\n<!-- finishing_touch_checkbox_start -->\n\n<details>\n<summary>\u2728 Finishing Touches</summary>\n\n<details>\n<summary>\u2728 Simplify code</summary>\n\n- [ ] <!-- {\"checkboxId\": \"f120d606-b0e2-4b7d-8316-181794555b43\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Create PR with simplified code\n- [ ] <!-- {\"checkboxId\": \"9a4e3077-58f6-4eba-b7ee-62e936ea00ea\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Commit simplified code in branch `claude/gifted-jennings-9c151c`\n\n</details>\n\n</details>\n\n<!-- finishing_touch_checkbox_end -->\n<!-- tips_start -->\n\n---\n\nThanks for using [CodeRabbit](https://coderabbit.ai?utm_source=oss&utm_medium=github&utm_campaign=moq-dev/drafts&utm_content=29)! It's free for OSS, and your support helps us grow. If you like it, consider giving us a shout-out.\n\n<details>\n<summary>\u2764\ufe0f Share</summary>\n\n- [X](https://twitter.com/intent/tweet?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A&url=https%3A//coderabbit.ai)\n- [Mastodon](https://mastodon.social/share?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A%20https%3A%2F%2Fcoderabbit.ai)\n- [Reddit](https://www.reddit.com/submit?title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&text=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code.%20Check%20it%20out%3A%20https%3A//coderabbit.ai)\n- [LinkedIn](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcoderabbit.ai&mini=true&title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&summary=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code)\n\n</details>\n\n\n<sub>Comment `@coderabbitai help` to get the list of available commands and usage tips.</sub>\n\n<!-- tips_end -->\n<!-- internal state start -->\n\n\n<!-- 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 -->\n\n<!-- internal state end -->",
+          "createdAt": "2026-06-09T22:42:15Z",
+          "updatedAt": "2026-06-10T02:51:45Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChNz1g",
+          "commit": {
+            "abbreviatedOid": "c50e4db"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "This document is far longer than it needs to be. Get to the chase and don't repeat qmux shit.\n\nReally it should be summarized as:\n- use subprotocol instead of ALPN\n- each websocket message is a qmux record\n\nAnd any websocket specific stuff, IDK. Don't repeat stuff in the qmux draft, just link to it instead.",
+          "createdAt": "2026-06-10T02:32:19Z",
+          "updatedAt": "2026-06-10T02:37:55Z",
+          "comments": [
+            {
+              "originalPosition": 33,
+              "body": "A little in the weeds for an abstract.",
+              "createdAt": "2026-06-10T02:32:19Z",
+              "updatedAt": "2026-06-10T02:37:55Z"
+            },
+            {
+              "originalPosition": 88,
+              "body": "for example `moq-transport-18` indicates `qmux-01` is to be used; there is no separate qmux version negotiation.",
+              "createdAt": "2026-06-10T02:34:22Z",
+              "updatedAt": "2026-06-10T02:37:55Z"
+            },
+            {
+              "originalPosition": 167,
+              "body": "wtf no. support all qmux features.",
+              "createdAt": "2026-06-10T02:35:44Z",
+              "updatedAt": "2026-06-10T02:37:55Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChPh0Q",
+          "commit": {
+            "abbreviatedOid": "838bbf4"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:39:27Z",
+          "updatedAt": "2026-06-10T02:39:27Z",
+          "comments": [
+            {
+              "originalPosition": 33,
+              "body": "Trimmed \u2014 dropped the Record/Size mechanism sentence; the abstract now just states the binding and its motivation.",
+              "createdAt": "2026-06-10T02:39:27Z",
+              "updatedAt": "2026-06-10T02:39:27Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChPiGg",
+          "commit": {
+            "abbreviatedOid": "838bbf4"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:39:28Z",
+          "updatedAt": "2026-06-10T02:39:28Z",
+          "comments": [
+            {
+              "originalPosition": 88,
+              "body": "Reworded to your phrasing: the app protocol id selects the version (`moq-transport-18` indicates `qmux-01`), with no separate QMux version negotiation.",
+              "createdAt": "2026-06-10T02:39:28Z",
+              "updatedAt": "2026-06-10T02:39:28Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChPiUw",
+          "commit": {
+            "abbreviatedOid": "838bbf4"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:39:29Z",
+          "updatedAt": "2026-06-10T02:39:29Z",
+          "comments": [
+            {
+              "originalPosition": 167,
+              "body": "Fixed \u2014 removed the prohibition. Datagrams are now fully supported: negotiated and encoded as in qmux and carried in binary messages, just delivered reliably/in-order since the transport is reliable.",
+              "createdAt": "2026-06-10T02:39:29Z",
+              "updatedAt": "2026-06-10T02:39:29Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 30,
+      "id": "PR_kwDOLz_x-M7koqpB",
+      "title": "Add moqt extension drafts: relay hops, object timestamps, payload compression",
+      "url": "https://github.com/moq-dev/drafts/pull/30",
+      "state": "MERGED",
+      "author": "kixelated",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "## What\n\nThree new MoQ Transport extension drafts, extracting functionality that moq-lite has grown but that has no equivalent in [draft-ietf-moq-transport-18](https://www.ietf.org/archive/id/draft-ietf-moq-transport-18.txt). Each is publishable independently of moq-lite.\n\n- **`draft-lcurley-moq-relay-hops.md`** \u2014 relay loop detection and path selection. A `HOP_PATH` parameter on `PUBLISH_NAMESPACE` carries the ordered Hop-ID list (a relay appends its own ID on forward \u2192 loop detection by self-ID lookup, plus shortest-path tiebreak), and an `EXCLUDE_HOP` parameter on `SUBSCRIBE_NAMESPACE` suppresses advertisements that already passed through a given relay.\n- **`draft-lcurley-moq-timestamp.md`** \u2014 a track-level `TIMESCALE` property plus per-object `TIMESTAMP` and optional `DURATION`, as Key-Value-Pair properties. Lets relays make consistent age-based drop decisions across hops without parsing the media container.\n- **`draft-lcurley-moq-compression.md`** \u2014 per-object DEFLATE compression negotiated via a `COMPRESSION` Setup Option (advertising supported algorithms) and a `COMPRESSION` track property, with a new algorithm registry and relay transcoding rules.\n\n## Why\n\nmoq-lite is the proving ground; successful features feed back to the IETF MoQ WG as composable extensions rather than waiting on the full moq-transport design. These three are the new functionality in moq-lite-05 with no upstream equivalent and no existing extension draft.\n\n## How it maps onto moqt\n\n- Negotiation uses **Setup Options** (registry \u00a715.4, Specification Required).\n- Data rides on moqt's native **Key-Value-Pair** mechanism \u2014 message Parameters for hops, object/track properties for timestamps/compression. KVP Type parity is respected (even = bare varint, odd = length-prefixed list).\n- All modeled on the existing `draft-lcurley-moq-probe.md` template.\n\n## Deliberately not extracted (already upstream / out of scope)\n\n- **Path** \u2014 moqt-18 already has a PATH Setup Option (\u00a710.3.1).\n- **Cache/Stale retention** \u2014 moqt-18 has `MAX_CACHE_DURATION` + `EXPIRES`.\n- **Datagram groups** \u2014 moqt-18 has `OBJECT_DATAGRAM`.\n- **Qmux TCP/WebSocket bindings** \u2014 belong in the qmux draft, not a moqt extension.\n\n## Reviewer notes\n\n- **Codepoints are distinctive provisional values** (same justification paragraph as moq-probe) \u2014 to be finalized before publication.\n- **Not built locally** (kramdown-rfc/xml2rfc not installed); the build auto-discovers `draft-*.md` and the frontmatter matches the existing drafts, but please confirm with `make`.\n- Two spots worth a close look, since the moqt-18 namespace-message field tables were truncated when I checked: that `PUBLISH_NAMESPACE` / `SUBSCRIBE_NAMESPACE` carry a Parameters/KVP block, and that the registry name \"MoQ Key-Value-Pair Types\" matches \u00a715's actual title.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+      "createdAt": "2026-06-10T01:31:36Z",
+      "updatedAt": "2026-06-10T02:52:49Z",
+      "baseRepository": "moq-dev/drafts",
+      "baseRefName": "main",
+      "baseRefOid": "bacaaa249da753fbb0909cb7fca6189bfad60ed5",
+      "headRepository": "moq-dev/drafts",
+      "headRefName": "claude/sleepy-boyd-214472",
+      "headRefOid": "a070b5a94313338899cd8801c2f6cd77c15fd0fb",
+      "closedAt": "2026-06-10T02:52:49Z",
+      "mergedAt": "2026-06-10T02:52:49Z",
+      "mergedBy": "kixelated",
+      "mergeCommit": {
+        "oid": "88808c6bff30cd6ce047791e35ef5574e21f29c6"
+      },
+      "comments": [
+        {
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "body": "<!-- This is an auto-generated comment: summarize by coderabbit.ai -->\n<!-- review_stack_entry_start -->\n\n[![Review Change Stack](https://storage.googleapis.com/coderabbit_public_assets/review-stack-in-coderabbit-ui.svg)](https://app.coderabbit.ai/change-stack/moq-dev/drafts/pull/30?utm_source=github_walkthrough&utm_medium=github&utm_campaign=change_stack)\n\n<!-- review_stack_entry_end -->\n<!-- This is an auto-generated comment: rate limited by coderabbit.ai -->\n\n> [!WARNING]\n> ## Review limit reached\n> \n> `@kixelated`, we couldn't start this review because you've reached your PR review rate limit.\n> \n> More reviews will be available in 44 minutes and 22 seconds. [Learn how PR review limits work](https://docs.coderabbit.ai/management/plans#fair-usage-limits-policy).\n> \n> Your organization has run out of usage credits. Purchase more in the [billing tab](https://app.coderabbit.ai/settings/subscription?tab=usage&tenantId=43a3cc7a-9a22-46cb-854d-dec79a791215).\n> \n> <details>\n> <summary>\u231b How to resolve this issue?</summary>\n> \n> After more reviews become available, a review can be triggered using the `@coderabbitai review` command as a PR comment. Alternatively, push new commits to this PR.\n> \n> We recommend that you space out your commits to avoid hitting the rate limit.\n> \n> </details>\n> \n> \n> <details>\n> <summary>\ud83d\udea6 How do rate limits work?</summary>\n> \n> CodeRabbit enforces hourly rate limits for each developer per organization.\n> \n> Our paid plans include higher PR review limits than trial, open-source, and free plans. In all cases, reviews become available again over time. During sustained high-volume PR review activity, CodeRabbit may temporarily slow when the next review becomes available.\n> \n> Please see our [Fair Usage Limits Policy](https://docs.coderabbit.ai/management/plans#fair-usage-limits-policy) for further information.\n> \n> </details>\n> \n> <details>\n> <summary>\u2139\ufe0f Review info</summary>\n> \n> <details>\n> <summary>\u2699\ufe0f Run configuration</summary>\n> \n> **Configuration used**: Organization UI\n> \n> **Review profile**: CHILL\n> \n> **Plan**: Pro\n> \n> **Run ID**: `7737acb3-8c2a-4b8d-bee4-b83916afb328`\n> \n> </details>\n> \n> <details>\n> <summary>\ud83d\udce5 Commits</summary>\n> \n> Reviewing files that changed from the base of the PR and between e8eb259d084162b080f4f9ff83a9160a2a2d3b1c and a070b5a94313338899cd8801c2f6cd77c15fd0fb.\n> \n> </details>\n> \n> <details>\n> <summary>\ud83d\udcd2 Files selected for processing (1)</summary>\n> \n> * `draft-lcurley-moq-compression.md`\n> \n> </details>\n> \n> </details>\n\n<!-- end of auto-generated comment: rate limited by coderabbit.ai -->\n\n<!-- walkthrough_start -->\n\n## Walkthrough\n\nThis pull request adds three standalone IETF Internet-Draft documents extending the MoQ Transport protocol and updates repo build guidance. The compression draft defines a COMPRESSION Setup Option and track-level COMPRESSION property with initial algorithms (none, per-object raw DEFLATE), relay decompression/recompression rules, decompression-size bounding, security considerations, and IANA registrations. The relay-hops draft defines HOP_PATH and EXCLUDE_HOP parameters for hop-ordered relay identity lists, parsing/validation, loop-detection and suppression behavior, security considerations, and IANA registrations. The timestamp draft adds TIMESCALE, TIMESTAMP, and DURATION properties, receiver fallback and age-based dropping rules, security considerations, and IANA registrations. The CLAUDE.md update expands build-first-run bootstrap instructions and build examples.\n\n<!-- walkthrough_end -->\n<!-- pre_merge_checks_walkthrough_start -->\n\n<details>\n<summary>\ud83d\udea5 Pre-merge checks | \u2705 5</summary>\n\n<details>\n<summary>\u2705 Passed checks (5 passed)</summary>\n\n|         Check name         | Status   | Explanation                                                                                                                                                                           |\n| :------------------------: | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |\n|         Title check        | \u2705 Passed | The title accurately and concisely summarizes the main change: adding three MoQ Transport extension drafts covering relay hops, object timestamps, and payload compression.           |\n|      Description check     | \u2705 Passed | The description is comprehensive and directly relevant to the changeset, explaining the purpose, content, and design rationale of each of the three new extension drafts being added. |\n|     Docstring Coverage     | \u2705 Passed | No functions found in the changed files to evaluate docstring coverage. Skipping docstring coverage check.                                                                            |\n|     Linked Issues check    | \u2705 Passed | Check skipped because no linked issues were found for this pull request.                                                                                                              |\n| Out of Scope Changes check | \u2705 Passed | Check skipped because no linked issues were found for this pull request.                                                                                                              |\n\n</details>\n\n<sub>\u270f\ufe0f Tip: You can configure your own custom pre-merge checks in the settings.</sub>\n\n</details>\n\n<!-- pre_merge_checks_walkthrough_end -->\n<!-- finishing_touch_checkbox_start -->\n\n<details>\n<summary>\u2728 Finishing Touches</summary>\n\n<details>\n<summary>\u2728 Simplify code</summary>\n\n- [ ] <!-- {\"checkboxId\": \"f120d606-b0e2-4b7d-8316-181794555b43\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Create PR with simplified code\n- [ ] <!-- {\"checkboxId\": \"9a4e3077-58f6-4eba-b7ee-62e936ea00ea\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Commit simplified code in branch `claude/sleepy-boyd-214472`\n\n</details>\n\n</details>\n\n<!-- finishing_touch_checkbox_end -->\n<!-- tips_start -->\n\n---\n\nThanks for using [CodeRabbit](https://coderabbit.ai?utm_source=oss&utm_medium=github&utm_campaign=moq-dev/drafts&utm_content=30)! It's free for OSS, and your support helps us grow. If you like it, consider giving us a shout-out.\n\n<details>\n<summary>\u2764\ufe0f Share</summary>\n\n- [X](https://twitter.com/intent/tweet?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A&url=https%3A//coderabbit.ai)\n- [Mastodon](https://mastodon.social/share?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A%20https%3A%2F%2Fcoderabbit.ai)\n- [Reddit](https://www.reddit.com/submit?title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&text=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code.%20Check%20it%20out%3A%20https%3A//coderabbit.ai)\n- [LinkedIn](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcoderabbit.ai&mini=true&title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&summary=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code)\n\n</details>\n\n\n<sub>Comment `@coderabbitai help` to get the list of available commands and usage tips.</sub>\n\n<!-- tips_end -->\n<!-- internal state start -->\n\n\n<!-- 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 -->\n\n<!-- internal state end -->",
+          "createdAt": "2026-06-10T01:38:54Z",
+          "updatedAt": "2026-06-10T02:51:49Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABCg_cCg",
+          "commit": {
+            "abbreviatedOid": "53cb2a7"
+          },
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "**Actionable comments posted: 3**\n\n<details>\n<summary>\ud83e\udd16 Prompt for all review comments with AI agents</summary>\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nInline comments:\nIn `@draft-lcurley-moq-relay-hops.md`:\n- Line 108: The current sentence \"When bridging from a peer that did not\nnegotiate this extension, a relay MAY synthesize a single leading `0` ... or MAY\nomit it\" is too permissive; update it to a prescriptive norm (change the first\nMAY to SHOULD or MUST as decided) so all relays behave consistently when\nbridging from non-supporting peers; modify the sentence in the \"When\nbridging...\" paragraph to require synthesizing a leading `0` (or explicitly\nstate the required behavior), and add a brief justification sentence referencing\npath-length comparison consistency and the downstream \"advisory path selection\"\nguidance so implementers understand why the stronger requirement is needed.\n- Around line 133-135: The spec currently mandates closing the session with\nPROTOCOL_VIOLATION when EXCLUDE_HOP has Length 0; update the text to allow an\nempty EXCLUDE_HOP instead (treat Length == 0 as \"exclude nothing\") or state that\nreceivers MAY ignore an empty EXCLUDE_HOP rather than treating it as a fatal\nerror; adjust the sentence referencing EXCLUDE_HOP, Length and\nPROTOCOL_VIOLATION and add an explicit note comparing behavior to HOP_PATH so\nimplementers know empty lists are permitted and should be treated as a no-op.\n- Around line 143-177: The IANA registry for HOP_PATH and EXCLUDE_HOP is\nincorrect: replace the \"MoQ Key-Value-Pair Types\" registry heading and Section\nreference with the correct \"MOQT Message Parameters\" registry ({{moqt}} Section\n15.7) since HOP_PATH and EXCLUDE_HOP are message parameters carried in\nPUBLISH_NAMESPACE and SUBSCRIBE_NAMESPACE; ensure the table heading and the\nsection citation (currently showing Section 15) are updated accordingly while\nkeeping the parameter names HOP_PATH and EXCLUDE_HOP and their \"Carried In\"\nentries unchanged.\n```\n\n</details>\n\n<details>\n<summary>\ud83e\ude84 Autofix (Beta)</summary>\n\nFix all unresolved CodeRabbit comments on this PR:\n\n- [ ] <!-- {\"checkboxId\": \"4b0d0e0a-96d7-4f10-b296-3a18ea78f0b9\"} --> Push a commit to this branch (recommended)\n- [ ] <!-- {\"checkboxId\": \"ff5b1114-7d8c-49e6-8ac1-43f82af23a33\"} --> Create a new PR with the fixes\n\n</details>\n\n---\n\n<details>\n<summary>\u2139\ufe0f Review info</summary>\n\n<details>\n<summary>\u2699\ufe0f Run configuration</summary>\n\n**Configuration used**: Organization UI\n\n**Review profile**: CHILL\n\n**Plan**: Pro\n\n**Run ID**: `5e2b1a3a-20e3-4107-94e6-feadda48e392`\n\n</details>\n\n<details>\n<summary>\ud83d\udce5 Commits</summary>\n\nReviewing files that changed from the base of the PR and between bacaaa249da753fbb0909cb7fca6189bfad60ed5 and 53cb2a77fa255ee90fa167b01a156fb5ab7a09b0.\n\n</details>\n\n<details>\n<summary>\ud83d\udcd2 Files selected for processing (3)</summary>\n\n* `draft-lcurley-moq-compression.md`\n* `draft-lcurley-moq-relay-hops.md`\n* `draft-lcurley-moq-timestamp.md`\n\n</details>\n\n</details>\n\n<!-- This is an auto-generated comment by CodeRabbit for review status -->",
+          "createdAt": "2026-06-10T01:38:57Z",
+          "updatedAt": "2026-06-10T01:38:58Z",
+          "comments": [
+            {
+              "originalPosition": 108,
+              "body": "_\u26a0\ufe0f Potential issue_ | _\ud83d\udfe0 Major_ | _\u2696\ufe0f Poor tradeoff_\n\n**Bridging behavior should be more prescriptive.**\n\nAllowing relays to choose whether to synthesize a leading `0` entry or omit it when bridging from non-supporting peers creates inconsistency. Different relays might make different choices, causing path length comparisons to become unreliable when bridging is involved. This undermines the advisory path selection guidance in the following section.\n\nConsider making this a SHOULD or MUST to ensure consistent behavior across implementations.\n\n<details>\n<summary>\ud83e\udd16 Prompt for AI Agents</summary>\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn `@draft-lcurley-moq-relay-hops.md` at line 108, The current sentence \"When\nbridging from a peer that did not negotiate this extension, a relay MAY\nsynthesize a single leading `0` ... or MAY omit it\" is too permissive; update it\nto a prescriptive norm (change the first MAY to SHOULD or MUST as decided) so\nall relays behave consistently when bridging from non-supporting peers; modify\nthe sentence in the \"When bridging...\" paragraph to require synthesizing a\nleading `0` (or explicitly state the required behavior), and add a brief\njustification sentence referencing path-length comparison consistency and the\ndownstream \"advisory path selection\" guidance so implementers understand why the\nstronger requirement is needed.\n```\n\n</details>\n\n<!-- fingerprinting:phantom:triton:puma -->\n\n<!-- cr-comment:v1:3d1fdc2f417b1a162aa7199a -->\n\n<!-- This is an auto-generated reply by CodeRabbit -->\n\n\u2705 Addressed in commits 0cb20b8 to 3edea9b",
+              "createdAt": "2026-06-10T01:38:57Z",
+              "updatedAt": "2026-06-10T01:44:42Z"
+            },
+            {
+              "originalPosition": 135,
+              "body": "_\u26a0\ufe0f Potential issue_ | _\ud83d\udfe0 Major_ | _\u26a1 Quick win_\n\n**Reconsider making empty EXCLUDE_HOP a protocol violation.**\n\nLine 135 requires closing the session with PROTOCOL_VIOLATION if `Length` is 0 (empty list). This is inconsistent with HOP_PATH where an empty value (Length 0) is explicitly allowed and meaningful. An empty EXCLUDE_HOP is semantically a no-op but not harmful - it could simply be ignored rather than treated as a fatal error.\n\nMaking this a protocol violation makes the protocol more brittle and could cause interoperability issues if a sender accidentally includes an empty parameter. Consider changing this to allow Length 0 (treating it as \"exclude nothing\") or downgrading to a MAY ignore.\n\n<details>\n<summary>\ud83e\udd16 Prompt for AI Agents</summary>\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn `@draft-lcurley-moq-relay-hops.md` around lines 133 - 135, The spec currently\nmandates closing the session with PROTOCOL_VIOLATION when EXCLUDE_HOP has Length\n0; update the text to allow an empty EXCLUDE_HOP instead (treat Length == 0 as\n\"exclude nothing\") or state that receivers MAY ignore an empty EXCLUDE_HOP\nrather than treating it as a fatal error; adjust the sentence referencing\nEXCLUDE_HOP, Length and PROTOCOL_VIOLATION and add an explicit note comparing\nbehavior to HOP_PATH so implementers know empty lists are permitted and should\nbe treated as a no-op.\n```\n\n</details>\n\n<!-- fingerprinting:phantom:triton:puma -->\n\n<!-- cr-comment:v1:e2a7a5561ca59a93da537c19 -->\n\n<!-- This is an auto-generated reply by CodeRabbit -->\n\n\u2705 Addressed in commits 0cb20b8 to 3edea9b",
+              "createdAt": "2026-06-10T01:38:57Z",
+              "updatedAt": "2026-06-10T01:44:42Z"
+            },
+            {
+              "originalPosition": 177,
+              "body": "_\u26a0\ufe0f Potential issue_ | _\ud83d\udfe0 Major_\n\n<details>\n<summary>\ud83e\udde9 Analysis chain</summary>\n\n\ud83c\udfc1 Script executed:\n\n```shell\n#!/bin/bash\n# Description: Check if the moqt draft or related documents define the referenced sections.\n\n# Search for moqt transport draft references\nfd -e md -e xml 'moq.*transport' --exec rg -l 'Setup Options|Key-Value-Pair Types'\n```\n\nRepository: moq-dev/drafts\n\nLength of output: 40\n\n---\n\n\ud83c\udf10 Web query:\n\n`IETF MoQ Transport draft-ietf-moq-transport section 15 registry names`\n\n\ud83d\udca1 Result:\n\nSection 15 of the IETF Media over QUIC Transport (MOQT) draft (e.g., draft-ietf-moq-transport-18) specifies the IANA Considerations for the protocol [1][2]. This section defines several IANA registries to manage the extensibility and interoperability of the protocol. As of the latest available draft, the IANA registries specified under Section 15 include: 15.1. URI Scheme Registrations [1][2] - Includes the \"moqt\" URI scheme registration [1][2]. 15.2. Media Type Registration [1][2] 15.3. MOQT URI Fragment Types [1][2] 15.4. Setup Options [1][2] 15.5. Authorization Token Alias Type [1][2] 15.6. MOQT Auth Token Type [1][2] 15.7. Message Parameters [1][2] 15.8. Properties [1][2] 15.9. Session-Level Track Names [1][2] 15.10. Error Codes [1][2] - This includes sub-registries for: - 15.10.1. Session Termination Error Codes [2] - 15.10.2. REQUEST_ERROR Codes [2] - 15.10.3. PUBLISH_DONE Codes [2] - 15.10.4. Stream Reset Error Codes [2] These registries are designed to allow for the orderly allocation of identifiers, parameters, and error codes as the protocol evolves [3]. Note that other related documents, such as the Common Catalog Format for moq-transport, may define additional IANA registries relevant to the broader MoQ ecosystem, such as \"MoQ Streaming Format Type\" and \"MoQ Common Catalog Fields\" [4][5].\n\nCitations:\n\n- 1: https://datatracker.ietf.org/doc/draft-ietf-moq-transport/18/\n- 2: https://www.ietf.org/archive/id/draft-ietf-moq-transport-18.txt\n- 3: https://github.com/moq-wg/moq-transport/issues/1268\n- 4: https://www.ietf.org/archive/id/draft-ietf-moq-catalogformat-01.html\n- 5: https://moq-wg.github.io/catalog-format/draft-ietf-moq-catalogformat.html\n\n---\n\n\n\n</details>\n\n**Fix MoQT IANA registry reference for HOP_PATH/EXCLUDE_HOP**\n\n- The \u201cMoQ Setup Options\u201d reference {{moqt}} Section 15.4 is consistent.\n- Line 171: update the registry name/section. \u201cMoQ Key-Value-Pair Types\u201d doesn\u2019t match the moqt-transport Section 15 registry naming; `HOP_PATH` and `EXCLUDE_HOP` are message parameters carried in `PUBLISH_NAMESPACE` / `SUBSCRIBE_NAMESPACE`, so they should be registered under the \u201cMOQT Message Parameters\u201d registry ({{moqt}} Section 15.7).\n\n<details>\n<summary>\ud83e\uddf0 Tools</summary>\n\n<details>\n<summary>\ud83e\ude9b markdownlint-cli2 (0.22.1)</summary>\n\n[warning] 143-143: Heading style\nExpected: setext; Actual: atx\n\n(MD003, heading-style)\n\n---\n\n[warning] 155-155: Heading style\nExpected: setext; Actual: atx\n\n(MD003, heading-style)\n\n---\n\n[warning] 161-161: Heading style\nExpected: setext; Actual: atx\n\n(MD003, heading-style)\n\n---\n\n[warning] 169-169: Heading style\nExpected: setext; Actual: atx\n\n(MD003, heading-style)\n\n</details>\n\n</details>\n\n<details>\n<summary>\ud83e\udd16 Prompt for AI Agents</summary>\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn `@draft-lcurley-moq-relay-hops.md` around lines 143 - 177, The IANA registry\nfor HOP_PATH and EXCLUDE_HOP is incorrect: replace the \"MoQ Key-Value-Pair\nTypes\" registry heading and Section reference with the correct \"MOQT Message\nParameters\" registry ({{moqt}} Section 15.7) since HOP_PATH and EXCLUDE_HOP are\nmessage parameters carried in PUBLISH_NAMESPACE and SUBSCRIBE_NAMESPACE; ensure\nthe table heading and the section citation (currently showing Section 15) are\nupdated accordingly while keeping the parameter names HOP_PATH and EXCLUDE_HOP\nand their \"Carried In\" entries unchanged.\n```\n\n</details>\n\n<!-- fingerprinting:phantom:triton:puma -->\n\n<!-- cr-comment:v1:18323c7384dc1410db5c4197 -->\n\n<!-- This is an auto-generated reply by CodeRabbit -->\n\n\u2705 Addressed in commits 0cb20b8 to 3edea9b",
+              "createdAt": "2026-06-10T01:38:58Z",
+              "updatedAt": "2026-06-10T01:44:42Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChBJVA",
+          "commit": {
+            "abbreviatedOid": "3edea9b"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T01:44:36Z",
+          "updatedAt": "2026-06-10T01:44:37Z",
+          "comments": [
+            {
+              "originalPosition": 108,
+              "body": "Done in 3edea9b \u2014 bridging now SHOULD synthesize a leading `0` \"unknown hop\" entry (was MAY/omit), with a note that counting the bridged hop keeps path-length comparisons consistent.",
+              "createdAt": "2026-06-10T01:44:36Z",
+              "updatedAt": "2026-06-10T01:44:37Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChBJmQ",
+          "commit": {
+            "abbreviatedOid": "3edea9b"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T01:44:38Z",
+          "updatedAt": "2026-06-10T01:44:38Z",
+          "comments": [
+            {
+              "originalPosition": 135,
+              "body": "Done in 3edea9b \u2014 an empty EXCLUDE_HOP (Length 0) is now a permitted no-op (\"exclude nothing\"), matching empty HOP_PATH; only a partial/overrunning list is a PROTOCOL_VIOLATION.",
+              "createdAt": "2026-06-10T01:44:38Z",
+              "updatedAt": "2026-06-10T01:44:38Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChBJ3w",
+          "commit": {
+            "abbreviatedOid": "3edea9b"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T01:44:39Z",
+          "updatedAt": "2026-06-10T01:44:39Z",
+          "comments": [
+            {
+              "originalPosition": 177,
+              "body": "Done in 3edea9b \u2014 HOP_PATH/EXCLUDE_HOP now register under \"MOQT Message Parameters\" (Section 15.7). Also fixed the timestamp/compression drafts to use \"MOQT Properties\" (Section 15.8) for object/track properties.",
+              "createdAt": "2026-06-10T01:44:39Z",
+              "updatedAt": "2026-06-10T01:44:39Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChBPvQ",
+          "commit": {
+            "abbreviatedOid": "3edea9b"
+          },
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T01:44:59Z",
+          "updatedAt": "2026-06-10T01:44:59Z",
+          "comments": [
+            {
+              "originalPosition": 135,
+              "body": "`@kixelated`, that's a clean resolution \u2014 aligning the empty-list semantics across both `HOP_PATH` and `EXCLUDE_HOP` keeps the protocol consistent and less brittle. Thanks for the quick fix!\n\n<!-- <review_comment_addressed> -->\n\n\n\n---\n\n<details>\n<summary>\ud83e\udde0 Learnings used</summary>\n\n```\nLearnt from: kixelated\nRepo: moq-dev/drafts PR: 26\nFile: draft-lcurley-moq-probe.md:69-69\nTimestamp: 2026-06-06T01:48:33.129Z\nLearning: In the moq-dev/drafts repository, files matching `draft-*.md` are intentionally formatted as kramdown-rfc drafts. These documents intentionally use ATX-style headings (`#`) and fenced code blocks. Since the repo does not run markdownlint in CI (kramdown-rfc is used instead), CodeRabbit should not flag markdownlint style issues (e.g., MD003/MD040/MD046 or similar markdownlint rule violations) in these `draft-*.md` files.\n```\n\n</details>\n\n---\n\n<!-- This is an auto-generated comment: tweet message by coderabbit.ai -->\n\nIf you found this review helpful, would you consider giving us a shout-out on [X](https://twitter.com/intent/tweet?related=CodeRabbitAI&text=Fixed%3A%20empty%20EXCLUDE_HOP%20no%20longer%20PROTOCOL_VIOLATION%20%E2%80%94%20now%20treated%20as%20a%20no%E2%80%91op%20(matches%20HOP_PATH).%20Reduces%20brittleness%20and%20improves%20interoperability.%20Smart%20review%20by%20%40coderabbitai%20%E2%9A%A1%20Try%20it!&url=https%3A%2F%2Fgithub.com%2Fmoq-dev%2Fdrafts%2Fpull%2F30%23discussion_r3384907736)?\n\nThank you for using CodeRabbit!\n\n<!-- end of auto-generated comment: tweet message by coderabbit.ai -->\n\n\n\n<!-- This is an auto-generated reply by CodeRabbit -->",
+              "createdAt": "2026-06-10T01:44:59Z",
+              "updatedAt": "2026-06-10T01:44:59Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChBSBQ",
+          "commit": {
+            "abbreviatedOid": "3edea9b"
+          },
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T01:45:04Z",
+          "updatedAt": "2026-06-10T01:45:05Z",
+          "comments": [
+            {
+              "originalPosition": 177,
+              "body": "`@kixelated`, thanks for the fix! Using \"MOQT Message Parameters\" (\u00a715.7) for `HOP_PATH`/`EXCLUDE_HOP` and \"MOQT Properties\" (\u00a715.8) for the timestamp/compression track properties is the correct split. Good catch applying it consistently across all three drafts.\n\n<!-- <review_comment_addressed> -->\n\n\n---\n\n<details>\n<summary>\ud83e\udde0 Learnings used</summary>\n\n```\nLearnt from: kixelated\nRepo: moq-dev/drafts PR: 26\nFile: draft-lcurley-moq-probe.md:69-69\nTimestamp: 2026-06-06T01:48:33.129Z\nLearning: In the moq-dev/drafts repository, files matching `draft-*.md` are intentionally formatted as kramdown-rfc drafts. These documents intentionally use ATX-style headings (`#`) and fenced code blocks. Since the repo does not run markdownlint in CI (kramdown-rfc is used instead), CodeRabbit should not flag markdownlint style issues (e.g., MD003/MD040/MD046 or similar markdownlint rule violations) in these `draft-*.md` files.\n```\n\n</details>\n\n---\n\n<!-- This is an auto-generated comment: tweet message by coderabbit.ai -->\n\nIf you found this review helpful, would you consider giving us a shout-out on [X](https://twitter.com/intent/tweet?related=CodeRabbitAI&text=Moved%20HOP_PATH%2FEXCLUDE_HOP%20to%20MOQT%20Message%20Parameters%20(Section%2015.7)%20%E2%80%94%20correct%20IANA%20registry%20for%20PUBLISH%2FSUBSCRIBE%20namespaces%3B%20improves%20protocol%20correctness%20%26%20interoperability.%20Try%20%40coderabbitai%20%F0%9F%9B%A0%EF%B8%8F%F0%9F%94%8D&url=https%3A%2F%2Fgithub.com%2Fmoq-dev%2Fdrafts%2Fpull%2F30%23discussion_r3384907740)?\n\nThank you for using CodeRabbit!\n\n<!-- end of auto-generated comment: tweet message by coderabbit.ai -->\n\n\n\n<!-- This is an auto-generated reply by CodeRabbit -->",
+              "createdAt": "2026-06-10T01:45:05Z",
+              "updatedAt": "2026-06-10T01:45:05Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChBTLQ",
+          "commit": {
+            "abbreviatedOid": "3edea9b"
+          },
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T01:45:10Z",
+          "updatedAt": "2026-06-10T01:45:10Z",
+          "comments": [
+            {
+              "originalPosition": 108,
+              "body": "`@kixelated`, thanks for the update! Upgrading to `SHOULD` and adding the rationale about path-length consistency is exactly the right fix \u2014 implementers now have clear guidance on the expected behavior when bridging from non-supporting peers, and the intent ties back cleanly to the advisory path selection semantics.\n\n<!-- <review_comment_addressed> -->\n\n\n\n---\n\n<details>\n<summary>\ud83e\udde0 Learnings used</summary>\n\n```\nLearnt from: kixelated\nRepo: moq-dev/drafts PR: 26\nFile: draft-lcurley-moq-probe.md:69-69\nTimestamp: 2026-06-06T01:48:33.129Z\nLearning: In the moq-dev/drafts repository, files matching `draft-*.md` are intentionally formatted as kramdown-rfc drafts. These documents intentionally use ATX-style headings (`#`) and fenced code blocks. Since the repo does not run markdownlint in CI (kramdown-rfc is used instead), CodeRabbit should not flag markdownlint style issues (e.g., MD003/MD040/MD046 or similar markdownlint rule violations) in these `draft-*.md` files.\n```\n\n</details>\n\n---\n\n<!-- This is an auto-generated comment: tweet message by coderabbit.ai -->\n\nIf you found this review helpful, would you consider giving us a shout-out on [X](https://twitter.com/intent/tweet?related=CodeRabbitAI&text=%40coderabbitai%3A%20Relays%20SHOULD%20synthesize%20a%20leading%20%600%60%20%22unknown%20hop%22%20when%20bridging%20non%E2%80%91supporting%20peers%20to%20keep%20path-length%20comparisons%20consistent.%20Try%20it%20%F0%9F%94%A7%E2%9C%85&url=https%3A%2F%2Fgithub.com%2Fmoq-dev%2Fdrafts%2Fpull%2F30%23discussion_r3384907734)?\n\nThank you for using CodeRabbit!\n\n<!-- end of auto-generated comment: tweet message by coderabbit.ai -->\n\n\n\n<!-- This is an auto-generated reply by CodeRabbit -->",
+              "createdAt": "2026-06-10T01:45:10Z",
+              "updatedAt": "2026-06-10T01:45:10Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChIJNQ",
+          "commit": {
+            "abbreviatedOid": "3edea9b"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:12:01Z",
+          "updatedAt": "2026-06-10T02:28:35Z",
+          "comments": [
+            {
+              "originalPosition": 47,
+              "body": "I would add one more sentence that compression is a wire optimization, similar to HTTP's transfer-encoding, and does not conceptually change the payload of each OBJECT.",
+              "createdAt": "2026-06-10T02:12:01Z",
+              "updatedAt": "2026-06-10T02:28:35Z"
+            },
+            {
+              "originalPosition": 115,
+              "body": "Hmm since compression is a track property, the original publisher MUST opt into it. \n\nI think it needs to be a subscription property instead? Hop-by-hop instead of end-to-end?",
+              "createdAt": "2026-06-10T02:15:01Z",
+              "updatedAt": "2026-06-10T02:28:36Z"
+            },
+            {
+              "originalPosition": 44,
+              "body": "I would put this bullet point first.",
+              "createdAt": "2026-06-10T02:15:34Z",
+              "updatedAt": "2026-06-10T02:28:36Z"
+            },
+            {
+              "originalPosition": 67,
+              "body": "MUST honor EXCLUDE_HOP. And MUST include HOP_PATH too?",
+              "createdAt": "2026-06-10T02:17:21Z",
+              "updatedAt": "2026-06-10T02:28:36Z"
+            },
+            {
+              "originalPosition": 75,
+              "body": "Add a note that subscribers SHOULD assign a random hop ID for connections that don't support this extension, instead of using 0, so loops can still be identified.",
+              "createdAt": "2026-06-10T02:18:28Z",
+              "updatedAt": "2026-06-10T02:28:36Z"
+            },
+            {
+              "originalPosition": 77,
+              "body": "why?",
+              "createdAt": "2026-06-10T02:18:38Z",
+              "updatedAt": "2026-06-10T02:28:36Z"
+            },
+            {
+              "originalPosition": 97,
+              "body": "I think it should always be at least 1. The first hop would be the original publisher.",
+              "createdAt": "2026-06-10T02:19:23Z",
+              "updatedAt": "2026-06-10T02:28:36Z"
+            },
+            {
+              "originalPosition": 45,
+              "body": "Also hop IDs can help identify unique broadcasts. Two namespaces with the same original hop ID are the same. If the original hop ID is different, then they are distinct.",
+              "createdAt": "2026-06-10T02:20:27Z",
+              "updatedAt": "2026-06-10T02:28:36Z"
+            },
+            {
+              "originalPosition": 67,
+              "body": "Yeah I would say MUST and there MUST be at least 1 HOP_PATH element, at least the publisher's ID.",
+              "createdAt": "2026-06-10T02:20:54Z",
+              "updatedAt": "2026-06-10T02:28:36Z"
+            },
+            {
+              "originalPosition": 108,
+              "body": "Again I would actually generate a random ID. I don't know if we need unknown hop (0) at all; that's a legacy thing from moq-lite-04.",
+              "createdAt": "2026-06-10T02:21:48Z",
+              "updatedAt": "2026-06-10T02:28:36Z"
+            },
+            {
+              "originalPosition": 135,
+              "body": "Do we need multiple? IDK I think moq-lite only supports one. If i'm wrong, then change it to be only one.",
+              "createdAt": "2026-06-10T02:22:32Z",
+              "updatedAt": "2026-06-10T02:28:36Z"
+            },
+            {
+              "originalPosition": 147,
+              "body": "IDK does BGP do something like this? \n\nMaybe add some advisory that a CDN may compress internal hops into one to avoid leaking internal topology or something. But a MUST is a bit strong.",
+              "createdAt": "2026-06-10T02:23:50Z",
+              "updatedAt": "2026-06-10T02:28:36Z"
+            },
+            {
+              "originalPosition": 150,
+              "body": "Not really because it can only add hops, not remove them?",
+              "createdAt": "2026-06-10T02:24:06Z",
+              "updatedAt": "2026-06-10T02:28:36Z"
+            },
+            {
+              "originalPosition": 153,
+              "body": "Then set a maximum size. Or just remove this functionality.",
+              "createdAt": "2026-06-10T02:24:31Z",
+              "updatedAt": "2026-06-10T02:28:36Z"
+            },
+            {
+              "originalPosition": 44,
+              "body": "Add a note that the demuxed nature of MoQ makes timestamps extremely common, and it's annoying to implement it for every single track.",
+              "createdAt": "2026-06-10T02:25:41Z",
+              "updatedAt": "2026-06-10T02:28:36Z"
+            },
+            {
+              "originalPosition": 128,
+              "body": "IDK it might be useful to know the end of an object for dropping reasons?",
+              "createdAt": "2026-06-10T02:27:13Z",
+              "updatedAt": "2026-06-10T02:28:36Z"
+            },
+            {
+              "originalPosition": 83,
+              "body": "You should add some notes that Timescale is needed to figure out the Timestamp units. Which means Objects can't be fully decoded until received track properties via SUBSCRIBE_OK or TRACK_STATUS.",
+              "createdAt": "2026-06-10T02:28:26Z",
+              "updatedAt": "2026-06-10T02:28:36Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChO-4w",
+          "commit": {
+            "abbreviatedOid": "e8eb259"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:37:13Z",
+          "updatedAt": "2026-06-10T02:37:13Z",
+          "comments": [
+            {
+              "originalPosition": 47,
+              "body": "Done in e8eb259 \u2014 added the HTTP Transfer-Encoding analogy in the abstract and intro; compression does not change the OBJECT payload, the decompressed bytes are the object.",
+              "createdAt": "2026-06-10T02:37:13Z",
+              "updatedAt": "2026-06-10T02:37:13Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChO_gA",
+          "commit": {
+            "abbreviatedOid": "e8eb259"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:37:15Z",
+          "updatedAt": "2026-06-10T02:37:15Z",
+          "comments": [
+            {
+              "originalPosition": 115,
+              "body": "Agreed \u2014 reframed in e8eb259 as hop-by-hop (Transfer-Encoding). COMPRESSION is now a per-subscription property in SUBSCRIBE_OK/FETCH_OK set by whoever serves the subscription, so the origin publisher need not opt in.",
+              "createdAt": "2026-06-10T02:37:15Z",
+              "updatedAt": "2026-06-10T02:37:15Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChO_9w",
+          "commit": {
+            "abbreviatedOid": "e8eb259"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:37:17Z",
+          "updatedAt": "2026-06-10T02:37:17Z",
+          "comments": [
+            {
+              "originalPosition": 44,
+              "body": "Done in e8eb259 \u2014 reordered the intro so Path selection is the first bullet.",
+              "createdAt": "2026-06-10T02:37:17Z",
+              "updatedAt": "2026-06-10T02:37:17Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChPAYg",
+          "commit": {
+            "abbreviatedOid": "e8eb259"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:37:18Z",
+          "updatedAt": "2026-06-10T02:37:18Z",
+          "comments": [
+            {
+              "originalPosition": 67,
+              "body": "Done in e8eb259 \u2014 both are now MUST: a relay MUST include HOP_PATH and MUST honor EXCLUDE_HOP, and HOP_PATH always carries at least the origin publisher ID.",
+              "createdAt": "2026-06-10T02:37:18Z",
+              "updatedAt": "2026-06-10T02:37:18Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChPAzw",
+          "commit": {
+            "abbreviatedOid": "e8eb259"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:37:20Z",
+          "updatedAt": "2026-06-10T02:37:20Z",
+          "comments": [
+            {
+              "originalPosition": 75,
+              "body": "Done in e8eb259 \u2014 Hop IDs are now random; when bridging a non-supporting upstream the relay assigns a random stand-in ID instead of 0 so loops are still detectable.",
+              "createdAt": "2026-06-10T02:37:20Z",
+              "updatedAt": "2026-06-10T02:37:20Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChPBLg",
+          "commit": {
+            "abbreviatedOid": "e8eb259"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:37:22Z",
+          "updatedAt": "2026-06-10T02:37:22Z",
+          "comments": [
+            {
+              "originalPosition": 77,
+              "body": "Relaxed in e8eb259 \u2014 with random opaque IDs, leaking them reveals little, so cross-deployment secrecy is no longer a MUST. Topology hiding is now advisory (a relay MAY coalesce/strip hops at a trust boundary, like BGP confederations).",
+              "createdAt": "2026-06-10T02:37:22Z",
+              "updatedAt": "2026-06-10T02:37:22Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChPBmg",
+          "commit": {
+            "abbreviatedOid": "e8eb259"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:37:23Z",
+          "updatedAt": "2026-06-10T02:37:23Z",
+          "comments": [
+            {
+              "originalPosition": 97,
+              "body": "Done in e8eb259 \u2014 HOP_PATH now MUST have at least one entry and the first entry is the origin publisher own Hop ID.",
+              "createdAt": "2026-06-10T02:37:23Z",
+              "updatedAt": "2026-06-10T02:37:23Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChPCbg",
+          "commit": {
+            "abbreviatedOid": "e8eb259"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:37:25Z",
+          "updatedAt": "2026-06-10T02:37:25Z",
+          "comments": [
+            {
+              "originalPosition": 45,
+              "body": "Added in e8eb259 \u2014 a Broadcast identity use: advertisements sharing the same first (origin) Hop ID are the same broadcast; different first IDs are distinct origins, and Path selection uses it to dedupe redundant paths.",
+              "createdAt": "2026-06-10T02:37:25Z",
+              "updatedAt": "2026-06-10T02:37:25Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChPDEg",
+          "commit": {
+            "abbreviatedOid": "e8eb259"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:37:26Z",
+          "updatedAt": "2026-06-10T02:37:26Z",
+          "comments": [
+            {
+              "originalPosition": 108,
+              "body": "Done in e8eb259 \u2014 dropped the unknown-hop 0 entirely (the moq-lite-04 legacy); relays generate random IDs, including a random stand-in for a bridged non-supporting upstream.",
+              "createdAt": "2026-06-10T02:37:26Z",
+              "updatedAt": "2026-06-10T02:37:26Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChPDlQ",
+          "commit": {
+            "abbreviatedOid": "e8eb259"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:37:28Z",
+          "updatedAt": "2026-06-10T02:37:28Z",
+          "comments": [
+            {
+              "originalPosition": 135,
+              "body": "You are right, moq-lite has a single Exclude Hop. Changed in e8eb259 to a single Hop ID (even Type, bare varint); \"exclude nothing\" is just omitting the parameter.",
+              "createdAt": "2026-06-10T02:37:28Z",
+              "updatedAt": "2026-06-10T02:37:28Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChPEGQ",
+          "commit": {
+            "abbreviatedOid": "e8eb259"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:37:29Z",
+          "updatedAt": "2026-06-10T02:37:29Z",
+          "comments": [
+            {
+              "originalPosition": 147,
+              "body": "Softened in e8eb259 \u2014 no longer a MUST. Added advisory that a relay MAY coalesce its internal hops into one (or strip HOP_PATH) to avoid leaking topology, noting the analogy to BGP confederations.",
+              "createdAt": "2026-06-10T02:37:29Z",
+              "updatedAt": "2026-06-10T02:37:30Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChPEiw",
+          "commit": {
+            "abbreviatedOid": "e8eb259"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:37:31Z",
+          "updatedAt": "2026-06-10T02:37:31Z",
+          "comments": [
+            {
+              "originalPosition": 150,
+              "body": "Good point \u2014 reworded in e8eb259: a relay only ever appends, so it cannot make a competing path look shorter; worst case it under-reports its own upstream to win an advisory tie-break, so the impact is limited.",
+              "createdAt": "2026-06-10T02:37:31Z",
+              "updatedAt": "2026-06-10T02:37:31Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChPE-g",
+          "commit": {
+            "abbreviatedOid": "e8eb259"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:37:33Z",
+          "updatedAt": "2026-06-10T02:37:33Z",
+          "comments": [
+            {
+              "originalPosition": 153,
+              "body": "Resolved in e8eb259 by making EXCLUDE_HOP a single Hop ID \u2014 no list, so no size bound is needed; removed this note.",
+              "createdAt": "2026-06-10T02:37:33Z",
+              "updatedAt": "2026-06-10T02:37:33Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChPFVA",
+          "commit": {
+            "abbreviatedOid": "e8eb259"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:37:34Z",
+          "updatedAt": "2026-06-10T02:37:35Z",
+          "comments": [
+            {
+              "originalPosition": 44,
+              "body": "Added in e8eb259 \u2014 a note that MoQ demuxed nature makes timestamps near-universal per track, and re-implementing them per track/container is repetitive, so standardizing at the transport helps.",
+              "createdAt": "2026-06-10T02:37:34Z",
+              "updatedAt": "2026-06-10T02:37:35Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChPGAQ",
+          "commit": {
+            "abbreviatedOid": "e8eb259"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:37:36Z",
+          "updatedAt": "2026-06-10T02:37:36Z",
+          "comments": [
+            {
+              "originalPosition": 128,
+              "body": "Agreed \u2014 updated in e8eb259: a relay MAY use timestamp+duration (the object presentation end) to refine age-based dropping, especially for the last object of a group, falling back to timestamps when duration is absent.",
+              "createdAt": "2026-06-10T02:37:36Z",
+              "updatedAt": "2026-06-10T02:37:36Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChPGZA",
+          "commit": {
+            "abbreviatedOid": "e8eb259"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:37:37Z",
+          "updatedAt": "2026-06-10T02:37:38Z",
+          "comments": [
+            {
+              "originalPosition": 83,
+              "body": "Added in e8eb259 \u2014 note that Timescale is required to interpret units, so timing cannot be resolved until the track properties arrive via SUBSCRIBE_OK or TRACK_STATUS; receivers buffer or treat-as-unknown until then.",
+              "createdAt": "2026-06-10T02:37:38Z",
+              "updatedAt": "2026-06-10T02:37:38Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChQq6A",
+          "commit": {
+            "abbreviatedOid": "6f59a40"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:44:03Z",
+          "updatedAt": "2026-06-10T02:44:03Z",
+          "comments": [
+            {
+              "originalPosition": 115,
+              "body": "Follow-up: reverted in 6f59a40 per offline discussion. COMPRESSION is back to a publisher track property \u2014 the original publisher signals that the content is worth compressing (and the algorithm). Actual compression stays hop-by-hop and gated by negotiation: a payload is compressed only on a hop that negotiated the extension and whose receiver advertised the algorithm, else verbatim. Re-registered under MOQT Properties (Section 15.8).",
+              "createdAt": "2026-06-10T02:44:03Z",
+              "updatedAt": "2026-06-10T02:44:03Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChQrIQ",
+          "commit": {
+            "abbreviatedOid": "e8eb259"
+          },
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "**Actionable comments posted: 2**\n\n<details>\n<summary>\ud83e\uddf9 Nitpick comments (1)</summary><blockquote>\n\n<details>\n<summary>draft-lcurley-moq-compression.md (1)</summary><blockquote>\n\n`114-114`: _\u26a1 Quick win_\n\n**Clarify pronoun reference for readability.**\n\nThe phrase \"On each downstream subscription it serves, it independently chooses\" has an ambiguous pronoun. Consider: \"On each downstream subscription it serves, the relay independently chooses\" for clarity.\n\n<details>\n<summary>\ud83e\udd16 Prompt for AI Agents</summary>\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn `@draft-lcurley-moq-compression.md` at line 114, Replace the ambiguous pronoun\n\"it\" in the sentence \"On each downstream subscription it serves, it\nindependently chooses whether to compress...\" with a clear subject; rewrite as\n\"On each downstream subscription the relay serves, the relay independently\nchooses whether to compress \u2014 using any algorithm that downstream advertised \u2014\nand signals its choice with the COMPRESSION subscription property on that\nSUBSCRIBE_OK / FETCH_OK.\" This clarifies the actor (the relay) without changing\nmeaning.\n```\n\n</details>\n\n<!-- cr-comment:v1:b0837422d1a3b21e17c3d34f -->\n\n</blockquote></details>\n\n</blockquote></details>\n\n<details>\n<summary>\ud83e\udd16 Prompt for all review comments with AI agents</summary>\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nInline comments:\nIn `@draft-lcurley-moq-compression.md`:\n- Line 130: The sentence stating \"reset the stream with a PROTOCOL_VIOLATION (or\nan application error)\" is ambiguous about whether the session or only the stream\nshould be terminated; update the text to explicitly state the intended action\n(e.g., \"reset the stream with a STREAM_RESET/RESET_STREAM error code (not\nCONNECTION_CLOSE) when only the subscription/fetch must end, or close the entire\nconnection with a CONNECTION_CLOSE/PROTOCOL_VIOLATION if the implementation must\nterminate the session\") and align this clarification with the identical wording\nused earlier (line ~70) so both places consistently specify which\nQUIC/HTTP/transport error action is expected and which error name to use for\nstream vs connection termination.\n- Line 70: The sentence about COMPRESSION handling is ambiguous about scope;\nupdate the text that currently says \"MUST reset the affected subscription/fetch\nwith a PROTOCOL_VIOLATION\" (refs: COMPRESSION subscription property,\nPROTOCOL_VIOLATION, Subscribe/Fetch) to explicitly choose and state one of two\nbehaviors: either \"MUST close the session with a PROTOCOL_VIOLATION\" (to match\nother drafts) or \"MUST reset only the affected Subscribe/Fetch stream with a\nPROTOCOL_VIOLATION and describe the precise stream-reset semantics (what frames\nare sent/received and final state of that subscription/fetch)\". Ensure the\nchosen wording replaces the ambiguous phrase and references the COMPRESSION\nproperty and the affected Subscribe/Fetch stream so readers know whether the\nviolation is session-level or stream-level.\n\n---\n\nNitpick comments:\nIn `@draft-lcurley-moq-compression.md`:\n- Line 114: Replace the ambiguous pronoun \"it\" in the sentence \"On each\ndownstream subscription it serves, it independently chooses whether to\ncompress...\" with a clear subject; rewrite as \"On each downstream subscription\nthe relay serves, the relay independently chooses whether to compress \u2014 using\nany algorithm that downstream advertised \u2014 and signals its choice with the\nCOMPRESSION subscription property on that SUBSCRIBE_OK / FETCH_OK.\" This\nclarifies the actor (the relay) without changing meaning.\n```\n\n</details>\n\n<details>\n<summary>\ud83e\ude84 Autofix (Beta)</summary>\n\nFix all unresolved CodeRabbit comments on this PR:\n\n- [ ] <!-- {\"checkboxId\": \"4b0d0e0a-96d7-4f10-b296-3a18ea78f0b9\"} --> Push a commit to this branch (recommended)\n- [ ] <!-- {\"checkboxId\": \"ff5b1114-7d8c-49e6-8ac1-43f82af23a33\"} --> Create a new PR with the fixes\n\n</details>\n\n---\n\n<details>\n<summary>\u2139\ufe0f Review info</summary>\n\n<details>\n<summary>\u2699\ufe0f Run configuration</summary>\n\n**Configuration used**: Organization UI\n\n**Review profile**: CHILL\n\n**Plan**: Pro\n\n**Run ID**: `0e2a7376-f084-477e-948e-aa18d07b2bbc`\n\n</details>\n\n<details>\n<summary>\ud83d\udce5 Commits</summary>\n\nReviewing files that changed from the base of the PR and between 53cb2a77fa255ee90fa167b01a156fb5ab7a09b0 and e8eb259d084162b080f4f9ff83a9160a2a2d3b1c.\n\n</details>\n\n<details>\n<summary>\ud83d\udcd2 Files selected for processing (4)</summary>\n\n* `CLAUDE.md`\n* `draft-lcurley-moq-compression.md`\n* `draft-lcurley-moq-relay-hops.md`\n* `draft-lcurley-moq-timestamp.md`\n\n</details>\n\n<details>\n<summary>\u2705 Files skipped from review due to trivial changes (1)</summary>\n\n* CLAUDE.md\n\n</details>\n\n</details>\n\n<!-- This is an auto-generated comment by CodeRabbit for review status -->",
+          "createdAt": "2026-06-10T02:44:04Z",
+          "updatedAt": "2026-06-10T02:44:05Z",
+          "comments": [
+            {
+              "originalPosition": 70,
+              "body": "_\u26a0\ufe0f Potential issue_ | _\ud83d\udfe0 Major_\n\n<details>\n<summary>\ud83e\udde9 Analysis chain</summary>\n\n\ud83c\udfc1 Script executed:\n\n```shell\n#!/bin/bash\n# Description: Check how PROTOCOL_VIOLATION is used across MoQT drafts\n\nrg -nC3 'PROTOCOL_VIOLATION' --glob '*.md'\n```\n\nRepository: moq-dev/drafts\n\nLength of output: 9180\n\n---\n\n\n\n</details>\n\n**Clarify the scope of \u201creset the affected subscription/fetch with a PROTOCOL_VIOLATION\u201d (line 70)**\n\n- `draft-lcurley-moq-compression.md` says the receiver \u201cMUST reset the affected subscription/fetch with a PROTOCOL_VIOLATION\u201d.\n- Other MoQT drafts consistently tie `PROTOCOL_VIOLATION` phrasing to session termination (e.g., `draft-lcurley-moq-largest-group.md`, `draft-lcurley-moq-relay-hops.md`, and `draft-lcurley-moq-probe.md` use \u201cMUST close the session with a PROTOCOL_VIOLATION\u201d for protocol/negotiation violations).\n- If the intent is stream/subscription-level handling (reset only the affected Subscribe/Fetch) rather than terminating the session, adjust the wording to explicitly state the affected stream and its reset semantics (or explicitly state that the session is closed).\n\n<details>\n<summary>\ud83e\udd16 Prompt for AI Agents</summary>\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn `@draft-lcurley-moq-compression.md` at line 70, The sentence about COMPRESSION\nhandling is ambiguous about scope; update the text that currently says \"MUST\nreset the affected subscription/fetch with a PROTOCOL_VIOLATION\" (refs:\nCOMPRESSION subscription property, PROTOCOL_VIOLATION, Subscribe/Fetch) to\nexplicitly choose and state one of two behaviors: either \"MUST close the session\nwith a PROTOCOL_VIOLATION\" (to match other drafts) or \"MUST reset only the\naffected Subscribe/Fetch stream with a PROTOCOL_VIOLATION and describe the\nprecise stream-reset semantics (what frames are sent/received and final state of\nthat subscription/fetch)\". Ensure the chosen wording replaces the ambiguous\nphrase and references the COMPRESSION property and the affected Subscribe/Fetch\nstream so readers know whether the violation is session-level or stream-level.\n```\n\n</details>\n\n<!-- fingerprinting:phantom:triton:puma -->\n\n<!-- cr-comment:v1:1f38770708523092494885ec -->\n\n<!-- This is an auto-generated reply by CodeRabbit -->\n\n\u2705 Addressed in commit 6f59a40",
+              "createdAt": "2026-06-10T02:44:04Z",
+              "updatedAt": "2026-06-10T02:47:31Z"
+            },
+            {
+              "originalPosition": 130,
+              "body": "_\u26a0\ufe0f Potential issue_ | _\ud83d\udfe0 Major_ | _\u2696\ufe0f Poor tradeoff_\n\n**Clarify error handling semantics (same issue as line 70).**\n\nThe phrase \"reset the stream with a PROTOCOL_VIOLATION (or an application error)\" shares the same ambiguity as line 70. PROTOCOL_VIOLATION typically closes the session, not just a stream. Clarify whether the intent is to close the session or reset only the subscription/fetch.\n\n<details>\n<summary>\ud83e\udd16 Prompt for AI Agents</summary>\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn `@draft-lcurley-moq-compression.md` at line 130, The sentence stating \"reset\nthe stream with a PROTOCOL_VIOLATION (or an application error)\" is ambiguous\nabout whether the session or only the stream should be terminated; update the\ntext to explicitly state the intended action (e.g., \"reset the stream with a\nSTREAM_RESET/RESET_STREAM error code (not CONNECTION_CLOSE) when only the\nsubscription/fetch must end, or close the entire connection with a\nCONNECTION_CLOSE/PROTOCOL_VIOLATION if the implementation must terminate the\nsession\") and align this clarification with the identical wording used earlier\n(line ~70) so both places consistently specify which QUIC/HTTP/transport error\naction is expected and which error name to use for stream vs connection\ntermination.\n```\n\n</details>\n\n<!-- fingerprinting:phantom:triton:puma -->\n\n<!-- cr-comment:v1:1a5860d13e934e91994c0c1b -->\n\n<!-- This is an auto-generated reply by CodeRabbit -->\n\n\u2705 Addressed in commit 6f59a40",
+              "createdAt": "2026-06-10T02:44:04Z",
+              "updatedAt": "2026-06-10T02:47:32Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChRbdQ",
+          "commit": {
+            "abbreviatedOid": "0fe1ec6"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:47:27Z",
+          "updatedAt": "2026-06-10T02:47:27Z",
+          "comments": [
+            {
+              "originalPosition": 70,
+              "body": "Already addressed in 6f59a40 \u2014 when COMPRESSION became a track property this sentence was removed. Mis-negotiation now resolves via the decode rule (decompress iff the property is present and the receiver advertised the algorithm, else treat as verbatim), so there is no ambiguous PROTOCOL_VIOLATION here.",
+              "createdAt": "2026-06-10T02:47:27Z",
+              "updatedAt": "2026-06-10T02:47:27Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChRbrQ",
+          "commit": {
+            "abbreviatedOid": "0fe1ec6"
+          },
+          "author": "kixelated",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:47:28Z",
+          "updatedAt": "2026-06-10T02:47:28Z",
+          "comments": [
+            {
+              "originalPosition": 130,
+              "body": "Clarified in 0fe1ec6 \u2014 a decompression bomb now MUST reset only the affected Subscribe/Fetch stream (so unrelated subscriptions survive), and MAY escalate to closing the session with a PROTOCOL_VIOLATION only if the peer is abusive. Also fixed the line-114 pronoun in the same commit.",
+              "createdAt": "2026-06-10T02:47:28Z",
+              "updatedAt": "2026-06-10T02:47:29Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChRfwA",
+          "commit": {
+            "abbreviatedOid": "0fe1ec6"
+          },
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:47:49Z",
+          "updatedAt": "2026-06-10T02:47:49Z",
+          "comments": [
+            {
+              "originalPosition": 130,
+              "body": "`@kixelated`, that's a well-reasoned resolution \u2014 scoping the reset to the individual Subscribe/Fetch stream preserves other in-flight subscriptions, and reserving session closure for demonstrably abusive peers is the right proportionality. Thanks for the detailed explanation and the pronoun fix too!\n\n<!-- <review_comment_addressed> -->\n\n\n\n---\n\n<details>\n<summary>\ud83e\udde0 Learnings used</summary>\n\n```\nLearnt from: kixelated\nRepo: moq-dev/drafts PR: 26\nFile: draft-lcurley-moq-probe.md:69-69\nTimestamp: 2026-06-06T01:48:33.129Z\nLearning: In the moq-dev/drafts repository, files matching `draft-*.md` are intentionally formatted as kramdown-rfc drafts. These documents intentionally use ATX-style headings (`#`) and fenced code blocks. Since the repo does not run markdownlint in CI (kramdown-rfc is used instead), CodeRabbit should not flag markdownlint style issues (e.g., MD003/MD040/MD046 or similar markdownlint rule violations) in these `draft-*.md` files.\n```\n\n</details>\n\n---\n\n<!-- This is an auto-generated comment: tweet message by coderabbit.ai -->\n\nIf you found this review helpful, would you consider giving us a shout-out on [X](https://twitter.com/intent/tweet?related=CodeRabbitAI&text=Clarified%20by%20%40coderabbitai%3A%20decompression%E2%80%91bomb%20handling%20%E2%80%94%20MUST%20reset%20only%20the%20affected%20Subscribe%2FFetch%20stream%20so%20others%20survive%3B%20MAY%20escalate%20to%20session%20close%20with%20PROTOCOL_VIOLATION%20for%20abusive%20peers.%20Try%20it%20%F0%9F%A4%96%F0%9F%94%A7&url=https%3A%2F%2Fgithub.com%2Fmoq-dev%2Fdrafts%2Fpull%2F30%23discussion_r3385138630)?\n\nThank you for using CodeRabbit!\n\n<!-- end of auto-generated comment: tweet message by coderabbit.ai -->\n\n\n\n<!-- This is an auto-generated reply by CodeRabbit -->",
+              "createdAt": "2026-06-10T02:47:49Z",
+              "updatedAt": "2026-06-10T02:47:49Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABChRmHQ",
+          "commit": {
+            "abbreviatedOid": "0fe1ec6"
+          },
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-10T02:48:25Z",
+          "updatedAt": "2026-06-10T02:48:25Z",
+          "comments": [
+            {
+              "originalPosition": 70,
+              "body": "<details>\n<summary>\ud83e\udde9 Analysis chain</summary>\n\n\ud83c\udfc1 Script executed:\n\n```shell\n#!/bin/bash\n# Resolve the coderabbitai comment on PR `#30`\n# First list comments to find the right one\ngh api repos/moq-dev/drafts/pulls/30/comments --jq '.[] | select(.user.login == \"coderabbitai[bot]\") | {id: .id, body: .body[0:80]}'\n```\n\nLength of output: 970\n\n---\n\n\ud83c\udfc1 Script executed:\n\n```shell\n#!/bin/bash\n# Resolve the review comment id 3384907740 via GraphQL\n# First get the node_id for the comment\ngh api repos/moq-dev/drafts/pulls/comments/3384907740 --jq '.node_id'\n```\n\nLength of output: 243\n\n---\n\n\ud83c\udfc1 Script executed:\n\n```shell\n#!/bin/bash\n# Get the pull request node_id and find the review thread containing our comment\ngh api graphql -f query='\n{\n  repository(owner: \"moq-dev\", name: \"drafts\") {\n    pullRequest(number: 30) {\n      reviewThreads(first: 50) {\n        nodes {\n          id\n          isResolved\n          comments(first: 5) {\n            nodes {\n              id\n              databaseId\n            }\n          }\n        }\n      }\n    }\n  }\n}'\n```\n\nLength of output: 4698\n\n---\n\n\n\n</details>\n\n---\n\n`@kixelated`, the review thread is already resolved. Thanks for the clear explanation \u2014 the decode-rule approach (decompress iff the COMPRESSION property is present and the algorithm was advertised, otherwise treat payload as verbatim) is a cleaner design that sidesteps the ambiguity entirely. Noted!\n\n\n\n<!-- <review_comment_addressed> -->\n\n\n\n\n\n---\n\n<details>\n<summary>\u270f\ufe0f Learnings added</summary>\n\n```\nLearnt from: kixelated\nRepo: moq-dev/drafts PR: 30\nFile: draft-lcurley-moq-compression.md:0-0\nTimestamp: 2026-06-10T02:48:15.839Z\nLearning: In draft-lcurley-moq-compression.md (moq-dev/drafts), COMPRESSION is a track-level property (not a per-Setup negotiation flag). Mis-negotiation and unknown-algorithm handling is resolved by a decode rule: decompress only if the COMPRESSION property is present and the receiver advertised that algorithm during SETUP; otherwise treat the payload as verbatim (uncompressed). There is no PROTOCOL_VIOLATION path for an unadvertised algorithm \u2014 the payload is simply passed through as-is.\n```\n\n> Note: Learnings are effective only in the context of similar code segments. To apply general coding guidelines, please configure [review instructions](https://docs.coderabbit.ai/guides/review-instructions). You can manage existing learnings in the [app](https://app.coderabbit.ai/learnings).\n\n</details>\n\n\n\n---\n\n<details>\n<summary>\ud83e\udde0 Learnings used</summary>\n\n```\nLearnt from: kixelated\nRepo: moq-dev/drafts PR: 26\nFile: draft-lcurley-moq-probe.md:69-69\nTimestamp: 2026-06-06T01:48:33.129Z\nLearning: In the moq-dev/drafts repository, files matching `draft-*.md` are intentionally formatted as kramdown-rfc drafts. These documents intentionally use ATX-style headings (`#`) and fenced code blocks. Since the repo does not run markdownlint in CI (kramdown-rfc is used instead), CodeRabbit should not flag markdownlint style issues (e.g., MD003/MD040/MD046 or similar markdownlint rule violations) in these `draft-*.md` files.\n```\n\n</details>\n\n---\n\n<!-- This is an auto-generated comment: tweet message by coderabbit.ai -->\n\nIf you found this review helpful, would you consider giving us a shout-out on [X](https://twitter.com/intent/tweet?related=CodeRabbitAI&text=%40coderabbitai%20flagged%20an%20ambiguous%20PROTOCOL_VIOLATION%20in%20COMPRESSION%20%E2%80%94%20now%20fixed%3A%20COMPRESSION%20is%20a%20track%20property%20and%20decode%20rule%20dictates%20behavior%20(no%20session%20kill).%20Try%20%40coderabbitai!%20%F0%9F%94%A7%F0%9F%9A%80&url=https%3A%2F%2Fgithub.com%2Fmoq-dev%2Fdrafts%2Fpull%2F30%23discussion_r3385138625)?\n\nThank you for using CodeRabbit!\n\n<!-- end of auto-generated comment: tweet message by coderabbit.ai -->\n\n\n\n<!-- This is an auto-generated reply by CodeRabbit -->",
+              "createdAt": "2026-06-10T02:48:25Z",
+              "updatedAt": "2026-06-10T02:48:25Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 31,
+      "id": "PR_kwDOLz_x-M7kqG2X",
+      "title": "Add telescoping Subscriber Count to moq-lite and a moq-transport extension",
+      "url": "https://github.com/moq-dev/drafts/pull/31",
+      "state": "OPEN",
+      "author": "kixelated",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "## Summary\n\nAdds a **telescoping subscriber (viewer) count** to subscriptions, in two places:\n\n1. **moq-lite** (`draft-lcurley-moq-lite.md`) \u2014 a new `Subscriber Count` field on SUBSCRIBE and SUBSCRIBE_UPDATE.\n2. **A new moq-transport extension** (`draft-lcurley-moq-subscriber-count.md`) \u2014 the same functionality expressed as a standalone extension I-D against `draft-ietf-moq-transport`.\n\nThe count lets a publisher learn its total downstream audience across any number of relay hops. It is a subscriber property that fans *in* at relays: a relay sums the counts of the downstream subscriptions it aggregates into one upstream subscription, so the value telescopes up the fan-out tree for free. This is a spec adaptation of moq-dev/moq#1672.\n\n## moq-lite change\n\n- `Subscriber Count` field on SUBSCRIBE / SUBSCRIBE_UPDATE, slotting into the existing subscriber-property (fan-in) model already described in the draft.\n- Encoded as `count - 1` (a leaf sends `0`); a relay sums downstream counts and forwards the sum, refreshed via SUBSCRIBE_UPDATE.\n- Relays SHOULD rate-limit count-only updates to absorb subscriber churn.\n- Changelog entry under moq-lite-05.\n\n## moq-transport extension (new draft)\n\nRe-expressed in moq-transport's idiom rather than copied:\n\n- Carried as an optional **Key-Value-Pair** parameter (even Type `0xC0116` \u2192 single varint, no length) on SUBSCRIBE and REQUEST_UPDATE.\n- Negotiated **per hop** via a `SUBSCRIBER_COUNT` Setup Option (`0xC0117`); un-negotiated counts are ignored, not errors.\n- Same `count - 1` encoding as moq-lite: absent or `0` on the wire both decode to `1`, making a count of `0` impossible to represent \u2014 a subscription can never report fewer subscribers than itself.\n- Real **Security/Privacy Considerations**: per-hop opt-out for sensitive audience sizes; the value is subscriber-supplied and untrusted (MUST NOT drive billing/admission/rate-limiting without verification); churn amplification bounded by the rate-limit.\n- IANA registrations for the Setup Option and Message Parameter, following the codepoint conventions used by the existing moq-probe / moq-largest-group drafts.\n\n## Reviewer notes\n\n- Both drafts build clean (`kramdown-rfc` + `xml2rfc-txt` OK).\n- The extension targets **draft-18**, where the update message is `REQUEST_UPDATE` and the registry is \"Message Parameters\" (\u00a715.7). Section references were pulled from the draft text and are worth eyeballing against a local copy before submission, since they renumber between revisions.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+      "createdAt": "2026-06-10T02:53:59Z",
+      "updatedAt": "2026-06-10T03:34:19Z",
+      "baseRepository": "moq-dev/drafts",
+      "baseRefName": "main",
+      "baseRefOid": "80308a37daa1b0474c4ba35b863ee36191f1197e",
+      "headRepository": "moq-dev/drafts",
+      "headRefName": "claude/serene-golick-e3445c",
+      "headRefOid": "b40032c8aca5955ec6a7da59fb7052f579830f37",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -2130,9 +3103,9 @@
         {
           "author": "coderabbitai",
           "authorAssociation": "NONE",
-          "body": "<!-- This is an auto-generated comment: summarize by coderabbit.ai -->\n<!-- review_stack_entry_start -->\n\n[![Review Change Stack](https://storage.googleapis.com/coderabbit_public_assets/review-stack-in-coderabbit-ui.svg)](https://app.coderabbit.ai/change-stack/moq-dev/drafts/pull/27?utm_source=github_walkthrough&utm_medium=github&utm_campaign=change_stack)\n\n<!-- review_stack_entry_end -->\nNo actionable comments were generated in the recent review. \ud83c\udf89\n\n<details>\n<summary>\u2139\ufe0f Recent review info</summary>\n\n<details>\n<summary>\u2699\ufe0f Run configuration</summary>\n\n**Configuration used**: Organization UI\n\n**Review profile**: CHILL\n\n**Plan**: Pro\n\n**Run ID**: `ab32403f-cf2d-442f-bdf5-97715228ed72`\n\n</details>\n\n<details>\n<summary>\ud83d\udce5 Commits</summary>\n\nReviewing files that changed from the base of the PR and between a5b185a38dffa8fbd71bf35b456ef8150d5f5e56 and d61341fdf0ecd1a2d17a0292653f8ba96ae64246.\n\n</details>\n\n<details>\n<summary>\ud83d\udcd2 Files selected for processing (1)</summary>\n\n* `draft-lcurley-moq-lite.md`\n\n</details>\n\n</details>\n\n---\n<!-- walkthrough_start -->\n\n## Walkthrough\n\nThis pull request adds a Path Parameter capability to the MOQ Lite SETUP protocol. The change introduces a new mechanism for client-to-server communication of request paths in protocol bindings that do not define their own request URI (such as ALPN-only QUIC and Qmux over TCP/TLS). The implementation includes a normative reference to RFC3986, a parameter table entry defining Path as parameter ID 0x2 with string value type, and a complete specification section detailing encoding constraints, required presence/absence by binding type, error-handling behavior, and relay forwarding rules.\n\n<!-- walkthrough_end -->\n<!-- pre_merge_checks_walkthrough_start -->\n\n<details>\n<summary>\ud83d\udea5 Pre-merge checks | \u2705 5</summary>\n\n<details>\n<summary>\u2705 Passed checks (5 passed)</summary>\n\n|         Check name         | Status   | Explanation                                                                                                                                        |\n| :------------------------: | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |\n|         Title check        | \u2705 Passed | The title accurately and concisely describes the main change: adding a Path Setup Parameter to moq-lite for transports without request URIs.       |\n|      Description check     | \u2705 Passed | The description is detailed and directly related to the changeset, explaining the what, why, and technical details of the Path parameter addition. |\n|     Docstring Coverage     | \u2705 Passed | No functions found in the changed files to evaluate docstring coverage. Skipping docstring coverage check.                                         |\n|     Linked Issues check    | \u2705 Passed | Check skipped because no linked issues were found for this pull request.                                                                           |\n| Out of Scope Changes check | \u2705 Passed | Check skipped because no linked issues were found for this pull request.                                                                           |\n\n</details>\n\n<sub>\u270f\ufe0f Tip: You can configure your own custom pre-merge checks in the settings.</sub>\n\n</details>\n\n<!-- pre_merge_checks_walkthrough_end -->\n<!-- finishing_touch_checkbox_start -->\n\n<details>\n<summary>\u2728 Finishing Touches</summary>\n\n<details>\n<summary>\u2728 Simplify code</summary>\n\n- [ ] <!-- {\"checkboxId\": \"f120d606-b0e2-4b7d-8316-181794555b43\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Create PR with simplified code\n- [ ] <!-- {\"checkboxId\": \"9a4e3077-58f6-4eba-b7ee-62e936ea00ea\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Commit simplified code in branch `claude/exciting-varahamihira-cc9460`\n\n</details>\n\n</details>\n\n<!-- finishing_touch_checkbox_end -->\n<!-- tips_start -->\n\n---\n\nThanks for using [CodeRabbit](https://coderabbit.ai?utm_source=oss&utm_medium=github&utm_campaign=moq-dev/drafts&utm_content=27)! It's free for OSS, and your support helps us grow. If you like it, consider giving us a shout-out.\n\n<details>\n<summary>\u2764\ufe0f Share</summary>\n\n- [X](https://twitter.com/intent/tweet?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A&url=https%3A//coderabbit.ai)\n- [Mastodon](https://mastodon.social/share?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A%20https%3A%2F%2Fcoderabbit.ai)\n- [Reddit](https://www.reddit.com/submit?title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&text=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code.%20Check%20it%20out%3A%20https%3A//coderabbit.ai)\n- [LinkedIn](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcoderabbit.ai&mini=true&title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&summary=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code)\n\n</details>\n\n\n<sub>Comment `@coderabbitai help` to get the list of available commands and usage tips.</sub>\n\n<!-- tips_end -->\n<!-- internal state start -->\n\n\n<!-- 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 -->\n\n<!-- internal state end -->",
-          "createdAt": "2026-06-09T01:40:05Z",
-          "updatedAt": "2026-06-09T01:40:05Z"
+          "body": "<!-- This is an auto-generated comment: summarize by coderabbit.ai -->\n<!-- This is an auto-generated comment: rate limited by coderabbit.ai -->\n\n> [!WARNING]\n> ## Review limit reached\n> \n> `@kixelated`, we couldn't start this review because you've reached your PR review rate limit.\n> \n> More reviews will be available in 1 minute and 51 seconds. [Learn how PR review limits work](https://docs.coderabbit.ai/management/plans#fair-usage-limits-policy).\n> \n> Your organization has run out of usage credits. Purchase more in the [billing tab](https://app.coderabbit.ai/settings/subscription?tab=usage&tenantId=43a3cc7a-9a22-46cb-854d-dec79a791215).\n> \n> <details>\n> <summary>\u231b How to resolve this issue?</summary>\n> \n> After more reviews become available, a review can be triggered using the `@coderabbitai review` command as a PR comment. Alternatively, push new commits to this PR.\n> \n> We recommend that you space out your commits to avoid hitting the rate limit.\n> \n> </details>\n> \n> \n> <details>\n> <summary>\ud83d\udea6 How do rate limits work?</summary>\n> \n> CodeRabbit enforces hourly rate limits for each developer per organization.\n> \n> Our paid plans include higher PR review limits than trial, open-source, and free plans. In all cases, reviews become available again over time. During sustained high-volume PR review activity, CodeRabbit may temporarily slow when the next review becomes available.\n> \n> Please see our [Fair Usage Limits Policy](https://docs.coderabbit.ai/management/plans#fair-usage-limits-policy) for further information.\n> \n> </details>\n> \n> <details>\n> <summary>\u2139\ufe0f Review info</summary>\n> \n> <details>\n> <summary>\u2699\ufe0f Run configuration</summary>\n> \n> **Configuration used**: Organization UI\n> \n> **Review profile**: CHILL\n> \n> **Plan**: Pro\n> \n> **Run ID**: `cec6525d-b8bf-4c9b-a5a0-95c56ed5419d`\n> \n> </details>\n> \n> <details>\n> <summary>\ud83d\udce5 Commits</summary>\n> \n> Reviewing files that changed from the base of the PR and between 80308a37daa1b0474c4ba35b863ee36191f1197e and b40032c8aca5955ec6a7da59fb7052f579830f37.\n> \n> </details>\n> \n> <details>\n> <summary>\ud83d\udcd2 Files selected for processing (2)</summary>\n> \n> * `draft-lcurley-moq-lite.md`\n> * `draft-lcurley-moq-subscribe-stats.md`\n> \n> </details>\n> \n> </details>\n\n<!-- end of auto-generated comment: rate limited by coderabbit.ai -->\n\n<!-- finishing_touch_checkbox_start -->\n\n<details>\n<summary>\u2728 Finishing Touches</summary>\n\n<details>\n<summary>\u2728 Simplify code</summary>\n\n- [ ] <!-- {\"checkboxId\": \"f120d606-b0e2-4b7d-8316-181794555b43\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Create PR with simplified code\n- [ ] <!-- {\"checkboxId\": \"9a4e3077-58f6-4eba-b7ee-62e936ea00ea\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Commit simplified code in branch `claude/serene-golick-e3445c`\n\n</details>\n\n</details>\n\n<!-- finishing_touch_checkbox_end -->\n<!-- tips_start -->\n\n---\n\nThanks for using [CodeRabbit](https://coderabbit.ai?utm_source=oss&utm_medium=github&utm_campaign=moq-dev/drafts&utm_content=31)! It's free for OSS, and your support helps us grow. If you like it, consider giving us a shout-out.\n\n<details>\n<summary>\u2764\ufe0f Share</summary>\n\n- [X](https://twitter.com/intent/tweet?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A&url=https%3A//coderabbit.ai)\n- [Mastodon](https://mastodon.social/share?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A%20https%3A%2F%2Fcoderabbit.ai)\n- [Reddit](https://www.reddit.com/submit?title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&text=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code.%20Check%20it%20out%3A%20https%3A//coderabbit.ai)\n- [LinkedIn](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcoderabbit.ai&mini=true&title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&summary=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code)\n\n</details>\n\n\n<sub>Comment `@coderabbitai help` to get the list of available commands and usage tips.</sub>\n\n<!-- tips_end -->",
+          "createdAt": "2026-06-10T02:54:05Z",
+          "updatedAt": "2026-06-10T03:34:19Z"
         }
       ],
       "reviews": []
