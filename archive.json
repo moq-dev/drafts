@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-06-11T02:48:46.983625+00:00",
+  "timestamp": "2026-06-14T02:49:32.620549+00:00",
   "repo": "moq-dev/drafts",
   "labels": [
     {
@@ -3088,7 +3088,7 @@
       "labels": [],
       "body": "## Summary\n\nAdds a **telescoping subscriber (viewer) count** to subscriptions, in two places:\n\n1. **moq-lite** (`draft-lcurley-moq-lite.md`) \u2014 a new `Subscriber Count` field on SUBSCRIBE and SUBSCRIBE_UPDATE.\n2. **A new moq-transport extension** (`draft-lcurley-moq-subscriber-count.md`) \u2014 the same functionality expressed as a standalone extension I-D against `draft-ietf-moq-transport`.\n\nThe count lets a publisher learn its total downstream audience across any number of relay hops. It is a subscriber property that fans *in* at relays: a relay sums the counts of the downstream subscriptions it aggregates into one upstream subscription, so the value telescopes up the fan-out tree for free. This is a spec adaptation of moq-dev/moq#1672.\n\n## moq-lite change\n\n- `Subscriber Count` field on SUBSCRIBE / SUBSCRIBE_UPDATE, slotting into the existing subscriber-property (fan-in) model already described in the draft.\n- Encoded as `count - 1` (a leaf sends `0`); a relay sums downstream counts and forwards the sum, refreshed via SUBSCRIBE_UPDATE.\n- Relays SHOULD rate-limit count-only updates to absorb subscriber churn.\n- Changelog entry under moq-lite-05.\n\n## moq-transport extension (new draft)\n\nRe-expressed in moq-transport's idiom rather than copied:\n\n- Carried as an optional **Key-Value-Pair** parameter (even Type `0xC0116` \u2192 single varint, no length) on SUBSCRIBE and REQUEST_UPDATE.\n- Negotiated **per hop** via a `SUBSCRIBER_COUNT` Setup Option (`0xC0117`); un-negotiated counts are ignored, not errors.\n- Same `count - 1` encoding as moq-lite: absent or `0` on the wire both decode to `1`, making a count of `0` impossible to represent \u2014 a subscription can never report fewer subscribers than itself.\n- Real **Security/Privacy Considerations**: per-hop opt-out for sensitive audience sizes; the value is subscriber-supplied and untrusted (MUST NOT drive billing/admission/rate-limiting without verification); churn amplification bounded by the rate-limit.\n- IANA registrations for the Setup Option and Message Parameter, following the codepoint conventions used by the existing moq-probe / moq-largest-group drafts.\n\n## Reviewer notes\n\n- Both drafts build clean (`kramdown-rfc` + `xml2rfc-txt` OK).\n- The extension targets **draft-18**, where the update message is `REQUEST_UPDATE` and the registry is \"Message Parameters\" (\u00a715.7). Section references were pulled from the draft text and are worth eyeballing against a local copy before submission, since they renumber between revisions.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
       "createdAt": "2026-06-10T02:53:59Z",
-      "updatedAt": "2026-06-10T03:34:19Z",
+      "updatedAt": "2026-06-11T18:34:06Z",
       "baseRepository": "moq-dev/drafts",
       "baseRefName": "main",
       "baseRefOid": "80308a37daa1b0474c4ba35b863ee36191f1197e",
