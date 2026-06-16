@@ -1048,7 +1048,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Curley</td>
-<td class="center">Expires 12 December 2026</td>
+<td class="center">Expires 18 December 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1061,12 +1061,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-lcurley-moq-lite-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-06-10" class="published">10 June 2026</time>
+<time datetime="2026-06-16" class="published">16 June 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-12-12">12 December 2026</time></dd>
+<dd class="expires"><time datetime="2026-12-18">18 December 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1112,7 +1112,7 @@ While primarily designed for media, the transport is payload agnostic and can be
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 12 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 18 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1519,10 +1519,9 @@ The same subscription <span class="bcp14">MAY</span> receive groups via both str
 <p id="section-3.5-1">A Frame is a payload of bytes within a Group.<a href="#section-3.5-1" class="pilcrow">¶</a></p>
 <p id="section-3.5-2">A frame is used to represent a chunk of data with an upfront size.
 The contents are opaque to the moq-lite layer.<a href="#section-3.5-2" class="pilcrow">¶</a></p>
-<p id="section-3.5-3">Each frame carries a presentation timestamp expressed in the parent Track's <code>Timescale</code> (units per second, part of the <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>), and a duration in the same scale.
+<p id="section-3.5-3">Each frame carries a presentation timestamp expressed in the parent Track's <code>Timescale</code> (units per second, part of the <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>).
 The timestamp is the source-of-truth for media time and is used by the moq-lite layer for <a href="#expiration" class="auto internal xref">Section 6.2</a> decisions instead of wall-clock arrival time.
-The duration is a hint for the application layer (e.g. presentation scheduling) and is not used by moq-lite itself; a duration of <code>0</code> means unknown and the frame is presented until the next frame begins.
-A Track with a <code>Timescale</code> of 0 (unspecified) carries no meaningful timestamps or durations and falls back to wall-clock arrival time for expiration.<a href="#section-3.5-3" class="pilcrow">¶</a></p>
+A Track with a <code>Timescale</code> of 0 (unspecified) carries no meaningful timestamps and falls back to wall-clock arrival time for expiration.<a href="#section-3.5-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2014,13 +2013,12 @@ DATAGRAM Body {
   Subscribe ID (i)
   Group Sequence (i)
   [Timestamp (i)]
-  [Duration (i)]
   Payload (b)
 }
 </pre><a href="#section-6.4-5" class="pilcrow">¶</a>
 </div>
-<p id="section-6.4-6"><code>Timestamp</code> and <code>Duration</code> are present only when the Track's <code>Publisher Timescale</code> (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>) is non-zero.
-When <code>Publisher Timescale</code> is 0, both fields are omitted from the wire and the datagram body consists of just <code>Subscribe ID</code>, <code>Group Sequence</code>, and <code>Payload</code>.<a href="#section-6.4-6" class="pilcrow">¶</a></p>
+<p id="section-6.4-6"><code>Timestamp</code> is present only when the Track's <code>Publisher Timescale</code> (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>) is non-zero.
+When <code>Publisher Timescale</code> is 0, the field is omitted from the wire and the datagram body consists of just <code>Subscribe ID</code>, <code>Group Sequence</code>, and <code>Payload</code>.<a href="#section-6.4-6" class="pilcrow">¶</a></p>
 <p id="section-6.4-7"><strong>Subscribe ID</strong>:
 The Subscribe ID of an active subscription on the same session.
 A subscriber receiving a datagram with an unknown Subscribe ID <span class="bcp14">MUST</span> silently drop it.<a href="#section-6.4-7" class="pilcrow">¶</a></p>
@@ -2030,16 +2028,13 @@ Each datagram represents a complete group containing exactly one frame.<a href="
 <p id="section-6.4-9"><strong>Timestamp</strong>:
 The absolute timestamp of the single frame in the group, expressed in the Track's negotiated <code>Timescale</code>.
 Any varint value (including 0) is a valid absolute timestamp.<a href="#section-6.4-9" class="pilcrow">¶</a></p>
-<p id="section-6.4-10"><strong>Duration</strong>:
-The absolute duration of the frame, expressed in the Track's negotiated <code>Timescale</code>.
-A value of <code>0</code> means the duration is unknown; the frame is presented until the next frame begins (or indefinitely, since a datagram-delivered group contains exactly one frame, until the application supersedes it).<a href="#section-6.4-10" class="pilcrow">¶</a></p>
-<p id="section-6.4-11"><strong>Payload</strong>:
+<p id="section-6.4-10"><strong>Payload</strong>:
 The frame payload, extending to the end of the datagram.
 If the Track's <code>Publisher Compression</code> is non-zero, the payload is compressed using the negotiated algorithm (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>).
 The total datagram body (including all header fields above and the compressed payload if applicable) <span class="bcp14">MUST NOT</span> exceed 1200 bytes.
 This limit ensures the datagram fits within the minimum QUIC path MTU without IP-layer fragmentation.
 Payloads that would not fit <span class="bcp14">MUST</span> be sent as a Group Stream instead.
-A receiver <span class="bcp14">MUST</span> silently drop any datagram that exceeds this limit.<a href="#section-6.4-11" class="pilcrow">¶</a></p>
+A receiver <span class="bcp14">MUST</span> silently drop any datagram that exceeds this limit.<a href="#section-6.4-10" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2436,7 +2431,7 @@ The unit is milliseconds (independent of <code>Publisher Timescale</code>) so ca
 <p id="section-7.10-9"><strong>Publisher Timescale</strong>:
 The number of timestamp units per second for frame timestamps on this Track.
 A value of 0 means unspecified; the subscriber <span class="bcp14">MUST</span> treat per-frame timestamps as opaque and fall back to wall-clock arrival time for <a href="#expiration" class="auto internal xref">Section 6.2</a>.
-When <code>Publisher Timescale</code> is 0, the per-frame <code>Timestamp Delta</code> and <code>Duration Delta</code> fields are omitted from FRAME messages and the <code>Timestamp</code> and <code>Duration</code> fields are omitted from datagram bodies (see <a href="#frame" class="auto internal xref">Section 3.5</a> and <a href="#datagrams" class="auto internal xref">Section 6.4</a>).
+When <code>Publisher Timescale</code> is 0, the per-frame <code>Timestamp Delta</code> field is omitted from FRAME messages and the <code>Timestamp</code> field is omitted from datagram bodies (see <a href="#frame" class="auto internal xref">Section 3.5</a> and <a href="#datagrams" class="auto internal xref">Section 6.4</a>).
 Common values include <code>1000</code> (milliseconds), <code>1000000</code> (microseconds), <code>48000</code> (audio sample rate), and <code>90000</code> (RTP video clock).<a href="#section-7.10-9" class="pilcrow">¶</a></p>
 <p id="section-7.10-10"><strong>Publisher Compression</strong>:
 The compression algorithm applied to every Frame <code>Payload</code> on this Track.<a href="#section-7.10-10" class="pilcrow">¶</a></p>
@@ -2662,14 +2657,13 @@ A subscriber <span class="bcp14">MUST</span> handle gaps, potentially caused by 
 <pre>
 FRAME Message {
   [Timestamp Delta (i)]
-  [Duration Delta (i)]
   Message Length (i)
   Payload (b)
 }
 </pre><a href="#section-7.18-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.18-3"><code>Timestamp Delta</code> and <code>Duration Delta</code> are present only when the Track's <code>Publisher Timescale</code> (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>) is non-zero.
-When <code>Publisher Timescale</code> is 0, both fields are omitted from the wire and the FRAME consists of just <code>Message Length</code> and <code>Payload</code>.<a href="#section-7.18-3" class="pilcrow">¶</a></p>
+<p id="section-7.18-3"><code>Timestamp Delta</code> is present only when the Track's <code>Publisher Timescale</code> (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>) is non-zero.
+When <code>Publisher Timescale</code> is 0, the field is omitted from the wire and the FRAME consists of just <code>Message Length</code> and <code>Payload</code>.<a href="#section-7.18-3" class="pilcrow">¶</a></p>
 <p id="section-7.18-4"><strong>Timestamp Delta</strong>:
 A signed delta from the previous frame's timestamp, in the Track's negotiated <code>Timescale</code>.
 Encoded as a zigzag-mapped variable-length integer:<a href="#section-7.18-4" class="pilcrow">¶</a></p>
@@ -2683,24 +2677,10 @@ Encoded as a zigzag-mapped variable-length integer:<a href="#section-7.18-4" cla
         </ul>
 <p id="section-7.18-6">Zigzag interleaves non-negative and negative values (<code>0 → 0, -1 → 1, 1 → 2, -2 → 3, 2 → 4, ...</code>) so small magnitudes of either sign fit in a 1-byte varint and there is exactly one wire encoding for zero.
 The first frame of a group is delta-encoded from <code>0</code>, so its <code>Timestamp Delta</code> is the zigzag encoding of the absolute timestamp.<a href="#section-7.18-6" class="pilcrow">¶</a></p>
-<p id="section-7.18-7"><strong>Duration Delta</strong>:
-A signed delta from the previous frame's duration, in the Track's negotiated <code>Timescale</code>, encoded using the same zigzag mapping as <code>Timestamp Delta</code>.
-A wire value of <code>0</code> means the duration is unchanged from the previous frame; this is the common case for constant-rate media and fits in one byte.
-The first frame of a group is delta-encoded from a prior duration of <code>0</code>.<a href="#section-7.18-7" class="pilcrow">¶</a></p>
-<p id="section-7.18-8">The resolved duration value carries the following semantics for the application:<a href="#section-7.18-8" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-7.18-9.1">
-            <p id="section-7.18-9.1.1">A resolved duration of <code>0</code> means the duration is unknown; the frame is presented until the next frame in the group begins (or until the group ends, if it is the last frame).<a href="#section-7.18-9.1.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-7.18-9.2">
-            <p id="section-7.18-9.2.1">A non-zero resolved duration is the explicit presentation duration in the Track's <code>Timescale</code>.<a href="#section-7.18-9.2.1" class="pilcrow">¶</a></p>
-</li>
-        </ul>
-<p id="section-7.18-10">The duration is an application-level hint and is not used by the moq-lite layer for delivery decisions.<a href="#section-7.18-10" class="pilcrow">¶</a></p>
-<p id="section-7.18-11"><strong>Payload</strong>:
+<p id="section-7.18-7"><strong>Payload</strong>:
 An application-specific payload.
 If the Track's <code>Publisher Compression</code> is non-zero, the payload is compressed using the negotiated algorithm (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>) and the <code>Message Length</code> describes the compressed size.
-A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify the decompressed contents unless otherwise negotiated; recompression that preserves the decompressed bytes exactly is allowed (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>).<a href="#section-7.18-11" class="pilcrow">¶</a></p>
+A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify the decompressed contents unless otherwise negotiated; recompression that preserves the decompressed bytes exactly is allowed (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>).<a href="#section-7.18-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2744,13 +2724,13 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
             <p id="section-8.1-1.9.1">Added ANNOUNCE_OK message, sent once at the head of the Announce Stream response. Carries the publisher's <code>Hop ID</code> (hoisted out of every ANNOUNCE's Hop ID list) and an <code>Active Count</code> so subscribers can batch the initial set instead of reporting each ANNOUNCE as it trickles in.<a href="#section-8.1-1.9.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.10">
-            <p id="section-8.1-1.10.1">Added <code>Publisher Timescale</code> to TRACK_INFO for per-track timestamp negotiation. When <code>Publisher Timescale</code> is 0, the per-frame timestamp/duration fields are omitted entirely from FRAME and datagram bodies.<a href="#section-8.1-1.10.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.10.1">Added <code>Publisher Timescale</code> to TRACK_INFO for per-track timestamp negotiation. When <code>Publisher Timescale</code> is 0, the per-frame timestamp field is omitted entirely from FRAME and datagram bodies.<a href="#section-8.1-1.10.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.11">
-            <p id="section-8.1-1.11.1">Added <code>Timestamp Delta</code> and <code>Duration Delta</code> to FRAME, both zigzag-encoded signed varints (present only when timescale is non-zero). <code>Duration Delta = 0</code> is the common "unchanged" case and fits in one byte; a resolved duration of <code>0</code> means "until the next frame".<a href="#section-8.1-1.11.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.11.1">Added <code>Timestamp Delta</code> to FRAME, a zigzag-encoded signed varint (present only when timescale is non-zero).<a href="#section-8.1-1.11.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.12">
-            <p id="section-8.1-1.12.1">Added <code>Timestamp</code> and <code>Duration</code> to the QUIC datagram body (absolute, present only when timescale is non-zero).<a href="#section-8.1-1.12.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.12.1">Added <code>Timestamp</code> to the QUIC datagram body (absolute, present only when timescale is non-zero).<a href="#section-8.1-1.12.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.13">
             <p id="section-8.1-1.13.1">Renamed <code>Publisher Max Latency</code> to <code>Publisher Cache</code> (now in TRACK_INFO), defined as a minimum retention guarantee (similar to HTTP <code>Cache-Control: max-age</code>). Groups may live longer than <code>Publisher Cache</code> and remain FETCH-able.<a href="#section-8.1-1.13.1" class="pilcrow">¶</a></p>
