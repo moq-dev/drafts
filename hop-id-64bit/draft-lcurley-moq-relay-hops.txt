@@ -162,16 +162,13 @@ Table of Contents
 
 4.  Hop IDs
 
-   A *Hop ID* is a fixed-width 64-bit integer that identifies a single
+   A *Hop ID* is a variable-length integer that identifies a single
    relay (or the origin publisher) within the path of an advertisement.
 
    Each relay and each origin publisher chooses its Hop ID *randomly*.
-   An endpoint SHOULD draw a full-width 64-bit random value so that the
-   probability of two endpoints choosing the same Hop ID is negligible.
-   Hop IDs are carried as fixed-width 64 bits rather than a variable-
-   length integer: because the value is random, a varint would almost
-   never be shorter, and the fixed width buys the full 64-bit space (a
-   varint caps at 62 bits).  Random assignment means there is no
+   An endpoint SHOULD draw a full-width random value (up to the 64-bit
+   varint maximum) so that the probability of two endpoints choosing the
+   same Hop ID is negligible.  Random assignment means there is no
    registry, no coordination, and no reserved values: a Hop ID is simply
    an opaque identifier that is, with overwhelming probability, unique.
 
@@ -199,16 +196,16 @@ Table of Contents
    HOP_PATH Parameter {
      Type (vi64) = 0x40B57
      Length (vi64)
-     Hop ID (64) ...
+     Hop ID (vi64) ...
    }
 
    *Hop ID*: One or more Hop IDs, ordered from the origin publisher
    (first entry) to the relay immediately upstream of the receiver (last
-   entry).  Each Hop ID is a fixed 8 bytes, so the number of entries is
-   Length / 8; a receiver MUST close the session with a
-   PROTOCOL_VIOLATION if Length is not a positive multiple of 8 (an
-   empty list, Length 0, is also a violation).  HOP_PATH always contains
-   at least one entry: the first entry is the Hop ID of the origin
+   entry).  The number of entries is determined by consuming Hop IDs
+   until Length bytes have been read; a receiver MUST close the session
+   with a PROTOCOL_VIOLATION if the entries do not exactly fill Length,
+   or if the list is empty (Length 0).  HOP_PATH always contains at
+   least one entry: the first entry is the Hop ID of the origin
    publisher, even before the advertisement has traversed any relay.
 
 5.1.  Relay Behavior
@@ -264,20 +261,18 @@ Table of Contents
    originated, the most common source of a two-hop loop.
 
    It is a Key-Value-Pair carried in the Parameters of a
-   SUBSCRIBE_NAMESPACE message ([moqt] Section 10.18).  A Hop ID is a
-   fixed 8 bytes, so EXCLUDE_HOP uses an odd Type and carries its value
-   length-prefixed:
+   SUBSCRIBE_NAMESPACE message ([moqt] Section 10.18).  A single Hop ID
+   is excluded, so EXCLUDE_HOP uses an even Type and its value is a bare
+   varint with no length prefix:
 
    EXCLUDE_HOP Parameter {
-     Type (vi64) = 0x40B59
-     Length (vi64) = 8
-     Hop ID (64)
+     Type (vi64) = 0x40B58
+     Hop ID (vi64)
    }
 
-   *Hop ID*: The single Hop ID to exclude.  A receiver MUST close the
-   session with a PROTOCOL_VIOLATION if Length is not 8.  To exclude
-   nothing, a subscriber simply omits the parameter; there is no
-   reserved "exclude nothing" value.
+   *Hop ID*: The single Hop ID to exclude.  To exclude nothing, a
+   subscriber simply omits the parameter; there is no reserved "exclude
+   nothing" value.
 
    A relay that receives a SUBSCRIBE_NAMESPACE carrying EXCLUDE_HOP MUST
    NOT send, on that session, any PUBLISH_NAMESPACE whose HOP_PATH
@@ -317,10 +312,9 @@ Table of Contents
    distinctive values are requested to avoid the low ranges reserved by
    [moqt] and to minimize collisions with provisional registrations by
    other extensions; they also avoid the greasing pattern (0x7f * N +
-   0x9D).  Both HOP_PATH and EXCLUDE_HOP carry fixed-width 64-bit Hop
-   IDs, so both use odd (length-prefixed) Types: HOP_PATH a list of
-   8-byte entries, EXCLUDE_HOP a single 8-byte value.  See [moqt]
-   Section 2.5.
+   0x9D).  HOP_PATH carries a list, so its Type is odd (length-
+   prefixed); EXCLUDE_HOP carries a single Hop ID, so its Type is even
+   (a bare varint).  See [moqt] Section 2.5.
 
 8.1.  MOQT Setup Options
 
@@ -348,7 +342,7 @@ Table of Contents
       +=========+=============+=====================+===============+
       | 0x40B57 | HOP_PATH    | PUBLISH_NAMESPACE   | This Document |
       +---------+-------------+---------------------+---------------+
-      | 0x40B59 | EXCLUDE_HOP | SUBSCRIBE_NAMESPACE | This Document |
+      | 0x40B58 | EXCLUDE_HOP | SUBSCRIBE_NAMESPACE | This Document |
       +---------+-------------+---------------------+---------------+
 
                                   Table 2
