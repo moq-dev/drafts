@@ -1272,9 +1272,10 @@ An endpoint that did not negotiate the extension simply omits these parameters; 
       <h2 id="name-hop-ids">
 <a href="#section-4" class="section-number selfRef">4. </a><a href="#name-hop-ids" class="section-name selfRef">Hop IDs</a>
       </h2>
-<p id="section-4-1">A <strong>Hop ID</strong> is a variable-length integer that identifies a single relay (or the origin publisher) within the path of an advertisement.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-1">A <strong>Hop ID</strong> is a fixed-width 64-bit integer that identifies a single relay (or the origin publisher) within the path of an advertisement.<a href="#section-4-1" class="pilcrow">¶</a></p>
 <p id="section-4-2">Each relay and each origin publisher chooses its Hop ID <strong>randomly</strong>.
-An endpoint <span class="bcp14">SHOULD</span> draw a full-width random value (up to the 62-bit varint maximum) so that the probability of two endpoints choosing the same Hop ID is negligible.
+An endpoint <span class="bcp14">SHOULD</span> draw a full-width 64-bit random value so that the probability of two endpoints choosing the same Hop ID is negligible.
+Hop IDs are carried as fixed-width 64 bits rather than a variable-length integer: because the value is random, a varint would almost never be shorter, and the fixed width buys the full 64-bit space (a varint caps at 62 bits).
 Random assignment means there is no registry, no coordination, and no reserved values: a Hop ID is simply an opaque identifier that is, with overwhelming probability, unique.<a href="#section-4-2" class="pilcrow">¶</a></p>
 <p id="section-4-3">An endpoint <span class="bcp14">SHOULD</span> keep its Hop ID stable for the lifetime of a session (and <span class="bcp14">MAY</span> reuse it across sessions) so that loop detection and path comparison are consistent.<a href="#section-4-3" class="pilcrow">¶</a></p>
 <p id="section-4-4">When a relay bridges an advertisement from an upstream peer that did <strong>not</strong> negotiate this extension, the upstream carries no HOP_PATH. The relay <span class="bcp14">MUST</span> synthesize one (see <span><a href="#relay-behavior" class="internal xref">Relay Behavior</a> (<a href="#relay-behavior" class="auto internal xref">Section 5.1</a>)</span>) by assigning a random Hop ID to stand in for the unknown upstream, so that loop detection and path length still work within the cooperating region of the mesh.<a href="#section-4-4" class="pilcrow">¶</a></p>
@@ -1293,13 +1294,13 @@ It is a Key-Value-Pair (see <span>[<a href="#moqt" class="cite xref">moqt</a>]</
 HOP_PATH Parameter {
   Type (vi64) = 0x40B57
   Length (vi64)
-  Hop ID (vi64) ...
+  Hop ID (64) ...
 }
 </pre><a href="#section-5-3" class="pilcrow">¶</a>
 </div>
 <p id="section-5-4"><strong>Hop ID</strong>:
 One or more Hop IDs, ordered from the origin publisher (first entry) to the relay immediately upstream of the receiver (last entry).
-The number of entries is determined by consuming Hop IDs until <code>Length</code> bytes have been read; a receiver <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION if the entries do not exactly fill <code>Length</code>, or if the list is empty (<code>Length</code> 0).
+Each Hop ID is a fixed 8 bytes, so the number of entries is <code>Length / 8</code>; a receiver <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION if <code>Length</code> is not a positive multiple of 8 (an empty list, <code>Length</code> 0, is also a violation).
 HOP_PATH always contains at least one entry: the first entry is the Hop ID of the origin publisher, even before the advertisement has traversed any relay.<a href="#section-5-4" class="pilcrow">¶</a></p>
 <div id="relay-behavior">
 <section id="section-5.1">
@@ -1343,17 +1344,19 @@ If the best path changes — for example after a relay failover — the publishe
 <p id="section-6-1">The EXCLUDE_HOP parameter lets a downstream subscriber tell an upstream relay to suppress advertisements that have already passed through a given hop.
 A relay in a cluster uses it to prevent the upstream from sending back an advertisement that the downstream originated, the most common source of a two-hop loop.<a href="#section-6-1" class="pilcrow">¶</a></p>
 <p id="section-6-2">It is a Key-Value-Pair carried in the Parameters of a SUBSCRIBE_NAMESPACE message (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10.18).
-A single Hop ID is excluded, so EXCLUDE_HOP uses an even Type and its value is a bare varint with no length prefix:<a href="#section-6-2" class="pilcrow">¶</a></p>
+A Hop ID is a fixed 8 bytes, so EXCLUDE_HOP uses an odd Type and carries its value length-prefixed:<a href="#section-6-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-6-3">
 <pre>
 EXCLUDE_HOP Parameter {
-  Type (vi64) = 0x40B58
-  Hop ID (vi64)
+  Type (vi64) = 0x40B59
+  Length (vi64) = 8
+  Hop ID (64)
 }
 </pre><a href="#section-6-3" class="pilcrow">¶</a>
 </div>
 <p id="section-6-4"><strong>Hop ID</strong>:
 The single Hop ID to exclude.
+A receiver <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION if <code>Length</code> is not 8.
 To exclude nothing, a subscriber simply omits the parameter; there is no reserved "exclude nothing" value.<a href="#section-6-4" class="pilcrow">¶</a></p>
 <p id="section-6-5">A relay that receives a SUBSCRIBE_NAMESPACE carrying EXCLUDE_HOP <span class="bcp14">MUST NOT</span> send, on that session, any PUBLISH_NAMESPACE whose HOP_PATH contains the excluded Hop ID (including the entry the relay would itself append).
 The exclusion is scoped to the namespace subscription it accompanies.<a href="#section-6-5" class="pilcrow">¶</a></p>
@@ -1379,7 +1382,7 @@ This is analogous to how BGP confederations hide internal AS topology while pres
       </h2>
 <p id="section-8-1">This document requests the following registrations.
 High, distinctive values are requested to avoid the low ranges reserved by <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> and to minimize collisions with provisional registrations by other extensions; they also avoid the greasing pattern (<code>0x7f * N + 0x9D</code>).
-HOP_PATH carries a list, so its Type is odd (length-prefixed); EXCLUDE_HOP carries a single Hop ID, so its Type is even (a bare varint). See <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 2.5.<a href="#section-8-1" class="pilcrow">¶</a></p>
+Both HOP_PATH and EXCLUDE_HOP carry fixed-width 64-bit Hop IDs, so both use odd (length-prefixed) Types: HOP_PATH a list of 8-byte entries, EXCLUDE_HOP a single 8-byte value. See <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 2.5.<a href="#section-8-1" class="pilcrow">¶</a></p>
 <div id="moqt-setup-options">
 <section id="section-8.1">
         <h3 id="name-moqt-setup-options">
@@ -1430,7 +1433,7 @@ HOP_PATH and EXCLUDE_HOP are message parameters carried in PUBLISH_NAMESPACE and
               <td class="text-left" rowspan="1" colspan="1">This Document</td>
             </tr>
             <tr>
-              <td class="text-left" rowspan="1" colspan="1">0x40B58</td>
+              <td class="text-left" rowspan="1" colspan="1">0x40B59</td>
               <td class="text-left" rowspan="1" colspan="1">EXCLUDE_HOP</td>
               <td class="text-left" rowspan="1" colspan="1">SUBSCRIBE_NAMESPACE</td>
               <td class="text-left" rowspan="1" colspan="1">This Document</td>
