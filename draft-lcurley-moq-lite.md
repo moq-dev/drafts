@@ -299,7 +299,8 @@ There MAY be multiple Announce Streams, potentially containing overlapping prefi
 ### Subscribe
 A subscriber opens Subscribe Streams to request a Track.
 
-The subscriber MUST start a Subscribe Stream with a SUBSCRIBE message followed by any number of SUBSCRIBE_UPDATE messages.
+The subscriber MUST start a Subscribe Stream with a SUBSCRIBE message followed by any number of SUBSCRIBE_UPDATE and SUBSCRIBE_DEMAND messages.
+The opening SUBSCRIBE is identified by the stream type (0x2) and carries no message Type; every subsequent message from the subscriber begins with a Type that distinguishes SUBSCRIBE_UPDATE (0x0) from SUBSCRIBE_DEMAND (0x1), mirroring how the publisher's messages on this stream are typed.
 When a start group can be resolved, the publisher replies with a SUBSCRIBE_OK message (confirming the subscription and resolving its start group), followed by any number of SUBSCRIBE_END and SUBSCRIBE_DROP messages.
 When the accepted track has already ended with no matching groups there is no start group to resolve, so the publisher sends SUBSCRIBE_END with no preceding SUBSCRIBE_OK.
 A rejection is a stream reset: if the publisher cannot serve the subscription — the track does not exist, or it otherwise refuses — it MUST reset the stream rather than leave it pending, and SHOULD do so promptly (within roughly a round trip) so the subscriber is not left waiting.
@@ -770,6 +771,7 @@ The start and end group can be changed in either direction (growing or shrinking
 
 ~~~
 SUBSCRIBE_UPDATE Message {
+  Type (i) = 0x0
   Message Length (i)
   Subscriber Priority (8)
   Subscriber Ordered (8)
@@ -779,7 +781,54 @@ SUBSCRIBE_UPDATE Message {
 }
 ~~~
 
-See [SUBSCRIBE](#subscribe) for information about each field.
+**Type**:
+Set to 0x0 to indicate a SUBSCRIBE_UPDATE message.
+
+See [SUBSCRIBE](#subscribe) for information about each remaining field.
+
+
+## SUBSCRIBE_DEMAND
+A subscriber sends a SUBSCRIBE_DEMAND message to report the downstream demand for a subscription: how many subscribers it represents and, optionally, the next group they need.
+Unlike SUBSCRIBE_UPDATE it does not change the subscription's delivery range or priority; it is kept separate so that refreshing demand does not re-echo the subscription's delivery parameters on every change.
+A subscriber MAY send multiple SUBSCRIBE_DEMAND messages over the life of the subscription to refresh the values.
+
+~~~
+SUBSCRIBE_DEMAND Message {
+  Type (i) = 0x1
+  Message Length (i)
+  Subscriptions Created (i)
+  Subscriptions Closed (i)
+  Group Request (i)
+}
+~~~
+
+**Type**:
+Set to 0x1 to indicate a SUBSCRIBE_DEMAND message.
+
+**Subscriptions Created** and **Subscriptions Closed**:
+Cumulative counts, over the life of this subscription, of the downstream subscriptions it represents that have been created and closed respectively.
+The current demand — the number of subscribers presently receiving the Track through this subscription — is `Subscriptions Created - Subscriptions Closed`.
+These are subscriber-side values that fan *in* at a relay: a relay merging multiple downstream subscriptions into one upstream subscription reports the **sum** of their `Subscriptions Created` and the **sum** of their `Subscriptions Closed`, so both counts (and therefore the demand) telescope up the fan-out tree.
+A publisher thus learns its total number of downstream subscribers across any number of relay hops by reading `Created - Closed` on its single upstream subscription, without any per-hop coordination.
+
+A **leaf subscriber** represents only itself: `Subscriptions Created` is `1` and `Subscriptions Closed` is `0` (a demand of `1`).
+These are the defaults until a SUBSCRIBE_DEMAND is received, so a leaf subscriber need not send the message at all.
+A **relay** increments `Subscriptions Created` each time a downstream subscription is created and `Subscriptions Closed` each time one is closed; it SHOULD keep both counts non-decreasing over the upstream subscription's life, accounting a fully-departed downstream's outstanding demand as closed.
+Because they are independent counts rather than a single gauge, a publisher can also treat a rising `Subscriptions Created` as an implicit request to start a new group: a newly-joined subscriber generally needs a fresh group (e.g. a keyframe) to begin decoding, so the publisher MAY start one when the count increases, without waiting for an explicit `Group Request`.
+
+The counts are advisory: a subscriber MAY misreport them, and a relay MUST NOT use them for delivery decisions other than the optional new-group hint above.
+
+**Group Request**:
+The minimum group the subscriber wants the publisher to produce, encoded like `Group Start` (see [SUBSCRIBE](#subscribe)): `0` means no request (the default — the publisher produces groups at its own cadence), and a non-zero value is the requested absolute group sequence + 1.
+A subscriber raises this to ask the publisher to start a new group once it has fallen too far behind the live edge to catch up — for example, after missing group `5` it requests `6` to jump to the next group rather than wait.
+Unlike a one-shot "new group now" signal, this is a *level* a publisher compares against: if it has already produced a group at or beyond the request the request is already satisfied and no new group is needed, which makes the request idempotent and safe to retransmit or aggregate.
+This value fans *in* at a relay as the **maximum** of its downstream requests, minus any the relay can already satisfy from its own cache: a relay forwards a request upstream only when it lacks a group at or beyond the highest value its downstreams want.
+Once the publisher produces a group satisfying the highest request, every lower request is satisfied at once.
+
+A relay SHOULD rate-limit SUBSCRIBE_DEMAND messages it sends upstream, coalescing demand changes within a short window (roughly a second) so that rapid subscriber churn does not flood the upstream with control messages; because each message carries the latest values rather than deltas, a change that reverts within the window requires no message at all.
+A `Group Request` increase is latency-sensitive, however, and SHOULD be forwarded promptly rather than held for the demand window.
+
+Future revisions MAY append additional fields to this message; the `Message Length` bounds the message so a receiver can stop after the fields it understands.
 
 
 ## TRACK
@@ -1066,6 +1115,7 @@ A generic library or relay MUST NOT inspect or modify the decompressed contents 
 # Appendix A: Changelog
 
 ## moq-lite-05
+- Added a SUBSCRIBE_DEMAND message reporting the downstream demand for a subscription. It carries `Subscriptions Created` and `Subscriptions Closed` (cumulative counts whose difference is the current subscriber count; both sum up the relay fan-out tree, so a publisher reads its total audience across any number of hops from its single upstream subscription) and a `Group Request` (the minimum group the subscriber wants produced, encoded like `Group Start`; `0` means no request). The group request is a level rather than a one-shot "new group now" signal — already satisfied if a group at or beyond it exists — making it idempotent and aggregatable as the maximum of downstream requests; a relay also MAY treat a rising `Subscriptions Created` as an implicit new-group request. It is kept separate from SUBSCRIBE_UPDATE so refreshing demand does not re-echo the subscription's delivery parameters; relays SHOULD rate-limit it to absorb subscriber churn. This also introduced a `Type` tag on the subscriber's post-SUBSCRIBE messages (`0x0` SUBSCRIBE_UPDATE, `0x1` SUBSCRIBE_DEMAND) to distinguish them, mirroring the publisher's typed responses.
 - Added a SETUP message, sent once on a unidirectional Setup Stream (0x1) at the start of the session and FIN'd immediately. It carries a list of Setup Parameters for negotiating optional capabilities and extensions per-hop, replacing the prior stream-probing approach (version is still negotiated via ALPN, not SETUP). Endpoints keep exchanging non-Setup streams without waiting for SETUP, buffering only a stream whose encoding a negotiated extension would change; unknown stream types are still reset as a fallback.
 - Added a SETUP `Probe` parameter advertising the publisher's capability level: `None`, `Report` (measure and report the estimated bitrate), or `Increase` (additionally pad to probe for bandwidth above the current sending rate). The levels are nested since probing without measuring is meaningless. A subscriber must not rely on a level the publisher did not advertise.
 - Added `Frame Start` to FETCH so a subscriber can begin partway through a group instead of always at frame `0`, allowing resumption of a partially-received group.
