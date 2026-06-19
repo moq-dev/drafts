@@ -4,14 +4,16 @@
 <meta charset="utf-8">
 <meta content="Common,Latin" name="scripts">
 <meta content="initial-scale=1.0" name="viewport">
-<title>MoQ Largest Group Extension</title>
+<title>MoQ Relay Hops Extension</title>
 <meta content="Luke Curley" name="author">
 <meta content="
-       This document defines a Largest Group subscription filter type for MoQ Transport  .
-A subscriber uses this filter to request delivery starting from the first object of the publisher's largest (most recent) group, ensuring a complete group is received. 
+       This document defines a Relay Hops extension for MoQ Transport  .
+Each namespace advertisement carries an ordered list of Hop IDs identifying the relays it has traversed, starting with the origin publisher.
+This lets a subscriber prefer the shortest of several paths to the same namespace, identify which advertisements refer to the same broadcast (same origin), and lets a relay cluster detect and avoid routing loops.
+A namespace subscription  MAY  carry a single Hop ID to exclude, which a relay uses to suppress advertisements that have already passed through that hop. 
     " name="description">
 <meta content="xml2rfc 3.34.0" name="generator">
-<meta content="draft-lcurley-moq-largest-group-latest" name="ietf.draft">
+<meta content="draft-lcurley-moq-relay-hops-latest" name="ietf.draft">
 <!-- Generator version information:
   xml2rfc 3.34.0
     Python 3.14.5
@@ -27,7 +29,7 @@ A subscriber uses this filter to request delivery starting from the first object
     requests 2.33.1
     wcwidth 0.8.1
 -->
-<link href="draft-lcurley-moq-largest-group.xml" rel="alternate" type="application/rfc+xml">
+<link href="draft-lcurley-moq-relay-hops.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
 <style type="text/css">@font-face {
   font-family: 'Lora';
@@ -1043,7 +1045,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <table class="ears">
 <thead><tr>
 <td class="left">Internet-Draft</td>
-<td class="center">moq-largest-group</td>
+<td class="center">moq-relay-hops</td>
 <td class="right">June 2026</td>
 </tr></thead>
 <tfoot><tr>
@@ -1058,7 +1060,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dt class="label-workgroup">Workgroup:</dt>
 <dd class="workgroup">moq</dd>
 <dt class="label-internet-draft">Internet-Draft:</dt>
-<dd class="internet-draft">draft-lcurley-moq-largest-group-latest</dd>
+<dd class="internet-draft">draft-lcurley-moq-relay-hops-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
 <time datetime="2026-06-19" class="published">19 June 2026</time>
@@ -1075,11 +1077,13 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </dd>
 </dl>
 </div>
-<h1 id="title">MoQ Largest Group Extension</h1>
+<h1 id="title">MoQ Relay Hops Extension</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">This document defines a Largest Group subscription filter type for MoQ Transport <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>.
-A subscriber uses this filter to request delivery starting from the first object of the publisher's largest (most recent) group, ensuring a complete group is received.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">This document defines a Relay Hops extension for MoQ Transport <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>.
+Each namespace advertisement carries an ordered list of Hop IDs identifying the relays it has traversed, starting with the origin publisher.
+This lets a subscriber prefer the shortest of several paths to the same namespace, identify which advertisements refer to the same broadcast (same origin), and lets a relay cluster detect and avoid routing loops.
+A namespace subscription <span class="bcp14">MAY</span> carry a single Hop ID to exclude, which a relay uses to suppress advertisements that have already passed through that hop.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-discussion-venues">
@@ -1147,7 +1151,7 @@ A subscriber uses this filter to request delivery starting from the first object
             <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.1">
-                <p id="section-toc.1-1.2.2.1.1" class="keepWithNext"><a href="#section-2.1" class="auto internal xref">2.1</a>.  <a href="#name-joining-fetch-workaround" class="internal xref">Joining Fetch Workaround</a></p>
+                <p id="section-toc.1-1.2.2.1.1" class="keepWithNext"><a href="#section-2.1" class="auto internal xref">2.1</a>.  <a href="#name-why-per-hop-not-end-to-end" class="internal xref">Why per-hop, not end-to-end</a></p>
 </li>
             </ul>
 </li>
@@ -1155,38 +1159,44 @@ A subscriber uses this filter to request delivery starting from the first object
             <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-setup-negotiation" class="internal xref">Setup Negotiation</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
-            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-largest-group-filter" class="internal xref">Largest Group Filter</a></p>
-<ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
-                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-filter-type" class="internal xref">Filter Type</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2">
-                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-semantics" class="internal xref">Semantics</a></p>
-</li>
-            </ul>
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-hop-ids" class="internal xref">Hop IDs</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
-            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
-</li>
-          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
-            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-hop_path-parameter" class="internal xref">HOP_PATH Parameter</a></p>
 <ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
-                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-moq-setup-option-types" class="internal xref">MoQ Setup Option Types</a></p>
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-relay-behavior" class="internal xref">Relay Behavior</a></p>
 </li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
-                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-moq-subscription-filter-typ" class="internal xref">MoQ Subscription Filter Types</a></p>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-path-selection" class="internal xref">Path Selection</a></p>
 </li>
             </ul>
 </li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-exclude_hop-parameter" class="internal xref">EXCLUDE_HOP Parameter</a></p>
+</li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
-            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
-            <p id="section-toc.1-1.8.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1">
+                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-moqt-setup-options" class="internal xref">MOQT Setup Options</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.2">
+                <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="auto internal xref">8.2</a>.  <a href="#name-moqt-message-parameters" class="internal xref">MOQT Message Parameters</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
-            <p id="section-toc.1-1.9.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
+            <p id="section-toc.1-1.11.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
 </li>
         </ul>
 </nav>
@@ -1208,46 +1218,31 @@ appear in all capitals, as shown here.<a href="#section-1-1" class="pilcrow">¶<
       <h2 id="name-introduction">
 <a href="#section-2" class="section-number selfRef">2. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
-<p id="section-2-1"><span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 5.1.2 defines four subscription filter types that control where delivery begins:<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-1"><span>[<a href="#moqt" class="cite xref">moqt</a>]</span> is designed to deliver content end-to-end through a mesh of relays.
+A namespace advertisement (PUBLISH_NAMESPACE, <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10.15) originates at a publisher and propagates downstream through one or more relays toward interested subscribers, which express interest with SUBSCRIBE_NAMESPACE (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10.18).<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-2">In a redundant deployment, relays are interconnected so that the same namespace can reach a given relay over more than one path.
+This redundancy is desirable for failover, but it leaves a receiver with no information that <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> does not address:<a href="#section-2-2" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-2-2.1">
-          <p id="section-2-2.1.1"><strong>Next Group Start (0x1)</strong>: Starts at <code>{Largest.Group + 1, 0}</code>, skipping the remainder of the current group entirely.<a href="#section-2-2.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-2-3.1">
+          <p id="section-2-3.1.1"><strong>Path selection</strong>: when the same namespace arrives over multiple paths, a relay or subscriber has no information with which to prefer one path over another (e.g. the shorter, and usually lower-latency, one).<a href="#section-2-3.1.1" class="pilcrow">¶</a></p>
 </li>
-        <li class="normal" id="section-2-2.2">
-          <p id="section-2-2.2.1"><strong>Largest Object (0x2)</strong>: Despite the name, starts at <code>{Largest.Group, Largest.Object + 1}</code> — the object <em>after</em> the largest, not the largest object itself.<a href="#section-2-2.2.1" class="pilcrow">¶</a></p>
+        <li class="normal" id="section-2-3.2">
+          <p id="section-2-3.2.1"><strong>Broadcast identity</strong>: two advertisements for the same namespace may refer to the same broadcast or to two distinct origins reusing a namespace. With no origin identity a receiver cannot tell them apart, nor deduplicate redundant paths to one broadcast.<a href="#section-2-3.2.1" class="pilcrow">¶</a></p>
 </li>
-        <li class="normal" id="section-2-2.3">
-          <p id="section-2-2.3.1"><strong>AbsoluteStart (0x3)</strong>: Starts at an explicit location specified by the subscriber.<a href="#section-2-2.3.1" class="pilcrow">¶</a></p>
-</li>
-        <li class="normal" id="section-2-2.4">
-          <p id="section-2-2.4.1"><strong>AbsoluteRange (0x4)</strong>: Starts and ends at explicit locations specified by the subscriber.<a href="#section-2-2.4.1" class="pilcrow">¶</a></p>
+        <li class="normal" id="section-2-3.3">
+          <p id="section-2-3.3.1"><strong>Routing loops</strong>: relay A advertises a namespace to relay B, which advertises it back to A (directly or through a cycle). Without a way to recognize an advertisement it has already seen, a relay will re-advertise it indefinitely.<a href="#section-2-3.3.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-2-3">There is no filter that starts from the <em>beginning</em> of the current group.
-Next Group Start skips the current group entirely, potentially adding latency equal to the group duration.
-Largest Object starts mid-group, delivering objects that may depend on earlier objects in the same group.<a href="#section-2-3" class="pilcrow">¶</a></p>
-<p id="section-2-4">Objects within a group are typically delta encoded (ex. video GOPs), so arbitrary objects in the middle of a group are undecodable without prior objects.
-A subscriber using Next Group Start avoids this problem but must wait for the next group to begin, unnecessarily increasing join latency.<a href="#section-2-4" class="pilcrow">¶</a></p>
-<div id="joining-fetch-workaround">
+<p id="section-2-4">This extension solves all three with a single mechanism: an ordered list of <strong>Hop IDs</strong> that records the path an advertisement has taken, starting with the origin publisher and with one entry appended per relay.
+The first entry identifies the origin (broadcast identity); the list length gives the path length (path selection); a relay finding its own Hop ID already in the list detects a loop.<a href="#section-2-4" class="pilcrow">¶</a></p>
+<div id="why-per-hop-not-end-to-end">
 <section id="section-2.1">
-        <h3 id="name-joining-fetch-workaround">
-<a href="#section-2.1" class="section-number selfRef">2.1. </a><a href="#name-joining-fetch-workaround" class="section-name selfRef">Joining Fetch Workaround</a>
+        <h3 id="name-why-per-hop-not-end-to-end">
+<a href="#section-2.1" class="section-number selfRef">2.1. </a><a href="#name-why-per-hop-not-end-to-end" class="section-name selfRef">Why per-hop, not end-to-end</a>
         </h3>
-<p id="section-2.1-1"><span>[<a href="#moqt" class="cite xref">moqt</a>]</span> does provide a workaround: a subscriber can issue a separate "joining" FETCH request alongside a SUBSCRIBE to retrieve the beginning of the current group.
-However, this approach has several drawbacks:<a href="#section-2.1-1" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-2.1-2.1">
-            <p id="section-2.1-2.1.1"><strong>Complexity</strong>: Libraries emulate Largest Group by coordinating a FETCH and SUBSCRIBE, splitting the group across multiple streams. This requires merging the results into a single coherent group and handling various edge cases, such as one of the two requests failing independently.<a href="#section-2.1-2.1.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-2.1-2.2">
-            <p id="section-2.1-2.2.1"><strong>Head-of-line blocking</strong>: If the group contains multiple sub-groups, the FETCH delivers them sequentially over a single stream, introducing head-of-line blocking that negates the benefits of sub-group parallelism.<a href="#section-2.1-2.2.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-2.1-2.3">
-            <p id="section-2.1-2.3.1"><strong>Priority</strong>: Everything should be delivered in dependency order to improve startup time and avoid potential flow control deadlocks. This requires prioritizing the FETCH higher than the SUBSCRIBE, which may be non-obvious or unsupported.<a href="#section-2.1-2.3.1" class="pilcrow">¶</a></p>
-</li>
-        </ul>
-<p id="section-2.1-3">This extension avoids these issues by defining a Largest Group filter that starts delivery from the first object of the publisher's most recent group within the SUBSCRIBE itself, ensuring a complete group is delivered over the normal subscription path.
-Additionally, the first group of a subscription behaves the same as any other group.<a href="#section-2.1-3" class="pilcrow">¶</a></p>
+<p id="section-2.1-1">The Hop ID list is rewritten at every relay: a relay appends its own Hop ID before forwarding an advertisement downstream.
+A relay therefore detects a loop by finding its own Hop ID already present in an incoming advertisement, and a subscriber compares path lengths using the list length.
+Hop IDs are chosen randomly (see <span><a href="#hop-ids" class="internal xref">Hop IDs</a> (<a href="#hop-ids" class="auto internal xref">Section 4</a>)</span>) so they are unique with overwhelming probability without any central coordination, even across independently operated relays.<a href="#section-2.1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1257,84 +1252,140 @@ Additionally, the first group of a subscription behaves the same as any other gr
       <h2 id="name-setup-negotiation">
 <a href="#section-3" class="section-number selfRef">3. </a><a href="#name-setup-negotiation" class="section-name selfRef">Setup Negotiation</a>
       </h2>
-<p id="section-3-1">The Largest Group extension is negotiated during the SETUP exchange as defined in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 9.4.<a href="#section-3-1" class="pilcrow">¶</a></p>
-<p id="section-3-2">Both endpoints indicate support by including the following Setup Option:<a href="#section-3-2" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-3-3">
+<p id="section-3-1">The Relay Hops extension is negotiated during the SETUP exchange as defined in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10.3.
+An endpoint indicates support by including the following Setup Option:<a href="#section-3-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-3-2">
 <pre>
-LARGEST_GROUP Setup Option {
-  Option Key (vi64) = TBD1
+RELAY_HOPS Setup Option {
+  Option Key (vi64) = 0x40B55
   Option Value Length (vi64) = 0
 }
-</pre><a href="#section-3-3" class="pilcrow">¶</a>
+</pre><a href="#section-3-2" class="pilcrow">¶</a>
 </div>
-<p id="section-3-4">If both endpoints include this option, the Largest Group filter is available for the session.
-If a peer receives a SUBSCRIBE containing the Largest Group filter without having negotiated the extension, it <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION.<a href="#section-3-4" class="pilcrow">¶</a></p>
+<p id="section-3-3">The extension applies to a single hop (one MOQT session) and is negotiated independently for each session; a relay <span class="bcp14">MUST NOT</span> assume that because one of its sessions negotiated Relay Hops, another did.<a href="#section-3-3" class="pilcrow">¶</a></p>
+<p id="section-3-4">A relay that negotiated this extension on a downstream session <span class="bcp14">MUST</span> include the HOP_PATH parameter on every PUBLISH_NAMESPACE it sends on that session, and <span class="bcp14">MUST</span> honor an EXCLUDE_HOP parameter it receives in SUBSCRIBE_NAMESPACE.
+An endpoint that did not negotiate the extension simply omits these parameters; per <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> an unknown Key-Value-Pair Type is ignored, so an advertisement forwarded into a non-supporting session loses its hop information gracefully.<a href="#section-3-4" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="largest-group-filter">
+<div id="hop-ids">
 <section id="section-4">
-      <h2 id="name-largest-group-filter">
-<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-largest-group-filter" class="section-name selfRef">Largest Group Filter</a>
+      <h2 id="name-hop-ids">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-hop-ids" class="section-name selfRef">Hop IDs</a>
       </h2>
-<p id="section-4-1">This document defines a new subscription filter type for use in the Subscription Filter field of SUBSCRIBE messages as defined in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 5.1.2.<a href="#section-4-1" class="pilcrow">¶</a></p>
-<div id="filter-type">
-<section id="section-4.1">
-        <h3 id="name-filter-type">
-<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-filter-type" class="section-name selfRef">Filter Type</a>
-        </h3>
-<div class="alignLeft art-text artwork" id="section-4.1-1">
+<p id="section-4-1">A <strong>Hop ID</strong> is a variable-length integer that identifies a single relay (or the origin publisher) within the path of an advertisement.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-2">Each relay and each origin publisher chooses its Hop ID <strong>randomly</strong>.
+An endpoint <span class="bcp14">SHOULD</span> draw a full-width random value (up to the 64-bit varint maximum) so that the probability of two endpoints choosing the same Hop ID is negligible.
+Random assignment means there is no registry, no coordination, and no reserved values: a Hop ID is simply an opaque identifier that is, with overwhelming probability, unique.<a href="#section-4-2" class="pilcrow">¶</a></p>
+<p id="section-4-3">An endpoint <span class="bcp14">SHOULD</span> keep its Hop ID stable for the lifetime of a session (and <span class="bcp14">MAY</span> reuse it across sessions) so that loop detection and path comparison are consistent.<a href="#section-4-3" class="pilcrow">¶</a></p>
+<p id="section-4-4">When a relay bridges an advertisement from an upstream peer that did <strong>not</strong> negotiate this extension, the upstream carries no HOP_PATH. The relay <span class="bcp14">MUST</span> synthesize one (see <span><a href="#relay-behavior" class="internal xref">Relay Behavior</a> (<a href="#relay-behavior" class="auto internal xref">Section 5.1</a>)</span>) by assigning a random Hop ID to stand in for the unknown upstream, so that loop detection and path length still work within the cooperating region of the mesh.<a href="#section-4-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="hoppath-parameter">
+<section id="section-5">
+      <h2 id="name-hop_path-parameter">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-hop_path-parameter" class="section-name selfRef">HOP_PATH Parameter</a>
+      </h2>
+<p id="section-5-1">The HOP_PATH parameter carries the ordered list of Hop IDs that an advertisement has traversed, from the origin publisher toward the receiver.
+It is a Key-Value-Pair (see <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 2.5) carried in the Parameters of a PUBLISH_NAMESPACE message (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10.15).<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-5-2">Because the value is a variable-length list, HOP_PATH uses an odd Type so that it is length-prefixed:<a href="#section-5-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5-3">
 <pre>
-Subscription Filter {
-  Filter Type (vi64) = 0x20
+HOP_PATH Parameter {
+  Type (vi64) = 0x40B57
+  Length (vi64)
+  Hop ID (vi64) ...
 }
-</pre><a href="#section-4.1-1" class="pilcrow">¶</a>
+</pre><a href="#section-5-3" class="pilcrow">¶</a>
 </div>
-<p id="section-4.1-2">The Largest Group filter uses Filter Type value <code>0x20</code>.
-No additional fields (Start Location or End Group Delta) are present in the Subscription Filter.<a href="#section-4.1-2" class="pilcrow">¶</a></p>
-</section>
-</div>
-<div id="semantics">
-<section id="section-4.2">
-        <h3 id="name-semantics">
-<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-semantics" class="section-name selfRef">Semantics</a>
+<p id="section-5-4"><strong>Hop ID</strong>:
+One or more Hop IDs, ordered from the origin publisher (first entry) to the relay immediately upstream of the receiver (last entry).
+The number of entries is determined by consuming Hop IDs until <code>Length</code> bytes have been read; a receiver <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION if the entries do not exactly fill <code>Length</code>, or if the list is empty (<code>Length</code> 0).
+HOP_PATH always contains at least one entry: the first entry is the Hop ID of the origin publisher, even before the advertisement has traversed any relay.<a href="#section-5-4" class="pilcrow">¶</a></p>
+<div id="relay-behavior">
+<section id="section-5.1">
+        <h3 id="name-relay-behavior">
+<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-relay-behavior" class="section-name selfRef">Relay Behavior</a>
         </h3>
-<p id="section-4.2-1">When the publisher receives a SUBSCRIBE with the Largest Group filter, it computes the start location as:<a href="#section-4.2-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.2-2">
-<pre>
-{Largest.Group, 0}
-</pre><a href="#section-4.2-2" class="pilcrow">¶</a>
-</div>
-<p id="section-4.2-3">Where <code>Largest.Group</code> is the group sequence number of the largest object known to the publisher at the time the SUBSCRIBE is processed.
-Delivery begins from the first object (object 0) of that group.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
-<p id="section-4.2-4">The subscription is open-ended: the publisher continues delivering subsequent groups until the subscription is cancelled or the session ends.
-This is consistent with the behavior of Next Group Start and Largest Object filters.<a href="#section-4.2-4" class="pilcrow">¶</a></p>
-<p id="section-4.2-5">The largest group is delivered using normal SUBSCRIBE semantics.
-If earlier objects in the group have been evicted from the cache, the publisher <span class="bcp14">MAY</span> attempt to repopulate the cache or simply drop the group as it would for any other subscription.<a href="#section-4.2-5" class="pilcrow">¶</a></p>
+<p id="section-5.1-1">When a relay forwards a namespace advertisement downstream on a session that negotiated this extension, it <span class="bcp14">MUST</span> append its own Hop ID to the HOP_PATH it received.
+The relay's own Hop ID is therefore always the last entry of the list it sends.
+If the advertisement arrived from an upstream that did not negotiate this extension (and so carried no HOP_PATH), the relay <span class="bcp14">MUST</span> first create a HOP_PATH whose single initial entry is a random Hop ID it assigns to stand in for that unknown upstream, then append its own Hop ID.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.1-2">When a relay receives a namespace advertisement on a session that negotiated this extension, it <span class="bcp14">MUST</span> inspect the HOP_PATH:<a href="#section-5.1-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-5.1-3.1">
+            <p id="section-5.1-3.1.1">If its own Hop ID already appears in the list, the advertisement has looped. The relay <span class="bcp14">MUST NOT</span> forward it and <span class="bcp14">SHOULD</span> drop it.<a href="#section-5.1-3.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-5.1-3.2">
+            <p id="section-5.1-3.2.1">Otherwise the relay <span class="bcp14">MAY</span> forward it downstream, appending its own Hop ID as described above.<a href="#section-5.1-3.2.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
 </section>
 </div>
+<div id="path-selection">
+<section id="section-5.2">
+        <h3 id="name-path-selection">
+<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-path-selection" class="section-name selfRef">Path Selection</a>
+        </h3>
+<p id="section-5.2-1">A relay or subscriber that receives advertisements for the same namespace over multiple sessions <span class="bcp14">MAY</span> use the length of the HOP_PATH list as a tiebreaker, preferring the advertisement with the fewest hops (usually the lowest-latency path).
+This is advisory: the receiver <span class="bcp14">MAY</span> apply additional local policy (e.g. measured RTT or administrative preference) and is not required to prefer the shortest path.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<p id="section-5.2-2">Two advertisements for the same namespace whose HOP_PATH begins with the same Hop ID share an origin and therefore refer to the same broadcast; a receiver <span class="bcp14">MAY</span> treat them as redundant paths and keep only the best one.
+If the first Hop IDs differ, the advertisements come from distinct origins that happen to reuse a namespace, and a receiver <span class="bcp14">MUST NOT</span> treat them as interchangeable.<a href="#section-5.2-2" class="pilcrow">¶</a></p>
+<p id="section-5.2-3">A publisher (or relay acting as one) <span class="bcp14">SHOULD</span> advertise only the single best path it currently knows for each namespace.
+If the best path changes — for example after a relay failover — the publisher <span class="bcp14">MAY</span> re-advertise the namespace; the new advertisement, carrying an updated HOP_PATH, replaces the prior one per the namespace-advertisement semantics of <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>.<a href="#section-5.2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="excludehop-parameter">
+<section id="section-6">
+      <h2 id="name-exclude_hop-parameter">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-exclude_hop-parameter" class="section-name selfRef">EXCLUDE_HOP Parameter</a>
+      </h2>
+<p id="section-6-1">The EXCLUDE_HOP parameter lets a downstream subscriber tell an upstream relay to suppress advertisements that have already passed through a given hop.
+A relay in a cluster uses it to prevent the upstream from sending back an advertisement that the downstream originated, the most common source of a two-hop loop.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">It is a Key-Value-Pair carried in the Parameters of a SUBSCRIBE_NAMESPACE message (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10.18).
+A single Hop ID is excluded, so EXCLUDE_HOP uses an even Type and its value is a bare varint with no length prefix:<a href="#section-6-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6-3">
+<pre>
+EXCLUDE_HOP Parameter {
+  Type (vi64) = 0x40B58
+  Hop ID (vi64)
+}
+</pre><a href="#section-6-3" class="pilcrow">¶</a>
+</div>
+<p id="section-6-4"><strong>Hop ID</strong>:
+The single Hop ID to exclude.
+To exclude nothing, a subscriber simply omits the parameter; there is no reserved "exclude nothing" value.<a href="#section-6-4" class="pilcrow">¶</a></p>
+<p id="section-6-5">A relay that receives a SUBSCRIBE_NAMESPACE carrying EXCLUDE_HOP <span class="bcp14">MUST NOT</span> send, on that session, any PUBLISH_NAMESPACE whose HOP_PATH contains the excluded Hop ID (including the entry the relay would itself append).
+The exclusion is scoped to the namespace subscription it accompanies.<a href="#section-6-5" class="pilcrow">¶</a></p>
+<p id="section-6-6">A relay that receives EXCLUDE_HOP without having negotiated the Relay Hops extension ignores it as an unknown parameter, which is the safe default (it simply does not perform the exclusion).<a href="#section-6-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="security-considerations">
-<section id="section-5">
+<section id="section-7">
       <h2 id="name-security-considerations">
-<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
-<p id="section-5-1">This extension introduces no new security considerations beyond those described in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>.
-The publisher already tracks group state; this filter uses existing state to compute the start location.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-7-1">Hop IDs are opaque random integers, so an individual value reveals nothing about a relay's identity or location.
+A HOP_PATH list does, however, expose the number of hops an advertisement traversed, which can hint at the size and shape of a relay deployment.
+A relay that wishes to hide its internal topology <span class="bcp14">MAY</span> coalesce the hops within its own administrative domain into a single Hop ID, or strip HOP_PATH entirely, before forwarding across a trust boundary (for example, to a subscriber outside the operator's own relay cluster).
+This is analogous to how BGP confederations hide internal AS topology while preserving loop detection; it is a deployment choice, not a requirement.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<p id="section-7-2">Because a relay only ever appends to HOP_PATH, it cannot make a competing path appear shorter than it is; the worst a misbehaving relay can do is under-report the upstream portion of its own path to win an advisory tie-break. Since path selection is advisory, the impact is limited to a suboptimal path choice. A receiver <span class="bcp14">MUST NOT</span> make security decisions based on Hop IDs, and <span class="bcp14">SHOULD</span> corroborate path selection with locally measured signals (e.g. RTT) when it matters.<a href="#section-7-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="iana-considerations">
-<section id="section-6">
+<section id="section-8">
       <h2 id="name-iana-considerations">
-<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
-<p id="section-6-1">This document requests the following registrations:<a href="#section-6-1" class="pilcrow">¶</a></p>
-<div id="moq-setup-option-types">
-<section id="section-6.1">
-        <h3 id="name-moq-setup-option-types">
-<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-moq-setup-option-types" class="section-name selfRef">MoQ Setup Option Types</a>
+<p id="section-8-1">This document requests the following registrations.
+High, distinctive values are requested to avoid the low ranges reserved by <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> and to minimize collisions with provisional registrations by other extensions; they also avoid the greasing pattern (<code>0x7f * N + 0x9D</code>).
+HOP_PATH carries a list, so its Type is odd (length-prefixed); EXCLUDE_HOP carries a single Hop ID, so its Type is even (a bare varint). See <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 2.5.<a href="#section-8-1" class="pilcrow">¶</a></p>
+<div id="moqt-setup-options">
+<section id="section-8.1">
+        <h3 id="name-moqt-setup-options">
+<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-moqt-setup-options" class="section-name selfRef">MOQT Setup Options</a>
         </h3>
-<p id="section-6.1-1">This document registers the following entry in the "MoQ Setup Option Types" registry established by <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>:<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+<p id="section-8.1-1">This document requests a registration in the "MOQT Setup Options" registry (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 15.4), whose policy is Specification Required.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
 <table class="center" id="table-1">
           <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
 <thead>
@@ -1346,33 +1397,42 @@ The publisher already tracks group state; this filter uses existing state to com
           </thead>
           <tbody>
             <tr>
-              <td class="text-left" rowspan="1" colspan="1">TBD1</td>
-              <td class="text-left" rowspan="1" colspan="1">LARGEST_GROUP</td>
+              <td class="text-left" rowspan="1" colspan="1">0x40B55</td>
+              <td class="text-left" rowspan="1" colspan="1">RELAY_HOPS</td>
               <td class="text-left" rowspan="1" colspan="1">This Document</td>
             </tr>
           </tbody>
         </table>
 </section>
 </div>
-<div id="moq-subscription-filter-types">
-<section id="section-6.2">
-        <h3 id="name-moq-subscription-filter-typ">
-<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-moq-subscription-filter-typ" class="section-name selfRef">MoQ Subscription Filter Types</a>
+<div id="moqt-message-parameters">
+<section id="section-8.2">
+        <h3 id="name-moqt-message-parameters">
+<a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-moqt-message-parameters" class="section-name selfRef">MOQT Message Parameters</a>
         </h3>
-<p id="section-6.2-1">This document registers the following entry in the "MoQ Subscription Filter Types" registry established by <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>:<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+<p id="section-8.2-1">This document requests registrations in the "MOQT Message Parameters" registry (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 15.7).
+HOP_PATH and EXCLUDE_HOP are message parameters carried in PUBLISH_NAMESPACE and SUBSCRIBE_NAMESPACE respectively.<a href="#section-8.2-1" class="pilcrow">¶</a></p>
 <table class="center" id="table-2">
           <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
 <thead>
             <tr>
               <th class="text-left" rowspan="1" colspan="1">Value</th>
               <th class="text-left" rowspan="1" colspan="1">Name</th>
+              <th class="text-left" rowspan="1" colspan="1">Carried In</th>
               <th class="text-left" rowspan="1" colspan="1">Reference</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td class="text-left" rowspan="1" colspan="1">0x20</td>
-              <td class="text-left" rowspan="1" colspan="1">LARGEST_GROUP</td>
+              <td class="text-left" rowspan="1" colspan="1">0x40B57</td>
+              <td class="text-left" rowspan="1" colspan="1">HOP_PATH</td>
+              <td class="text-left" rowspan="1" colspan="1">PUBLISH_NAMESPACE</td>
+              <td class="text-left" rowspan="1" colspan="1">This Document</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0x40B58</td>
+              <td class="text-left" rowspan="1" colspan="1">EXCLUDE_HOP</td>
+              <td class="text-left" rowspan="1" colspan="1">SUBSCRIBE_NAMESPACE</td>
               <td class="text-left" rowspan="1" colspan="1">This Document</td>
             </tr>
           </tbody>
@@ -1382,9 +1442,9 @@ The publisher already tracks group state; this filter uses existing state to com
 </section>
 </div>
 <div id="sec-normative-references">
-<section id="section-7">
+<section id="section-9">
       <h2 id="name-normative-references">
-<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
       </h2>
 <dl class="references">
 <dt id="moqt">[moqt]</dt>

@@ -3,9 +3,9 @@
 
 
 moq                                                            L. Curley
-Internet-Draft                                              10 June 2026
+Internet-Draft                                              19 June 2026
 Intended status: Informational                                          
-Expires: 12 December 2026
+Expires: 21 December 2026
 
 
                          Media over QUIC - Lite
@@ -46,7 +46,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 12 December 2026.
+   This Internet-Draft will expire on 21 December 2026.
 
 Copyright Notice
 
@@ -107,7 +107,7 @@ Table of Contents
      7.6.  ANNOUNCE
      7.7.  SUBSCRIBE
      7.8.  SUBSCRIBE_UPDATE
-     7.9.  SUBSCRIBE_STATS
+     7.9.  SUBSCRIBE_DEMAND
      7.10. TRACK
      7.11. TRACK_INFO
      7.12. SUBSCRIBE_OK
@@ -321,15 +321,11 @@ Table of Contents
 
    Each frame carries a presentation timestamp expressed in the parent
    Track's Timescale (units per second, part of the TRACK_INFO
-   (Section 7.11)), and a duration in the same scale.  The timestamp is
-   the source-of-truth for media time and is used by the moq-lite layer
-   for Section 6.2 decisions instead of wall-clock arrival time.  The
-   duration is a hint for the application layer (e.g. presentation
-   scheduling) and is not used by moq-lite itself; a duration of 0 means
-   unknown and the frame is presented until the next frame begins.  A
-   Track with a Timescale of 0 (unspecified) carries no meaningful
-   timestamps or durations and falls back to wall-clock arrival time for
-   expiration.
+   (Section 7.11)).  The timestamp is the source-of-truth for media time
+   and is used by the moq-lite layer for Section 6.2 decisions instead
+   of wall-clock arrival time.  A Track with a Timescale of 0
+   (unspecified) carries no meaningful timestamps and falls back to
+   wall-clock arrival time for expiration.
 
 4.  Flow
 
@@ -539,33 +535,33 @@ Table of Contents
    A subscriber opens Subscribe Streams to request a Track.
 
    The subscriber MUST start a Subscribe Stream with a SUBSCRIBE message
-   followed by any number of SUBSCRIBE_UPDATE and SUBSCRIBE_STATS
+   followed by any number of SUBSCRIBE_UPDATE and SUBSCRIBE_DEMAND
    messages.  The opening SUBSCRIBE is identified by the stream type
    (0x2) and carries no message Type; every subsequent message from the
    subscriber begins with a Type that distinguishes SUBSCRIBE_UPDATE
-   from SUBSCRIBE_STATS, mirroring how the publisher's messages on this
-   stream are typed.  When a start group can be resolved, the publisher
-   replies with a SUBSCRIBE_OK message (confirming the subscription and
-   resolving its start group), followed by any number of SUBSCRIBE_END
-   and SUBSCRIBE_DROP messages.  When the accepted track has already
-   ended with no matching groups there is no start group to resolve, so
-   the publisher sends SUBSCRIBE_END with no preceding SUBSCRIBE_OK.  A
-   rejection is a stream reset: if the publisher cannot serve the
-   subscription — the track does not exist, or it otherwise refuses — it
-   MUST reset the stream rather than leave it pending, and SHOULD do so
-   promptly (within roughly a round trip) so the subscriber is not left
-   waiting.  A subscription the publisher accepts but has no groups for
-   yet is not a rejection: for a live track the publisher MAY withhold
-   SUBSCRIBE_OK until the first matching group resolves the start.  A
-   subscriber therefore distinguishes "pending" from "refused" by the
-   stream reset, not by a timeout.  The Subscribe Stream does not carry
-   the track's publisher properties — those are immutable and fetched
-   once via a Track Stream (Section 5.1.4) (see TRACK_INFO
-   (Section 7.11)).  The subscriber MUST have the track's TRACK_INFO
-   before it can parse the FRAME messages that arrive on Group Streams,
-   since the timescale and compression determine the frame wire format;
-   it MAY open the Track and Subscribe streams concurrently and buffer
-   frames until TRACK_INFO arrives.
+   (0x0) from SUBSCRIBE_DEMAND (0x1), mirroring how the publisher's
+   messages on this stream are typed.  When a start group can be
+   resolved, the publisher replies with a SUBSCRIBE_OK message
+   (confirming the subscription and resolving its start group), followed
+   by any number of SUBSCRIBE_END and SUBSCRIBE_DROP messages.  When the
+   accepted track has already ended with no matching groups there is no
+   start group to resolve, so the publisher sends SUBSCRIBE_END with no
+   preceding SUBSCRIBE_OK.  A rejection is a stream reset: if the
+   publisher cannot serve the subscription — the track does not exist,
+   or it otherwise refuses — it MUST reset the stream rather than leave
+   it pending, and SHOULD do so promptly (within roughly a round trip)
+   so the subscriber is not left waiting.  A subscription the publisher
+   accepts but has no groups for yet is not a rejection: for a live
+   track the publisher MAY withhold SUBSCRIBE_OK until the first
+   matching group resolves the start.  A subscriber therefore
+   distinguishes "pending" from "refused" by the stream reset, not by a
+   timeout.  The Subscribe Stream does not carry the track's publisher
+   properties — those are immutable and fetched once via a Track Stream
+   (Section 5.1.4) (see TRACK_INFO (Section 7.11)).  The subscriber MUST
+   have the track's TRACK_INFO before it can parse the FRAME messages
+   that arrive on Group Streams, since the timescale and compression
+   determine the frame wire format; it MAY open the Track and Subscribe
+   streams concurrently and buffer frames until TRACK_INFO arrives.
 
    The publisher sends SUBSCRIBE_OK once the absolute start group is
    resolved, and SUBSCRIBE_END once no further groups will be produced
@@ -869,15 +865,13 @@ Table of Contents
      Subscribe ID (i)
      Group Sequence (i)
      [Timestamp (i)]
-     [Duration (i)]
      Payload (b)
    }
 
-   Timestamp and Duration are present only when the Track's Publisher
-   Timescale (see TRACK_INFO (Section 7.11)) is non-zero.  When
-   Publisher Timescale is 0, both fields are omitted from the wire and
-   the datagram body consists of just Subscribe ID, Group Sequence, and
-   Payload.
+   Timestamp is present only when the Track's Publisher Timescale (see
+   TRACK_INFO (Section 7.11)) is non-zero.  When Publisher Timescale is
+   0, the field is omitted from the wire and the datagram body consists
+   of just Subscribe ID, Group Sequence, and Payload.
 
    *Subscribe ID*: The Subscribe ID of an active subscription on the
    same session.  A subscriber receiving a datagram with an unknown
@@ -890,12 +884,6 @@ Table of Contents
    *Timestamp*: The absolute timestamp of the single frame in the group,
    expressed in the Track's negotiated Timescale.  Any varint value
    (including 0) is a valid absolute timestamp.
-
-   *Duration*: The absolute duration of the frame, expressed in the
-   Track's negotiated Timescale.  A value of 0 means the duration is
-   unknown; the frame is presented until the next frame begins (or
-   indefinitely, since a datagram-delivered group contains exactly one
-   frame, until the application supersedes it).
 
    *Payload*: The frame payload, extending to the end of the datagram.
    If the Track's Publisher Compression is non-zero, the payload is
@@ -1070,7 +1058,7 @@ Table of Contents
    ANNOUNCE_INTEREST Message {
      Message Length (i)
      Broadcast Path Prefix (s),
-     Exclude Hop (i),
+     Exclude Hop (64),
    }
 
    *Broadcast Path Prefix*: Indicate interest for any broadcasts with a
@@ -1096,17 +1084,21 @@ Table of Contents
 
    ANNOUNCE_OK Message {
      Message Length (i)
-     Hop ID (i)
+     Hop ID (64)
      Active Count (i)
    }
 
-   *Hop ID*: The publisher's own Hop ID.  This is treated as the
-   implicit trailing entry of every ANNOUNCE's Hop ID list on this
-   stream; ANNOUNCE messages MUST NOT repeat this value as the last
-   entry of their Hop ID list.  A value of 0 indicates the publisher
-   does not assign Hop IDs (e.g. when bridging from an older protocol
-   version).  Receivers reconstruct the full path as ANNOUNCE.Hop IDs ++
-   [ANNOUNCE_OK.Hop ID].
+   *Hop ID*: The publisher's own Hop ID, encoded as a 64-bit integer.
+   Hop IDs are randomly assigned, so they are carried as fixed-width 64
+   bits rather than a variable-length integer: a varint would almost
+   never be shorter, and the fixed width buys the full 64-bit space (a
+   varint caps at 62 bits).  This is treated as the implicit trailing
+   entry of every ANNOUNCE's Hop ID list on this stream; ANNOUNCE
+   messages MUST NOT repeat this value as the last entry of their Hop ID
+   list.  A value of 0 indicates the publisher does not assign Hop IDs
+   (e.g. when bridging from an older protocol version).  Receivers
+   reconstruct the full path as ANNOUNCE.Hop IDs ++ [ANNOUNCE_OK.Hop
+   ID].
 
    *Active Count*: The number of active ANNOUNCE messages that the
    publisher will send immediately as the initial set.  The subscriber
@@ -1136,7 +1128,7 @@ Table of Contents
      Announce Status (i),
      Broadcast Path Suffix (s),
      Hop Count (i),
-     Hop ID (i) ...,
+     Hop ID (64) ...,
    }
 
    *Announce Status*: A flag indicating the announce status.
@@ -1161,18 +1153,20 @@ Table of Contents
 
    *Hop ID*: A unique identifier for each relay in the path from the
    origin publisher, ordered from origin to the upstream of the
-   responding publisher.  The responding publisher's own Hop ID is NOT
-   included in this list; it is carried once in ANNOUNCE_OK as Hop ID.
-   When forwarding an announcement received from an upstream peer, a
-   relay MUST append the upstream peer's ANNOUNCE_OK Hop ID to this list
-   (since that ID is no longer implicit downstream) and then send its
-   own Hop ID in the ANNOUNCE_OK it sends to the downstream subscriber.
-   The total path length is Hop Count + 1 (including the implicit
-   ANNOUNCE_OK Hop ID); this total is used as a tiebreaker when there
-   are multiple paths to the same broadcast.  A Hop ID value of 0
-   indicates an unknown or bridged relay hop (e.g. when bridging from an
-   older protocol version that does not assign Hop IDs); the Hop Count
-   still reflects the total number of entries including unknown hops.
+   responding publisher, each encoded as a 64-bit integer (see
+   ANNOUNCE_OK's Hop ID for the rationale).  The responding publisher's
+   own Hop ID is NOT included in this list; it is carried once in
+   ANNOUNCE_OK as Hop ID.  When forwarding an announcement received from
+   an upstream peer, a relay MUST append the upstream peer's ANNOUNCE_OK
+   Hop ID to this list (since that ID is no longer implicit downstream)
+   and then send its own Hop ID in the ANNOUNCE_OK it sends to the
+   downstream subscriber.  The total path length is Hop Count + 1
+   (including the implicit ANNOUNCE_OK Hop ID); this total is used as a
+   tiebreaker when there are multiple paths to the same broadcast.  A
+   Hop ID value of 0 indicates an unknown or bridged relay hop (e.g.
+   when bridging from an older protocol version that does not assign Hop
+   IDs); the Hop Count still reflects the total number of entries
+   including unknown hops.
 
 7.7.  SUBSCRIBE
 
@@ -1247,49 +1241,90 @@ Table of Contents
 
    See Section 5.1.2 for information about each remaining field.
 
-7.9.  SUBSCRIBE_STATS
+7.9.  SUBSCRIBE_DEMAND
 
-   A subscriber sends a SUBSCRIBE_STATS message to report telemetry
-   about a subscription.  Unlike SUBSCRIBE_UPDATE, it does not modify
-   the subscription and the publisher only observes it; it is kept
-   separate so that refreshing telemetry does not re-echo the
-   subscription's delivery parameters on every change.  A subscriber MAY
-   send multiple SUBSCRIBE_STATS messages over the life of the
-   subscription to refresh the values.
+   A subscriber sends a SUBSCRIBE_DEMAND message to report the
+   downstream demand for a subscription: how many subscribers it
+   represents and, optionally, the next group they need.  Unlike
+   SUBSCRIBE_UPDATE it does not change the subscription's delivery range
+   or priority; it is kept separate so that refreshing demand does not
+   re-echo the subscription's delivery parameters on every change.  A
+   subscriber MAY send multiple SUBSCRIBE_DEMAND messages over the life
+   of the subscription to refresh the values.
 
-   SUBSCRIBE_STATS Message {
+   SUBSCRIBE_DEMAND Message {
      Type (i) = 0x1
      Message Length (i)
-     Subscriber Count (i)
+     Subscriptions Created (i)
+     Subscriptions Closed (i)
+     Group Request (i)
    }
 
-   *Type*: Set to 0x1 to indicate a SUBSCRIBE_STATS message.
+   *Type*: Set to 0x1 to indicate a SUBSCRIBE_DEMAND message.
 
-   *Subscriber Count*: The number of subscribers this subscription
-   represents, encoded as the count minus one: the subscription is the
-   implicit 1, so a leaf subscriber sends 0.  This is a subscriber-side
-   value that fans _in_ at a relay: a relay merging multiple downstream
-   subscriptions into one upstream subscription sets this to the *sum*
-   of their counts, so the value telescopes up the fan-out tree.  A
-   publisher therefore learns its total number of downstream subscribers
-   across any number of relay hops by reading the count on its single
-   upstream subscription, without any per-hop coordination.  Until a
-   SUBSCRIBE_STATS is received, the count is 1; a leaf subscriber that
-   represents only itself need not send the message.  A relay holding a
-   subscription open with no live downstream subscribers (e.g. briefly
-   retaining it for reuse) MUST still report at least 1, since the held
-   subscription cannot represent fewer subscribers than itself.  The
-   count is advisory: a subscriber MAY misreport it, and a relay MUST
-   NOT use it for delivery decisions.
+   *Subscriptions Created* and *Subscriptions Closed*: Cumulative
+   counts, over the life of this subscription, of the downstream
+   subscriptions it represents that have been created and closed
+   respectively.  The current demand — the number of subscribers
+   presently receiving the Track through this subscription — is
+   Subscriptions Created - Subscriptions Closed.  These are subscriber-
+   side values that fan _in_ at a relay: a relay merging multiple
+   downstream subscriptions into one upstream subscription reports the
+   *sum* of their Subscriptions Created and the *sum* of their
+   Subscriptions Closed, so both counts (and therefore the demand)
+   telescope up the fan-out tree.  A publisher thus learns its total
+   number of downstream subscribers across any number of relay hops by
+   reading Created - Closed on its single upstream subscription, without
+   any per-hop coordination.
 
-   A relay SHOULD rate-limit SUBSCRIBE_STATS messages (for example,
-   coalescing changes within a short window of roughly a second), so
-   that rapid subscriber churn does not flood the upstream with control
-   messages.  Because the count is the latest aggregate rather than a
-   delta, a change that reverts within the window requires no message at
-   all.
+   A *leaf subscriber* represents only itself: Subscriptions Created is
+   1 and Subscriptions Closed is 0 (a demand of 1).  These are the
+   defaults until a SUBSCRIBE_DEMAND is received, so a leaf subscriber
+   need not send the message at all.  A *relay* increments Subscriptions
+   Created each time a downstream subscription is created and
+   Subscriptions Closed each time one is closed; it SHOULD keep both
+   counts non-decreasing over the upstream subscription's life,
+   accounting a fully-departed downstream's outstanding demand as
+   closed.  Because they are independent counts rather than a single
+   gauge, a publisher can also treat a rising Subscriptions Created as
+   an implicit request to start a new group: a newly-joined subscriber
+   generally needs a fresh group (e.g. a keyframe) to begin decoding, so
+   the publisher MAY start one when the count increases, without waiting
+   for an explicit Group Request.
 
-   Future revisions MAY append additional stats to this message; the
+   The counts are advisory: a subscriber MAY misreport them, and a relay
+   MUST NOT use them for delivery decisions other than the optional new-
+   group hint above.
+
+   *Group Request*: The minimum group the subscriber wants the publisher
+   to produce, encoded like Group Start (see Section 5.1.2): 0 means no
+   request (the default — the publisher produces groups at its own
+   cadence), and a non-zero value is the requested absolute group
+   sequence + 1.  A subscriber raises this to ask the publisher to start
+   a new group once it has fallen too far behind the live edge to catch
+   up — for example, after missing group 5 it requests 6 to jump to the
+   next group rather than wait.  Unlike a one-shot "new group now"
+   signal, this is a _level_ a publisher compares against: if it has
+   already produced a group at or beyond the request the request is
+   already satisfied and no new group is needed, which makes the request
+   idempotent and safe to retransmit or aggregate.  This value fans _in_
+   at a relay as the *maximum* of its downstream requests, minus any the
+   relay can already satisfy from its own cache: a relay forwards a
+   request upstream only when it lacks a group at or beyond the highest
+   value its downstreams want.  Once the publisher produces a group
+   satisfying the highest request, every lower request is satisfied at
+   once.
+
+   A relay SHOULD rate-limit SUBSCRIBE_DEMAND messages it sends
+   upstream, coalescing demand changes within a short window (roughly a
+   second) so that rapid subscriber churn does not flood the upstream
+   with control messages; because each message carries the latest values
+   rather than deltas, a change that reverts within the window requires
+   no message at all.  A Group Request increase is latency-sensitive,
+   however, and SHOULD be forwarded promptly rather than held for the
+   demand window.
+
+   Future revisions MAY append additional fields to this message; the
    Message Length bounds the message so a receiver can stop after the
    fields it understands.
 
@@ -1369,11 +1404,11 @@ Table of Contents
    frame timestamps on this Track.  A value of 0 means unspecified; the
    subscriber MUST treat per-frame timestamps as opaque and fall back to
    wall-clock arrival time for Section 6.2.  When Publisher Timescale is
-   0, the per-frame Timestamp Delta and Duration Delta fields are
-   omitted from FRAME messages and the Timestamp and Duration fields are
-   omitted from datagram bodies (see Section 3.5 and Section 6.4).
-   Common values include 1000 (milliseconds), 1000000 (microseconds),
-   48000 (audio sample rate), and 90000 (RTP video clock).
+   0, the per-frame Timestamp Delta field is omitted from FRAME messages
+   and the Timestamp field is omitted from datagram bodies (see
+   Section 3.5 and Section 6.4).  Common values include 1000
+   (milliseconds), 1000000 (microseconds), 48000 (audio sample rate),
+   and 90000 (RTP video clock).
 
    *Publisher Compression*: The compression algorithm applied to every
    Frame Payload on this Track.
@@ -1598,15 +1633,14 @@ Table of Contents
 
    FRAME Message {
      [Timestamp Delta (i)]
-     [Duration Delta (i)]
      Message Length (i)
      Payload (b)
    }
 
-   Timestamp Delta and Duration Delta are present only when the Track's
-   Publisher Timescale (see TRACK_INFO (Section 7.11)) is non-zero.
-   When Publisher Timescale is 0, both fields are omitted from the wire
-   and the FRAME consists of just Message Length and Payload.
+   Timestamp Delta is present only when the Track's Publisher Timescale
+   (see TRACK_INFO (Section 7.11)) is non-zero.  When Publisher
+   Timescale is 0, the field is omitted from the wire and the FRAME
+   consists of just Message Length and Payload.
 
    *Timestamp Delta*: A signed delta from the previous frame's
    timestamp, in the Track's negotiated Timescale.  Encoded as a zigzag-
@@ -1623,26 +1657,6 @@ Table of Contents
    first frame of a group is delta-encoded from 0, so its Timestamp
    Delta is the zigzag encoding of the absolute timestamp.
 
-   *Duration Delta*: A signed delta from the previous frame's duration,
-   in the Track's negotiated Timescale, encoded using the same zigzag
-   mapping as Timestamp Delta.  A wire value of 0 means the duration is
-   unchanged from the previous frame; this is the common case for
-   constant-rate media and fits in one byte.  The first frame of a group
-   is delta-encoded from a prior duration of 0.
-
-   The resolved duration value carries the following semantics for the
-   application:
-
-   *  A resolved duration of 0 means the duration is unknown; the frame
-      is presented until the next frame in the group begins (or until
-      the group ends, if it is the last frame).
-
-   *  A non-zero resolved duration is the explicit presentation duration
-      in the Track's Timescale.
-
-   The duration is an application-level hint and is not used by the moq-
-   lite layer for delivery decisions.
-
    *Payload*: An application-specific payload.  If the Track's Publisher
    Compression is non-zero, the payload is compressed using the
    negotiated algorithm (see TRACK_INFO (Section 7.11)) and the Message
@@ -1655,16 +1669,23 @@ Table of Contents
 
 8.1.  moq-lite-05
 
-   *  Added a SUBSCRIBE_STATS message carrying a telescoping Subscriber
-      Count (count of downstream subscribers, encoded as the count minus
-      one so a leaf sends 0); a relay sums the counts of the downstream
-      subscriptions it merges, so a publisher reads its total audience
-      across any number of hops from its single upstream subscription.
-      It is kept separate from SUBSCRIBE_UPDATE so that refreshing
-      telemetry does not re-echo the subscription's delivery parameters;
-      relays SHOULD rate-limit it to absorb subscriber churn.  This also
-      introduced a Type tag on the subscriber's post-SUBSCRIBE messages
-      (0x0 SUBSCRIBE_UPDATE, 0x1 SUBSCRIBE_STATS) to distinguish them,
+   *  Added a SUBSCRIBE_DEMAND message reporting the downstream demand
+      for a subscription.  It carries Subscriptions Created and
+      Subscriptions Closed (cumulative counts whose difference is the
+      current subscriber count; both sum up the relay fan-out tree, so a
+      publisher reads its total audience across any number of hops from
+      its single upstream subscription) and a Group Request (the minimum
+      group the subscriber wants produced, encoded like Group Start; 0
+      means no request).  The group request is a level rather than a
+      one-shot "new group now" signal — already satisfied if a group at
+      or beyond it exists — making it idempotent and aggregatable as the
+      maximum of downstream requests; a relay also MAY treat a rising
+      Subscriptions Created as an implicit new-group request.  It is
+      kept separate from SUBSCRIBE_UPDATE so refreshing demand does not
+      re-echo the subscription's delivery parameters; relays SHOULD
+      rate-limit it to absorb subscriber churn.  This also introduced a
+      Type tag on the subscriber's post-SUBSCRIBE messages (0x0
+      SUBSCRIBE_UPDATE, 0x1 SUBSCRIBE_DEMAND) to distinguish them,
       mirroring the publisher's typed responses.
 
    *  Added a SETUP message, sent once on a unidirectional Setup Stream
@@ -1729,18 +1750,22 @@ Table of Contents
       can batch the initial set instead of reporting each ANNOUNCE as it
       trickles in.
 
+   *  Encoded Hop ID (in ANNOUNCE and ANNOUNCE_OK) and Exclude Hop (in
+      ANNOUNCE_INTEREST) as fixed-width 64-bit integers instead of
+      varints.  Hop IDs are random, so a varint would almost never be
+      shorter, and the fixed width restores the 2 bits a 62-bit varint
+      would have cost.
+
    *  Added Publisher Timescale to TRACK_INFO for per-track timestamp
       negotiation.  When Publisher Timescale is 0, the per-frame
-      timestamp/duration fields are omitted entirely from FRAME and
-      datagram bodies.
+      timestamp field is omitted entirely from FRAME and datagram
+      bodies.
 
-   *  Added Timestamp Delta and Duration Delta to FRAME, both zigzag-
-      encoded signed varints (present only when timescale is non-zero).
-      Duration Delta = 0 is the common "unchanged" case and fits in one
-      byte; a resolved duration of 0 means "until the next frame".
+   *  Added Timestamp Delta to FRAME, a zigzag-encoded signed varint
+      (present only when timescale is non-zero).
 
-   *  Added Timestamp and Duration to the QUIC datagram body (absolute,
-      present only when timescale is non-zero).
+   *  Added Timestamp to the QUIC datagram body (absolute, present only
+      when timescale is non-zero).
 
    *  Renamed Publisher Max Latency to Publisher Cache (now in
       TRACK_INFO), defined as a minimum retention guarantee (similar to

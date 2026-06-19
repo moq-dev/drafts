@@ -4,14 +4,16 @@
 <meta charset="utf-8">
 <meta content="Common,Latin" name="scripts">
 <meta content="initial-scale=1.0" name="viewport">
-<title>MoQ Largest Group Extension</title>
+<title>MoQ Payload Compression Extension</title>
 <meta content="Luke Curley" name="author">
 <meta content="
-       This document defines a Largest Group subscription filter type for MoQ Transport  .
-A subscriber uses this filter to request delivery starting from the first object of the publisher's largest (most recent) group, ensuring a complete group is received. 
+       This document defines a payload compression extension for MoQ Transport  .
+A track-level Compression property lets the original publisher signal that a track's object payloads are worth compressing, and with which algorithm.
+Compression is then applied independently on each hop: a payload is compressed only on a hop that has negotiated the extension and whose receiver supports the algorithm, and is sent verbatim otherwise.
+Each object is compressed independently so objects remain individually decodable, and the decompressed bytes — the actual object — are unchanged end to end. 
     " name="description">
 <meta content="xml2rfc 3.34.0" name="generator">
-<meta content="draft-lcurley-moq-largest-group-latest" name="ietf.draft">
+<meta content="draft-lcurley-moq-compression-latest" name="ietf.draft">
 <!-- Generator version information:
   xml2rfc 3.34.0
     Python 3.14.5
@@ -27,7 +29,7 @@ A subscriber uses this filter to request delivery starting from the first object
     requests 2.33.1
     wcwidth 0.8.1
 -->
-<link href="draft-lcurley-moq-largest-group.xml" rel="alternate" type="application/rfc+xml">
+<link href="draft-lcurley-moq-compression.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
 <style type="text/css">@font-face {
   font-family: 'Lora';
@@ -1043,7 +1045,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <table class="ears">
 <thead><tr>
 <td class="left">Internet-Draft</td>
-<td class="center">moq-largest-group</td>
+<td class="center">moq-compression</td>
 <td class="right">June 2026</td>
 </tr></thead>
 <tfoot><tr>
@@ -1058,7 +1060,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dt class="label-workgroup">Workgroup:</dt>
 <dd class="workgroup">moq</dd>
 <dt class="label-internet-draft">Internet-Draft:</dt>
-<dd class="internet-draft">draft-lcurley-moq-largest-group-latest</dd>
+<dd class="internet-draft">draft-lcurley-moq-compression-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
 <time datetime="2026-06-19" class="published">19 June 2026</time>
@@ -1075,11 +1077,13 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </dd>
 </dl>
 </div>
-<h1 id="title">MoQ Largest Group Extension</h1>
+<h1 id="title">MoQ Payload Compression Extension</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">This document defines a Largest Group subscription filter type for MoQ Transport <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>.
-A subscriber uses this filter to request delivery starting from the first object of the publisher's largest (most recent) group, ensuring a complete group is received.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">This document defines a payload compression extension for MoQ Transport <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>.
+A track-level Compression property lets the original publisher signal that a track's object payloads are worth compressing, and with which algorithm.
+Compression is then applied independently on each hop: a payload is compressed only on a hop that has negotiated the extension and whose receiver supports the algorithm, and is sent verbatim otherwise.
+Each object is compressed independently so objects remain individually decodable, and the decompressed bytes — the actual object — are unchanged end to end.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-discussion-venues">
@@ -1145,48 +1149,44 @@ A subscriber uses this filter to request delivery starting from the first object
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
             <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
-<ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.1">
-                <p id="section-toc.1-1.2.2.1.1" class="keepWithNext"><a href="#section-2.1" class="auto internal xref">2.1</a>.  <a href="#name-joining-fetch-workaround" class="internal xref">Joining Fetch Workaround</a></p>
-</li>
-            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
-            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-setup-negotiation" class="internal xref">Setup Negotiation</a></p>
+            <p id="section-toc.1-1.3.1" class="keepWithNext"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-setup-negotiation" class="internal xref">Setup Negotiation</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
-            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-largest-group-filter" class="internal xref">Largest Group Filter</a></p>
-<ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
-                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-filter-type" class="internal xref">Filter Type</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2">
-                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-semantics" class="internal xref">Semantics</a></p>
-</li>
-            </ul>
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-compression-track-property" class="internal xref">COMPRESSION Track Property</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
-            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-compression-algorithms" class="internal xref">Compression Algorithms</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
-            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
-<ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
-                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-moq-setup-option-types" class="internal xref">MoQ Setup Option Types</a></p>
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-relay-behavior" class="internal xref">Relay Behavior</a></p>
 </li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
-                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-moq-subscription-filter-typ" class="internal xref">MoQ Subscription Filter Types</a></p>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1">
+                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-moqt-setup-options" class="internal xref">MOQT Setup Options</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.2">
+                <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="auto internal xref">8.2</a>.  <a href="#name-moqt-properties" class="internal xref">MOQT Properties</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.3">
+                <p id="section-toc.1-1.8.2.3.1"><a href="#section-8.3" class="auto internal xref">8.3</a>.  <a href="#name-moqt-compression-algorithms" class="internal xref">MOQT Compression Algorithms</a></p>
 </li>
             </ul>
 </li>
-          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
-            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
-</li>
-          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
-            <p id="section-toc.1-1.8.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
-</li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
-            <p id="section-toc.1-1.9.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
+            <p id="section-toc.1-1.11.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
 </li>
         </ul>
 </nav>
@@ -1208,48 +1208,20 @@ appear in all capitals, as shown here.<a href="#section-1-1" class="pilcrow">¶<
       <h2 id="name-introduction">
 <a href="#section-2" class="section-number selfRef">2. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
-<p id="section-2-1"><span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 5.1.2 defines four subscription filter types that control where delivery begins:<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-1"><span>[<a href="#moqt" class="cite xref">moqt</a>]</span> makes the original publisher "solely responsible for the content of the object payload ... including the underlying encoding, compression, any end-to-end encryption, or authentication" (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 2.1).
+For media this is the right layering: already-compressed codecs (H.264, Opus, AV1) gain nothing from a second compression pass.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-2">But MoQ also carries non-media tracks — JSON, text, telemetry, captions, uncompressed binary structures — where the payloads are highly compressible and where end-to-end encryption is often not in use.
+For these tracks there is no standard, transport-visible way to compress payloads, so each application reinvents it, and relays cannot help.<a href="#section-2-2" class="pilcrow">¶</a></p>
+<p id="section-2-3">Like HTTP Transfer-Encoding, the on-wire compression is a hop-by-hop optimization: it does not conceptually change the object payload — the decompressed bytes <em>are</em> the object — it only changes how those bytes are carried over a single hop.
+What this extension adds on top is an end-to-end <em>signal</em>: a track property by which the original publisher marks the content as worth compressing and names the algorithm. The signal travels end-to-end; the compression happens per hop.<a href="#section-2-3" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-2-2.1">
-          <p id="section-2-2.1.1"><strong>Next Group Start (0x1)</strong>: Starts at <code>{Largest.Group + 1, 0}</code>, skipping the remainder of the current group entirely.<a href="#section-2-2.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-2-4.1">
+          <p id="section-2-4.1.1"><strong>Publisher signals, hops apply</strong>: the COMPRESSION track property is set by the original publisher and carried end-to-end, but a payload is only compressed on a hop that negotiated the extension and whose receiver supports the algorithm. Where the extension is not negotiated, the same payload travels verbatim.<a href="#section-2-4.1.1" class="pilcrow">¶</a></p>
 </li>
-        <li class="normal" id="section-2-2.2">
-          <p id="section-2-2.2.1"><strong>Largest Object (0x2)</strong>: Despite the name, starts at <code>{Largest.Group, Largest.Object + 1}</code> — the object <em>after</em> the largest, not the largest object itself.<a href="#section-2-2.2.1" class="pilcrow">¶</a></p>
-</li>
-        <li class="normal" id="section-2-2.3">
-          <p id="section-2-2.3.1"><strong>AbsoluteStart (0x3)</strong>: Starts at an explicit location specified by the subscriber.<a href="#section-2-2.3.1" class="pilcrow">¶</a></p>
-</li>
-        <li class="normal" id="section-2-2.4">
-          <p id="section-2-2.4.1"><strong>AbsoluteRange (0x4)</strong>: Starts and ends at explicit locations specified by the subscriber.<a href="#section-2-2.4.1" class="pilcrow">¶</a></p>
+        <li class="normal" id="section-2-4.2">
+          <p id="section-2-4.2.1"><strong>Per object, independently</strong>: each object payload is an independent compressed stream with no shared dictionary or state between objects. This keeps every object individually decodable and avoids head-of-line decoding within a group.<a href="#section-2-4.2.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-2-3">There is no filter that starts from the <em>beginning</em> of the current group.
-Next Group Start skips the current group entirely, potentially adding latency equal to the group duration.
-Largest Object starts mid-group, delivering objects that may depend on earlier objects in the same group.<a href="#section-2-3" class="pilcrow">¶</a></p>
-<p id="section-2-4">Objects within a group are typically delta encoded (ex. video GOPs), so arbitrary objects in the middle of a group are undecodable without prior objects.
-A subscriber using Next Group Start avoids this problem but must wait for the next group to begin, unnecessarily increasing join latency.<a href="#section-2-4" class="pilcrow">¶</a></p>
-<div id="joining-fetch-workaround">
-<section id="section-2.1">
-        <h3 id="name-joining-fetch-workaround">
-<a href="#section-2.1" class="section-number selfRef">2.1. </a><a href="#name-joining-fetch-workaround" class="section-name selfRef">Joining Fetch Workaround</a>
-        </h3>
-<p id="section-2.1-1"><span>[<a href="#moqt" class="cite xref">moqt</a>]</span> does provide a workaround: a subscriber can issue a separate "joining" FETCH request alongside a SUBSCRIBE to retrieve the beginning of the current group.
-However, this approach has several drawbacks:<a href="#section-2.1-1" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-2.1-2.1">
-            <p id="section-2.1-2.1.1"><strong>Complexity</strong>: Libraries emulate Largest Group by coordinating a FETCH and SUBSCRIBE, splitting the group across multiple streams. This requires merging the results into a single coherent group and handling various edge cases, such as one of the two requests failing independently.<a href="#section-2.1-2.1.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-2.1-2.2">
-            <p id="section-2.1-2.2.1"><strong>Head-of-line blocking</strong>: If the group contains multiple sub-groups, the FETCH delivers them sequentially over a single stream, introducing head-of-line blocking that negates the benefits of sub-group parallelism.<a href="#section-2.1-2.2.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-2.1-2.3">
-            <p id="section-2.1-2.3.1"><strong>Priority</strong>: Everything should be delivered in dependency order to improve startup time and avoid potential flow control deadlocks. This requires prioritizing the FETCH higher than the SUBSCRIBE, which may be non-obvious or unsupported.<a href="#section-2.1-2.3.1" class="pilcrow">¶</a></p>
-</li>
-        </ul>
-<p id="section-2.1-3">This extension avoids these issues by defining a Largest Group filter that starts delivery from the first object of the publisher's most recent group within the SUBSCRIBE itself, ensuring a complete group is delivered over the normal subscription path.
-Additionally, the first group of a subscription behaves the same as any other group.<a href="#section-2.1-3" class="pilcrow">¶</a></p>
-</section>
-</div>
 </section>
 </div>
 <div id="setup-negotiation">
@@ -1257,109 +1229,136 @@ Additionally, the first group of a subscription behaves the same as any other gr
       <h2 id="name-setup-negotiation">
 <a href="#section-3" class="section-number selfRef">3. </a><a href="#name-setup-negotiation" class="section-name selfRef">Setup Negotiation</a>
       </h2>
-<p id="section-3-1">The Largest Group extension is negotiated during the SETUP exchange as defined in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 9.4.<a href="#section-3-1" class="pilcrow">¶</a></p>
-<p id="section-3-2">Both endpoints indicate support by including the following Setup Option:<a href="#section-3-2" class="pilcrow">¶</a></p>
+<p id="section-3-1">The Payload Compression extension is negotiated during the SETUP exchange as defined in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10.3.
+Unlike a purely additive property, compression <span class="bcp14">MUST</span> be negotiated: a receiver that does not understand the algorithm would otherwise pass the compressed bytes to the application as if they were plaintext.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">Each endpoint advertises the algorithms it can decompress by including the following Setup Option:<a href="#section-3-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-3-3">
 <pre>
-LARGEST_GROUP Setup Option {
-  Option Key (vi64) = TBD1
-  Option Value Length (vi64) = 0
+COMPRESSION Setup Option {
+  Option Key (vi64) = 0xC03DE
+  Option Value Length (vi64)
+  Algorithm (vi64) ...
 }
 </pre><a href="#section-3-3" class="pilcrow">¶</a>
 </div>
-<p id="section-3-4">If both endpoints include this option, the Largest Group filter is available for the session.
-If a peer receives a SUBSCRIBE containing the Largest Group filter without having negotiated the extension, it <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION.<a href="#section-3-4" class="pilcrow">¶</a></p>
+<p id="section-3-4"><strong>Algorithm</strong>:
+One or more Algorithm identifiers (see <span><a href="#compression-algorithms" class="internal xref">Compression Algorithms</a> (<a href="#compression-algorithms" class="auto internal xref">Section 5</a>)</span>) that the sender can decompress, each a varint, filling the Option Value.
+The identifier <code>none</code> (0) <span class="bcp14">MUST NOT</span> be listed (it requires no negotiation).<a href="#section-3-4" class="pilcrow">¶</a></p>
+<p id="section-3-5">A sender <span class="bcp14">MUST NOT</span> compress with an algorithm the receiver did not advertise in its SETUP.
+This makes the on-wire state unambiguous on every hop without any per-object signaling: a receiver decompresses a track's payloads <strong>if and only if</strong> the COMPRESSION track property is present and the receiver advertised that algorithm in its own SETUP. In every other case — the property absent, the extension not negotiated, or the algorithm not advertised by the receiver — the sender was not permitted to compress, so the receiver treats the payloads as verbatim.<a href="#section-3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="largest-group-filter">
+<div id="compression-track-property">
 <section id="section-4">
-      <h2 id="name-largest-group-filter">
-<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-largest-group-filter" class="section-name selfRef">Largest Group Filter</a>
+      <h2 id="name-compression-track-property">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-compression-track-property" class="section-name selfRef">COMPRESSION Track Property</a>
       </h2>
-<p id="section-4-1">This document defines a new subscription filter type for use in the Subscription Filter field of SUBSCRIBE messages as defined in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 5.1.2.<a href="#section-4-1" class="pilcrow">¶</a></p>
-<div id="filter-type">
-<section id="section-4.1">
-        <h3 id="name-filter-type">
-<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-filter-type" class="section-name selfRef">Filter Type</a>
-        </h3>
-<div class="alignLeft art-text artwork" id="section-4.1-1">
+<p id="section-4-1">The COMPRESSION property is the original publisher's signal that a track's object payloads are worth compressing, and which algorithm to use.
+It is a track-level Key-Value-Pair carried with the track's properties (see <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 2.5 and Section 12), set by the original publisher and forwarded unchanged by relays.
+Because the value is a single integer, COMPRESSION uses an even Type so the value is a bare varint:<a href="#section-4-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4-2">
 <pre>
-Subscription Filter {
-  Filter Type (vi64) = 0x20
+COMPRESSION Track Property {
+  Type (vi64) = 0xC03D0
+  Value (vi64)  ; Algorithm identifier
 }
-</pre><a href="#section-4.1-1" class="pilcrow">¶</a>
+</pre><a href="#section-4-2" class="pilcrow">¶</a>
 </div>
-<p id="section-4.1-2">The Largest Group filter uses Filter Type value <code>0x20</code>.
-No additional fields (Start Location or End Group Delta) are present in the Subscription Filter.<a href="#section-4.1-2" class="pilcrow">¶</a></p>
+<p id="section-4-3"><strong>Value</strong>:
+The Algorithm identifier the publisher recommends for this track's payloads.
+The absence of the property, or a value of <code>none</code> (0), means the track is not marked for compression and its payloads are always transmitted verbatim.<a href="#section-4-3" class="pilcrow">¶</a></p>
+<p id="section-4-4">The property is fixed for the lifetime of the track and <span class="bcp14">MUST NOT</span> change.
+A relay <span class="bcp14">MUST</span> forward it unchanged on every hop, including a hop that has not negotiated the extension: there it is simply an ignored unknown Key-Value-Pair, but forwarding it lets a further-downstream hop that does negotiate the extension still act on the publisher's signal.<a href="#section-4-4" class="pilcrow">¶</a></p>
+<p id="section-4-5">Compression is enabled only by the combination of this track property and the extension being negotiated on a hop.
+A publisher <span class="bcp14">MUST NOT</span> compress object payloads on a track that does not carry the COMPRESSION property, and there is no way to enable compression on a per-object basis: the property governs the whole track, and on a compressing hop every non-empty payload is compressed.<a href="#section-4-5" class="pilcrow">¶</a></p>
+<p id="section-4-6">Whether payloads are actually compressed is decided per hop:<a href="#section-4-6" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4-7.1">
+          <p id="section-4-7.1.1">On a hop where the extension is negotiated and the receiver advertised the property's algorithm, every non-empty object payload <span class="bcp14">MUST</span> be compressed with that algorithm, and the receiver decompresses it.<a href="#section-4-7.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-4-7.2">
+          <p id="section-4-7.2.1">On any other hop — the extension not negotiated, or the receiver did not advertise that algorithm — payloads are sent verbatim. The receiver either never sees the property (an ignored unknown Key-Value-Pair) or sees it but knows the sender was not permitted to compress for it, so it treats the payloads as verbatim either way.<a href="#section-4-7.2.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<p id="section-4-8">Compression applies to the object payload only; object properties and message framing are never compressed.
+An empty payload (size 0) <span class="bcp14">MUST NOT</span> be compressed and remains empty on the wire.<a href="#section-4-8" class="pilcrow">¶</a></p>
+<p id="section-4-9">A publisher <span class="bcp14">SHOULD</span> set COMPRESSION only for payload types that benefit from it.
+Already-compressed media <span class="bcp14">SHOULD</span> omit it (or use <code>none</code>).<a href="#section-4-9" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="semantics">
-<section id="section-4.2">
-        <h3 id="name-semantics">
-<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-semantics" class="section-name selfRef">Semantics</a>
-        </h3>
-<p id="section-4.2-1">When the publisher receives a SUBSCRIBE with the Largest Group filter, it computes the start location as:<a href="#section-4.2-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.2-2">
-<pre>
-{Largest.Group, 0}
-</pre><a href="#section-4.2-2" class="pilcrow">¶</a>
-</div>
-<p id="section-4.2-3">Where <code>Largest.Group</code> is the group sequence number of the largest object known to the publisher at the time the SUBSCRIBE is processed.
-Delivery begins from the first object (object 0) of that group.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
-<p id="section-4.2-4">The subscription is open-ended: the publisher continues delivering subsequent groups until the subscription is cancelled or the session ends.
-This is consistent with the behavior of Next Group Start and Largest Object filters.<a href="#section-4.2-4" class="pilcrow">¶</a></p>
-<p id="section-4.2-5">The largest group is delivered using normal SUBSCRIBE semantics.
-If earlier objects in the group have been evicted from the cache, the publisher <span class="bcp14">MAY</span> attempt to repopulate the cache or simply drop the group as it would for any other subscription.<a href="#section-4.2-5" class="pilcrow">¶</a></p>
+<div id="compression-algorithms">
+<section id="section-5">
+      <h2 id="name-compression-algorithms">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-compression-algorithms" class="section-name selfRef">Compression Algorithms</a>
+      </h2>
+<p id="section-5-1">This document defines the following algorithms.
+Further algorithms <span class="bcp14">MAY</span> be registered (see <span><a href="#iana-considerations" class="internal xref">IANA Considerations</a> (<a href="#iana-considerations" class="auto internal xref">Section 8</a>)</span>).<a href="#section-5-1" class="pilcrow">¶</a></p>
+<table class="center" id="table-1">
+        <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
+<thead>
+          <tr>
+            <th class="text-right" rowspan="1" colspan="1">ID</th>
+            <th class="text-left" rowspan="1" colspan="1">Name</th>
+            <th class="text-left" rowspan="1" colspan="1">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-right" rowspan="1" colspan="1">0</td>
+            <td class="text-left" rowspan="1" colspan="1">none</td>
+            <td class="text-left" rowspan="1" colspan="1">Payloads are transmitted verbatim. The default.</td>
+          </tr>
+          <tr>
+            <td class="text-right" rowspan="1" colspan="1">1</td>
+            <td class="text-left" rowspan="1" colspan="1">deflate</td>
+            <td class="text-left" rowspan="1" colspan="1">Raw DEFLATE <span>[<a href="#RFC1951" class="cite xref">RFC1951</a>]</span>, with no zlib or gzip framing.</td>
+          </tr>
+        </tbody>
+      </table>
+<p id="section-5-3">For <code>deflate</code>, each object payload is an independent raw DEFLATE stream.
+There is no shared dictionary or state between objects, so each object decompresses on its own.<a href="#section-5-3" class="pilcrow">¶</a></p>
 </section>
 </div>
+<div id="relay-behavior">
+<section id="section-6">
+      <h2 id="name-relay-behavior">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-relay-behavior" class="section-name selfRef">Relay Behavior</a>
+      </h2>
+<p id="section-6-1">A relay forwards the COMPRESSION track property unchanged — it is the publisher's end-to-end signal — and applies compression independently on each hop.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">On its upstream subscription, the relay receives payloads compressed if and only if that hop compressed them (the extension negotiated and the relay advertised the algorithm); it decompresses them as needed.
+On each downstream subscription the relay serves, it compresses payloads with the track's algorithm when that downstream negotiated the extension and advertised the algorithm, and sends them verbatim otherwise.<a href="#section-6-2" class="pilcrow">¶</a></p>
+<p id="section-6-3">Compression is thus driven by the publisher's track property, not by the relay: a relay does not compress a track the publisher did not mark.
+In every case the decompressed bytes delivered to the application <span class="bcp14">MUST</span> be identical to what the origin published.<a href="#section-6-3" class="pilcrow">¶</a></p>
+<p id="section-6-4">A relay or generic library <span class="bcp14">MUST NOT</span> inspect or modify the decompressed contents unless otherwise negotiated; only recompression that preserves the decompressed bytes exactly is permitted.<a href="#section-6-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="security-considerations">
-<section id="section-5">
+<section id="section-7">
       <h2 id="name-security-considerations">
-<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
-<p id="section-5-1">This extension introduces no new security considerations beyond those described in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>.
-The publisher already tracks group state; this filter uses existing state to compute the start location.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-7-1">Compressing data that mixes attacker-controlled and secret content in the same object can leak the secret through compressed size, as in the CRIME and BREACH attacks.
+A publisher <span class="bcp14">MUST NOT</span> set COMPRESSION on a track whose object payloads combine secret material with attacker-influenced material.
+Because compression here is per-object with no cross-object dictionary, the exposure is bounded to within a single object, but it is not eliminated.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<p id="section-7-2">A malicious sender could emit a small compressed payload that decompresses to a very large buffer (a "decompression bomb").
+A receiver <span class="bcp14">MUST</span> bound the size of a decompressed object payload. If the bound is exceeded it <span class="bcp14">MUST</span> reset the affected Subscribe/Fetch stream (rather than allocate unbounded memory) and <span class="bcp14">MAY</span> close the session with a PROTOCOL_VIOLATION if it considers the peer abusive; the reset is stream-scoped so a single bad object does not tear down unrelated subscriptions.<a href="#section-7-2" class="pilcrow">¶</a></p>
+<p id="section-7-3">Compression is orthogonal to <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> end-to-end encryption: an encrypted payload is effectively incompressible, so a publisher using end-to-end encryption <span class="bcp14">SHOULD</span> omit COMPRESSION (or use <code>none</code>).<a href="#section-7-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="iana-considerations">
-<section id="section-6">
+<section id="section-8">
       <h2 id="name-iana-considerations">
-<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
-<p id="section-6-1">This document requests the following registrations:<a href="#section-6-1" class="pilcrow">¶</a></p>
-<div id="moq-setup-option-types">
-<section id="section-6.1">
-        <h3 id="name-moq-setup-option-types">
-<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-moq-setup-option-types" class="section-name selfRef">MoQ Setup Option Types</a>
+<p id="section-8-1">This document requests the following registrations.
+High, distinctive values are requested to avoid the low ranges reserved by <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> and to minimize collisions with provisional registrations by other extensions; they also avoid the greasing pattern (<code>0x7f * N + 0x9D</code>).
+The parameter Type is even so that its value is a bare varint with no length prefix (see <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 2.5).<a href="#section-8-1" class="pilcrow">¶</a></p>
+<div id="moqt-setup-options">
+<section id="section-8.1">
+        <h3 id="name-moqt-setup-options">
+<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-moqt-setup-options" class="section-name selfRef">MOQT Setup Options</a>
         </h3>
-<p id="section-6.1-1">This document registers the following entry in the "MoQ Setup Option Types" registry established by <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>:<a href="#section-6.1-1" class="pilcrow">¶</a></p>
-<table class="center" id="table-1">
-          <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
-<thead>
-            <tr>
-              <th class="text-left" rowspan="1" colspan="1">Value</th>
-              <th class="text-left" rowspan="1" colspan="1">Name</th>
-              <th class="text-left" rowspan="1" colspan="1">Reference</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="text-left" rowspan="1" colspan="1">TBD1</td>
-              <td class="text-left" rowspan="1" colspan="1">LARGEST_GROUP</td>
-              <td class="text-left" rowspan="1" colspan="1">This Document</td>
-            </tr>
-          </tbody>
-        </table>
-</section>
-</div>
-<div id="moq-subscription-filter-types">
-<section id="section-6.2">
-        <h3 id="name-moq-subscription-filter-typ">
-<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-moq-subscription-filter-typ" class="section-name selfRef">MoQ Subscription Filter Types</a>
-        </h3>
-<p id="section-6.2-1">This document registers the following entry in the "MoQ Subscription Filter Types" registry established by <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>:<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+<p id="section-8.1-1">This document requests a registration in the "MOQT Setup Options" registry (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 15.4), whose policy is Specification Required.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
 <table class="center" id="table-2">
           <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
 <thead>
@@ -1371,8 +1370,66 @@ The publisher already tracks group state; this filter uses existing state to com
           </thead>
           <tbody>
             <tr>
-              <td class="text-left" rowspan="1" colspan="1">0x20</td>
-              <td class="text-left" rowspan="1" colspan="1">LARGEST_GROUP</td>
+              <td class="text-left" rowspan="1" colspan="1">0xC03DE</td>
+              <td class="text-left" rowspan="1" colspan="1">COMPRESSION</td>
+              <td class="text-left" rowspan="1" colspan="1">This Document</td>
+            </tr>
+          </tbody>
+        </table>
+</section>
+</div>
+<div id="moqt-properties">
+<section id="section-8.2">
+        <h3 id="name-moqt-properties">
+<a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-moqt-properties" class="section-name selfRef">MOQT Properties</a>
+        </h3>
+<p id="section-8.2-1">This document requests a registration in the "MOQT Properties" registry (<span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 15.8), used for object and track properties.<a href="#section-8.2-1" class="pilcrow">¶</a></p>
+<table class="center" id="table-3">
+          <caption><a href="#table-3" class="selfRef">Table 3</a></caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">Value</th>
+              <th class="text-left" rowspan="1" colspan="1">Name</th>
+              <th class="text-left" rowspan="1" colspan="1">Scope</th>
+              <th class="text-left" rowspan="1" colspan="1">Reference</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0xC03D0</td>
+              <td class="text-left" rowspan="1" colspan="1">COMPRESSION</td>
+              <td class="text-left" rowspan="1" colspan="1">Track</td>
+              <td class="text-left" rowspan="1" colspan="1">This Document</td>
+            </tr>
+          </tbody>
+        </table>
+</section>
+</div>
+<div id="moqt-compression-algorithms">
+<section id="section-8.3">
+        <h3 id="name-moqt-compression-algorithms">
+<a href="#section-8.3" class="section-number selfRef">8.3. </a><a href="#name-moqt-compression-algorithms" class="section-name selfRef">MOQT Compression Algorithms</a>
+        </h3>
+<p id="section-8.3-1">This document requests a new "MOQT Compression Algorithms" registry, with a registration policy of Specification Required.
+The initial contents are:<a href="#section-8.3-1" class="pilcrow">¶</a></p>
+<table class="center" id="table-4">
+          <caption><a href="#table-4" class="selfRef">Table 4</a></caption>
+<thead>
+            <tr>
+              <th class="text-right" rowspan="1" colspan="1">ID</th>
+              <th class="text-left" rowspan="1" colspan="1">Name</th>
+              <th class="text-left" rowspan="1" colspan="1">Reference</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0</td>
+              <td class="text-left" rowspan="1" colspan="1">none</td>
+              <td class="text-left" rowspan="1" colspan="1">This Document</td>
+            </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">1</td>
+              <td class="text-left" rowspan="1" colspan="1">deflate</td>
               <td class="text-left" rowspan="1" colspan="1">This Document</td>
             </tr>
           </tbody>
@@ -1382,14 +1439,18 @@ The publisher already tracks group state; this filter uses existing state to com
 </section>
 </div>
 <div id="sec-normative-references">
-<section id="section-7">
+<section id="section-9">
       <h2 id="name-normative-references">
-<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
       </h2>
 <dl class="references">
 <dt id="moqt">[moqt]</dt>
       <dd>
 <span class="refAuthor">Nandakumar, S.</span>, <span class="refAuthor">Vasiliev, V.</span>, <span class="refAuthor">Swett, I.</span>, and <span class="refAuthor">A. Frindell</span>, <span class="refTitle">"Media over QUIC Transport"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-moq-transport-18</span>, <time datetime="2026-05-12" class="refDate">12 May 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-18">https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-18</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC1951">[RFC1951]</dt>
+      <dd>
+<span class="refAuthor">Deutsch, P.</span>, <span class="refTitle">"DEFLATE Compressed Data Format Specification version 1.3"</span>, <span class="seriesInfo">RFC 1951</span>, <span class="seriesInfo">DOI 10.17487/RFC1951</span>, <time datetime="1996-05" class="refDate">May 1996</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc1951">https://www.rfc-editor.org/rfc/rfc1951</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC2119">[RFC2119]</dt>
       <dd>
