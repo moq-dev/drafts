@@ -12,21 +12,22 @@ Each namespace advertisement carries an ordered list of Hop IDs identifying the 
 This lets a subscriber prefer the shortest of several paths to the same namespace, identify which advertisements refer to the same broadcast (same origin), and lets a relay cluster detect and avoid routing loops.
 A namespace subscription  MAY  carry a single Hop ID to exclude, which a relay uses to suppress advertisements that have already passed through that hop. 
     " name="description">
-<meta content="xml2rfc 3.33.0" name="generator">
+<meta content="xml2rfc 3.34.0" name="generator">
 <meta content="draft-lcurley-moq-relay-hops-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.33.0
-    Python 3.12.13
-    ConfigArgParse 1.7
+  xml2rfc 3.34.0
+    Python 3.14.5
+    ConfigArgParse 1.7.5
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
-    lxml 6.0.2
-    platformdirs 4.9.6
+    lxml 6.1.1
+    natsort 8.4.0
+    platformdirs 4.10.0
     pycountry 24.6.1
     PyYAML 6.0.3
     requests 2.33.1
-    wcwidth 0.7.0
+    wcwidth 0.8.1
 -->
 <link href="draft-lcurley-moq-relay-hops.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -1049,7 +1050,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Curley</td>
-<td class="center">Expires 18 December 2026</td>
+<td class="center">Expires 21 December 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1062,12 +1063,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-lcurley-moq-relay-hops-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-06-16" class="published">16 June 2026</time>
+<time datetime="2026-06-19" class="published">19 June 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-12-18">18 December 2026</time></dd>
+<dd class="expires"><time datetime="2026-12-21">21 December 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1114,7 +1115,7 @@ A namespace subscription <span class="bcp14">MAY</span> carry a single Hop ID to
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 18 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 21 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1273,7 +1274,7 @@ An endpoint that did not negotiate the extension simply omits these parameters; 
       </h2>
 <p id="section-4-1">A <strong>Hop ID</strong> is a variable-length integer that identifies a single relay (or the origin publisher) within the path of an advertisement.<a href="#section-4-1" class="pilcrow">¶</a></p>
 <p id="section-4-2">Each relay and each origin publisher chooses its Hop ID <strong>randomly</strong>.
-An endpoint <span class="bcp14">SHOULD</span> draw a full-width random value (up to the 62-bit varint maximum) so that the probability of two endpoints choosing the same Hop ID is negligible.
+An endpoint <span class="bcp14">SHOULD</span> draw a full-width random value (up to the 64-bit varint maximum) so that the probability of two endpoints choosing the same Hop ID is negligible.
 Random assignment means there is no registry, no coordination, and no reserved values: a Hop ID is simply an opaque identifier that is, with overwhelming probability, unique.<a href="#section-4-2" class="pilcrow">¶</a></p>
 <p id="section-4-3">An endpoint <span class="bcp14">SHOULD</span> keep its Hop ID stable for the lifetime of a session (and <span class="bcp14">MAY</span> reuse it across sessions) so that loop detection and path comparison are consistent.<a href="#section-4-3" class="pilcrow">¶</a></p>
 <p id="section-4-4">When a relay bridges an advertisement from an upstream peer that did <strong>not</strong> negotiate this extension, the upstream carries no HOP_PATH. The relay <span class="bcp14">MUST</span> synthesize one (see <span><a href="#relay-behavior" class="internal xref">Relay Behavior</a> (<a href="#relay-behavior" class="auto internal xref">Section 5.1</a>)</span>) by assigning a random Hop ID to stand in for the unknown upstream, so that loop detection and path length still work within the cooperating region of the mesh.<a href="#section-4-4" class="pilcrow">¶</a></p>

@@ -3,9 +3,9 @@
 
 
 moq                                                            L. Curley
-Internet-Draft                                              16 June 2026
+Internet-Draft                                              19 June 2026
 Intended status: Informational                                          
-Expires: 18 December 2026
+Expires: 21 December 2026
 
 
                         MoQ Relay Hops Extension
@@ -49,7 +49,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 18 December 2026.
+   This Internet-Draft will expire on 21 December 2026.
 
 Copyright Notice
 
@@ -166,7 +166,7 @@ Table of Contents
    relay (or the origin publisher) within the path of an advertisement.
 
    Each relay and each origin publisher chooses its Hop ID *randomly*.
-   An endpoint SHOULD draw a full-width random value (up to the 62-bit
+   An endpoint SHOULD draw a full-width random value (up to the 64-bit
    varint maximum) so that the probability of two endpoints choosing the
    same Hop ID is negligible.  Random assignment means there is no
    registry, no coordination, and no reserved values: a Hop ID is simply
