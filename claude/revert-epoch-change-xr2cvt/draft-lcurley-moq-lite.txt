@@ -262,6 +262,14 @@ Table of Contents
    relationships, and encoding of tracks are determined by the
    application.
 
+   Each broadcast carries an Epoch that orders its instances, larger
+   meaning newer (see ANNOUNCE_BROADCAST (Section 7.6)).  When a
+   subscriber discovers the same broadcast from more than one publisher
+   — most commonly a reconnecting publisher whose new session overlaps a
+   not-yet-expired prior one — it uses the Epoch to route subscriptions
+   to the newest instance instead of waiting for the stale one to time
+   out.
+
 3.3.  Track
 
    A Track is a series of Groups identified by a unique name within a
@@ -518,7 +526,10 @@ Table of Contents
    (equivalent to UNANNOUNCE+ANNOUNCE_BROADCAST).  A publisher MUST NOT
    keep multiple active advertisements for the same broadcast on the
    same stream — each broadcast has at most one current advertisement at
-   a time.
+   a time.  A subscriber that sees the same broadcast advertised across
+   multiple streams SHOULD resolve the conflict using each
+   advertisement's Epoch (newer wins), as described in
+   ANNOUNCE_BROADCAST (Section 7.6).
 
    The subscriber MUST reset the stream if it receives an ended for a
    broadcast that is not currently active, or any ANNOUNCE_BROADCAST
@@ -1124,6 +1135,7 @@ Table of Contents
      Message Length (i)
      Announce Status (i),
      Broadcast Path Suffix (s),
+     Epoch (i),
      Hop Count (i),
      Hop ID (64) ...,
    }
@@ -1139,6 +1151,35 @@ Table of Contents
 
    *Broadcast Path Suffix*: This is combined with the broadcast path
    prefix to form the full broadcast path.
+
+   *Epoch*: The time at which the origin publisher created this instance
+   of the broadcast, in seconds since 2020-01-01T00:00:00Z (ignoring
+   leap seconds).  The reference point is 2020 rather than the Unix
+   epoch so that current timestamps stay within a 4-byte varint instead
+   of needing 8.  A newer instance of the same broadcast therefore
+   carries a larger value than an older one.  It is assigned once by the
+   origin publisher, and relays MUST forward it unchanged; unlike the
+   Hop ID list it is not modified along the path.
+
+   When the subscriber learns of the same broadcast (same path) from
+   more than one current active advertisement — for example a
+   reconnecting publisher whose new session races the not-yet-timed-out
+   session of a prior instance — it SHOULD route subscriptions to the
+   advertisement with the larger Epoch, and use total path length (see
+   Hop Count) only to break ties between equal Epochs.  This lets a
+   subscriber switch to a freshly reconnected publisher immediately,
+   rather than waiting for the stale session to time out.  For an ended
+   advertisement, the Epoch identifies which instance ended: a
+   subscriber that has already moved to a larger Epoch MAY ignore an
+   ended carrying a smaller one.  A value of 0 means the publisher does
+   not assign an Epoch; such advertisements are resolved by path length
+   alone.
+
+   A publisher with a sufficiently accurate clock can derive the Epoch
+   directly; ordering only requires that successive instances of the
+   same broadcast have increasing timestamps, so a publisher whose clock
+   is coarse or skewed MUST ensure a reconnecting instance never reports
+   a smaller value than a prior one.
 
    *Hop Count*: The number of Hop ID entries that follow, NOT including
    the publisher's own Hop ID from ANNOUNCE_OK.  A value of 0 means no
@@ -1158,12 +1199,12 @@ Table of Contents
    Hop ID to this list (since that ID is no longer implicit downstream)
    and then send its own Hop ID in the ANNOUNCE_OK it sends to the
    downstream subscriber.  The total path length is Hop Count + 1
-   (including the implicit ANNOUNCE_OK Hop ID); this total is used as a
-   tiebreaker when there are multiple paths to the same broadcast.  A
-   Hop ID value of 0 indicates an unknown or bridged relay hop (e.g.
-   when bridging from an older protocol version that does not assign Hop
-   IDs); the Hop Count still reflects the total number of entries
-   including unknown hops.
+   (including the implicit ANNOUNCE_OK Hop ID); this total breaks ties
+   between multiple paths to the same broadcast that carry the same
+   Epoch (the larger Epoch wins outright).  A Hop ID value of 0
+   indicates an unknown or bridged relay hop (e.g. when bridging from an
+   older protocol version that does not assign Hop IDs); the Hop Count
+   still reflects the total number of entries including unknown hops.
 
 7.7.  SUBSCRIBE
 
@@ -1554,6 +1595,16 @@ Table of Contents
 8.  Appendix A: Changelog
 
 8.1.  moq-lite-05
+
+   *  Added an Epoch field to ANNOUNCE_BROADCAST (a varint, before the
+      Hop ID list): the time the origin publisher created this instance
+      of the broadcast, in seconds since 2020-01-01T00:00:00Z (the 2020
+      reference point keeps current timestamps within a 4-byte varint),
+      where larger means newer.  It is origin-assigned and forwarded
+      unchanged by relays.  Subscribers resolve duplicate advertisements
+      of the same broadcast by largest Epoch first (path length only
+      breaks ties), so a reconnecting publisher can take over
+      immediately instead of waiting for the stale session to time out.
 
    *  Renamed ANNOUNCE_INTEREST to ANNOUNCE_REQUEST (the subscriber's
       request to receive announcements) and ANNOUNCE to
