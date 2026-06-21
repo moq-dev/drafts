@@ -1049,7 +1049,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Curley</td>
-<td class="center">Expires 22 December 2026</td>
+<td class="center">Expires 23 December 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1062,12 +1062,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-lcurley-moq-lite-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-06-20" class="published">20 June 2026</time>
+<time datetime="2026-06-21" class="published">21 June 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-12-22">22 December 2026</time></dd>
+<dd class="expires"><time datetime="2026-12-23">23 December 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1113,7 +1113,7 @@ While primarily designed for media, the transport is payload agnostic and can be
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 22 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 23 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1275,13 +1275,13 @@ While primarily designed for media, the transport is payload agnostic and can be
                 </ul>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.4">
-                <p id="section-toc.1-1.7.2.4.1"><a href="#section-7.4" class="auto internal xref">7.4</a>.  <a href="#name-announce_interest" class="internal xref">ANNOUNCE_INTEREST</a></p>
+                <p id="section-toc.1-1.7.2.4.1"><a href="#section-7.4" class="auto internal xref">7.4</a>.  <a href="#name-announce_request" class="internal xref">ANNOUNCE_REQUEST</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.5">
                 <p id="section-toc.1-1.7.2.5.1"><a href="#section-7.5" class="auto internal xref">7.5</a>.  <a href="#name-announce_ok" class="internal xref">ANNOUNCE_OK</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.6">
-                <p id="section-toc.1-1.7.2.6.1"><a href="#section-7.6" class="auto internal xref">7.6</a>.  <a href="#name-announce-2" class="internal xref">ANNOUNCE</a></p>
+                <p id="section-toc.1-1.7.2.6.1"><a href="#section-7.6" class="auto internal xref">7.6</a>.  <a href="#name-announce_broadcast" class="internal xref">ANNOUNCE_BROADCAST</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.7">
                 <p id="section-toc.1-1.7.2.7.1"><a href="#section-7.7" class="auto internal xref">7.7</a>.  <a href="#name-subscribe-2" class="internal xref">SUBSCRIBE</a></p>
@@ -1471,11 +1471,13 @@ Any broadcasts and subscriptions are transparently proxied by the CDN behind the
         </h3>
 <p id="section-3.2-1">A Broadcast is a collection of Tracks from a single publisher.
 This corresponds to a MoqTransport's "track namespace".<a href="#section-3.2-1" class="pilcrow">¶</a></p>
-<p id="section-3.2-2">A publisher may produce multiple broadcasts, each of which is advertised via an ANNOUNCE message.
-The subscriber uses the ANNOUNCE_INTEREST message to discover available broadcasts.
+<p id="section-3.2-2">A publisher may produce multiple broadcasts, each of which is advertised via an ANNOUNCE_BROADCAST message.
+The subscriber uses the ANNOUNCE_REQUEST message to discover available broadcasts.
 These announcements are live and can change over time, allowing for dynamic origin discovery.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
 <p id="section-3.2-3">A broadcast consists of any number of Tracks.
 The contents, relationships, and encoding of tracks are determined by the application.<a href="#section-3.2-3" class="pilcrow">¶</a></p>
+<p id="section-3.2-4">Each broadcast carries an opaque <code>Epoch</code> that orders its instances, larger meaning newer (see <span><a href="#announce-broadcast" class="internal xref">ANNOUNCE_BROADCAST</a> (<a href="#announce-broadcast" class="auto internal xref">Section 7.6</a>)</span>).
+When a subscriber discovers the same broadcast from more than one publisher — most commonly a reconnecting publisher whose new session overlaps a not-yet-expired prior one — it uses the Epoch to route subscriptions to the newest instance instead of waiting for the stale one to time out.<a href="#section-3.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="track">
@@ -1734,18 +1736,18 @@ There's a 1-byte STREAM_TYPE at the beginning of each stream.<a href="#section-5
 <a href="#section-5.1.1" class="section-number selfRef">5.1.1. </a><a href="#name-announce" class="section-name selfRef">Announce</a>
           </h4>
 <p id="section-5.1.1-1">A subscriber can open an Announce Stream to discover broadcasts matching a prefix.<a href="#section-5.1.1-1" class="pilcrow">¶</a></p>
-<p id="section-5.1.1-2">The subscriber creates the stream with an ANNOUNCE_INTEREST message.
-The publisher replies with a single ANNOUNCE_OK message followed by ANNOUNCE messages for any matching broadcasts and any future changes.<a href="#section-5.1.1-2" class="pilcrow">¶</a></p>
-<p id="section-5.1.1-3">ANNOUNCE_OK carries metadata that applies to every ANNOUNCE on this stream and is sent exactly once at the start of the response:<a href="#section-5.1.1-3" class="pilcrow">¶</a></p>
+<p id="section-5.1.1-2">The subscriber creates the stream with an ANNOUNCE_REQUEST message.
+The publisher replies with a single ANNOUNCE_OK message followed by ANNOUNCE_BROADCAST messages for any matching broadcasts and any future changes.<a href="#section-5.1.1-2" class="pilcrow">¶</a></p>
+<p id="section-5.1.1-3">ANNOUNCE_OK carries metadata that applies to every ANNOUNCE_BROADCAST on this stream and is sent exactly once at the start of the response:<a href="#section-5.1.1-3" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-5.1.1-4.1">
-              <p id="section-5.1.1-4.1.1">The publisher's own <code>Hop ID</code>, which is the implicit trailing entry of every ANNOUNCE's Hop ID list. Hoisting it out of every ANNOUNCE saves bytes since it is identical for every announcement on the session.<a href="#section-5.1.1-4.1.1" class="pilcrow">¶</a></p>
+              <p id="section-5.1.1-4.1.1">The publisher's own <code>Hop ID</code>, which is the implicit trailing entry of every ANNOUNCE_BROADCAST's Hop ID list. Hoisting it out of every ANNOUNCE_BROADCAST saves bytes since it is identical for every announcement on the session.<a href="#section-5.1.1-4.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-5.1.1-4.2">
-              <p id="section-5.1.1-4.2.1">The number of <code>active</code> ANNOUNCE messages (<code>Active Count</code>) the publisher will send immediately as the initial set. The subscriber <span class="bcp14">MAY</span> buffer until all <code>Active Count</code> initial announcements arrive before reporting them to the application, avoiding a trickle. Any ANNOUNCE messages beyond <code>Active Count</code> are live updates and <span class="bcp14">SHOULD</span> be reported to the application as they arrive.<a href="#section-5.1.1-4.2.1" class="pilcrow">¶</a></p>
+              <p id="section-5.1.1-4.2.1">The number of <code>active</code> ANNOUNCE_BROADCAST messages (<code>Active Count</code>) the publisher will send immediately as the initial set. The subscriber <span class="bcp14">MAY</span> buffer until all <code>Active Count</code> initial announcements arrive before reporting them to the application, avoiding a trickle. Any ANNOUNCE_BROADCAST messages beyond <code>Active Count</code> are live updates and <span class="bcp14">SHOULD</span> be reported to the application as they arrive.<a href="#section-5.1.1-4.2.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-5.1.1-5">Each ANNOUNCE message contains one of the following statuses:<a href="#section-5.1.1-5" class="pilcrow">¶</a></p>
+<p id="section-5.1.1-5">Each ANNOUNCE_BROADCAST message contains one of the following statuses:<a href="#section-5.1.1-5" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-5.1.1-6.1">
               <p id="section-5.1.1-6.1.1"><code>active</code>: a matching broadcast is available.<a href="#section-5.1.1-6.1.1" class="pilcrow">¶</a></p>
@@ -1757,12 +1759,13 @@ The publisher replies with a single ANNOUNCE_OK message followed by ANNOUNCE mes
 <p id="section-5.1.1-7">Each broadcast starts as <code>ended</code>.
 An <code>active</code> announcement makes the broadcast available; a subsequent <code>ended</code> makes it unavailable again.<a href="#section-5.1.1-7" class="pilcrow">¶</a></p>
 <p id="section-5.1.1-8">A publisher <span class="bcp14">SHOULD</span> advertise only the best path it knows for each broadcast.
-If the best path changes (e.g. a relay failover or upstream restart), the publisher <span class="bcp14">MAY</span> send another <code>active</code> for that broadcast: the new announcement atomically replaces the prior one (equivalent to UNANNOUNCE+ANNOUNCE).
-A publisher <span class="bcp14">MUST NOT</span> keep multiple <code>active</code> advertisements for the same broadcast on the same stream — each broadcast has at most one current advertisement at a time.<a href="#section-5.1.1-8" class="pilcrow">¶</a></p>
-<p id="section-5.1.1-9">The subscriber <span class="bcp14">MUST</span> reset the stream if it receives an <code>ended</code> for a broadcast that is not currently <code>active</code>, or any ANNOUNCE before ANNOUNCE_OK.
+If the best path changes (e.g. a relay failover or upstream restart), the publisher <span class="bcp14">MAY</span> send another <code>active</code> for that broadcast: the new announcement atomically replaces the prior one (equivalent to UNANNOUNCE+ANNOUNCE_BROADCAST).
+A publisher <span class="bcp14">MUST NOT</span> keep multiple <code>active</code> advertisements for the same broadcast on the same stream — each broadcast has at most one current advertisement at a time.
+A subscriber that sees the same broadcast advertised across multiple streams <span class="bcp14">SHOULD</span> resolve the conflict using each advertisement's <code>Epoch</code> (newer wins), as described in <span><a href="#announce-broadcast" class="internal xref">ANNOUNCE_BROADCAST</a> (<a href="#announce-broadcast" class="auto internal xref">Section 7.6</a>)</span>.<a href="#section-5.1.1-8" class="pilcrow">¶</a></p>
+<p id="section-5.1.1-9">The subscriber <span class="bcp14">MUST</span> reset the stream if it receives an <code>ended</code> for a broadcast that is not currently <code>active</code>, or any ANNOUNCE_BROADCAST before ANNOUNCE_OK.
 When the stream is closed, the subscriber <span class="bcp14">MUST</span> assume that all broadcasts are now <code>ended</code>.<a href="#section-5.1.1-9" class="pilcrow">¶</a></p>
 <p id="section-5.1.1-10">Path prefix matching and equality is done on a byte-by-byte basis.
-There <span class="bcp14">MAY</span> be multiple Announce Streams, potentially containing overlapping prefixes, that get their own ANNOUNCE_OK + ANNOUNCE messages.<a href="#section-5.1.1-10" class="pilcrow">¶</a></p>
+There <span class="bcp14">MAY</span> be multiple Announce Streams, potentially containing overlapping prefixes, that get their own ANNOUNCE_OK + ANNOUNCE_BROADCAST messages.<a href="#section-5.1.1-10" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="subscribe">
@@ -1808,7 +1811,7 @@ The publisher FINs the stream after the last frame, or resets the stream on erro
 <p id="section-5.1.4-2">The subscriber sends a TRACK message containing the broadcast path and track name.
 The publisher replies with a single TRACK_INFO message and then FINs the stream, or resets the stream on error (e.g. the track does not exist).
 The returned properties are fixed for the lifetime of the track, so the subscriber <span class="bcp14">SHOULD</span> cache TRACK_INFO and reuse it across every SUBSCRIBE and FETCH for that track rather than requesting it again.
-When the track was discovered via an ANNOUNCE, the cached value is tied to that advertisement: if the broadcast is re-announced (a new <code>active</code> ANNOUNCE that atomically replaces the prior one), the subscriber <span class="bcp14">MUST</span> discard the cached TRACK_INFO and <span class="bcp14">MUST</span> re-request it before parsing any further FRAME messages, since the timescale or compression may have changed.
+When the track was discovered via an ANNOUNCE_BROADCAST, the cached value is tied to that advertisement: if the broadcast is re-announced (a new <code>active</code> ANNOUNCE_BROADCAST that atomically replaces the prior one), the subscriber <span class="bcp14">MUST</span> discard the cached TRACK_INFO and <span class="bcp14">MUST</span> re-request it before parsing any further FRAME messages, since the timescale or compression may have changed.
 If FRAME messages cannot be decoded against the cached TRACK_INFO (for example a malformed delta or payload after a missed re-announcement), the subscriber <span class="bcp14">MUST</span> reset the affected stream with a protocol violation and re-request TRACK_INFO.
 A subscriber that reached the track without an advertisement (e.g. a path known out of band) has no such invalidation signal; it <span class="bcp14">MAY</span> re-request TRACK_INFO whenever it needs to confirm freshness (for example on a new session). A stale cache only risks misparsing frames from a changed track, so the subscriber that cannot observe re-announcements <span class="bcp14">SHOULD NOT</span> cache TRACK_INFO beyond a single connection.<a href="#section-5.1.4-2" class="pilcrow">¶</a></p>
 <p id="section-5.1.4-3">Because a subscriber <span class="bcp14">MAY</span> open the Track stream concurrently with a SUBSCRIBE or FETCH (see <a href="#subscribe" class="auto internal xref">Section 5.1.2</a> and <a href="#fetch" class="auto internal xref">Section 5.1.3</a>) and cannot parse any buffered group frames until TRACK_INFO arrives, the publisher <span class="bcp14">SHOULD</span> prioritize TRACK_INFO ahead of group data on the connection.
@@ -2194,15 +2197,15 @@ The remaining bindings convey the path in their own handshake.<a href="#section-
 </div>
 </section>
 </div>
-<div id="announceinterest">
+<div id="announcerequest">
 <section id="section-7.4">
-        <h3 id="name-announce_interest">
-<a href="#section-7.4" class="section-number selfRef">7.4. </a><a href="#name-announce_interest" class="section-name selfRef">ANNOUNCE_INTEREST</a>
+        <h3 id="name-announce_request">
+<a href="#section-7.4" class="section-number selfRef">7.4. </a><a href="#name-announce_request" class="section-name selfRef">ANNOUNCE_REQUEST</a>
         </h3>
-<p id="section-7.4-1">A subscriber sends an ANNOUNCE_INTEREST message to indicate it wants to receive an ANNOUNCE message for any broadcasts with a path that starts with the requested prefix.<a href="#section-7.4-1" class="pilcrow">¶</a></p>
+<p id="section-7.4-1">A subscriber sends an ANNOUNCE_REQUEST message to indicate it wants to receive an ANNOUNCE_BROADCAST message for any broadcasts with a path that starts with the requested prefix.<a href="#section-7.4-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-7.4-2">
 <pre>
-ANNOUNCE_INTEREST Message {
+ANNOUNCE_REQUEST Message {
   Message Length (i)
   Broadcast Path Prefix (s),
   Exclude Hop (64),
@@ -2212,9 +2215,9 @@ ANNOUNCE_INTEREST Message {
 <p id="section-7.4-3"><strong>Broadcast Path Prefix</strong>:
 Indicate interest for any broadcasts with a path that starts with this prefix.<a href="#section-7.4-3" class="pilcrow">¶</a></p>
 <p id="section-7.4-4"><strong>Exclude Hop</strong>:
-If non-zero, the publisher <span class="bcp14">SHOULD</span> skip ANNOUNCE messages for broadcasts whose Hop ID entries (including the publisher's own <code>Hop ID</code> from ANNOUNCE_OK) contain this value.
+If non-zero, the publisher <span class="bcp14">SHOULD</span> skip ANNOUNCE_BROADCAST messages for broadcasts whose Hop ID entries (including the publisher's own <code>Hop ID</code> from ANNOUNCE_OK) contain this value.
 This is used by relays to avoid routing loops in a cluster.<a href="#section-7.4-4" class="pilcrow">¶</a></p>
-<p id="section-7.4-5">The publisher <span class="bcp14">MUST</span> respond with an ANNOUNCE_OK message followed by ANNOUNCE messages for any matching and active broadcasts, followed by ANNOUNCE messages for any future updates.
+<p id="section-7.4-5">The publisher <span class="bcp14">MUST</span> respond with an ANNOUNCE_OK message followed by ANNOUNCE_BROADCAST messages for any matching and active broadcasts, followed by ANNOUNCE_BROADCAST messages for any future updates.
 Implementations <span class="bcp14">SHOULD</span> consider reasonable limits on the number of matching broadcasts to prevent resource exhaustion.<a href="#section-7.4-5" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -2224,7 +2227,7 @@ Implementations <span class="bcp14">SHOULD</span> consider reasonable limits on 
 <a href="#section-7.5" class="section-number selfRef">7.5. </a><a href="#name-announce_ok" class="section-name selfRef">ANNOUNCE_OK</a>
         </h3>
 <p id="section-7.5-1">A publisher sends an ANNOUNCE_OK message exactly once, as the first message on the response side of an Announce Stream.
-It carries metadata that is constant for the lifetime of the stream and applies to every ANNOUNCE that follows.<a href="#section-7.5-1" class="pilcrow">¶</a></p>
+It carries metadata that is constant for the lifetime of the stream and applies to every ANNOUNCE_BROADCAST that follows.<a href="#section-7.5-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-7.5-2">
 <pre>
 ANNOUNCE_OK Message {
@@ -2237,33 +2240,34 @@ ANNOUNCE_OK Message {
 <p id="section-7.5-3"><strong>Hop ID</strong>:
 The publisher's own Hop ID, encoded as a 64-bit integer.
 Hop IDs are randomly assigned, so they are carried as fixed-width 64 bits rather than a variable-length integer: a varint would almost never be shorter, and the fixed width buys the full 64-bit space (a varint caps at 62 bits).
-This is treated as the implicit trailing entry of every ANNOUNCE's Hop ID list on this stream; ANNOUNCE messages <span class="bcp14">MUST NOT</span> repeat this value as the last entry of their <code>Hop ID</code> list.
+This is treated as the implicit trailing entry of every ANNOUNCE_BROADCAST's Hop ID list on this stream; ANNOUNCE_BROADCAST messages <span class="bcp14">MUST NOT</span> repeat this value as the last entry of their <code>Hop ID</code> list.
 A value of 0 indicates the publisher does not assign Hop IDs (e.g. when bridging from an older protocol version).
-Receivers reconstruct the full path as <code>ANNOUNCE.Hop IDs ++ [ANNOUNCE_OK.Hop ID]</code>.<a href="#section-7.5-3" class="pilcrow">¶</a></p>
+Receivers reconstruct the full path as <code>ANNOUNCE_BROADCAST.Hop IDs ++ [ANNOUNCE_OK.Hop ID]</code>.<a href="#section-7.5-3" class="pilcrow">¶</a></p>
 <p id="section-7.5-4"><strong>Active Count</strong>:
-The number of <code>active</code> ANNOUNCE messages that the publisher will send immediately as the initial set.
+The number of <code>active</code> ANNOUNCE_BROADCAST messages that the publisher will send immediately as the initial set.
 The subscriber <span class="bcp14">MAY</span> block reporting any announcement to the application until all <code>Active Count</code> initial ANNOUNCEs have arrived, then deliver the initial set as a batch.
-Any ANNOUNCE messages beyond <code>Active Count</code> are live updates and <span class="bcp14">SHOULD</span> be reported as they arrive.
+Any ANNOUNCE_BROADCAST messages beyond <code>Active Count</code> are live updates and <span class="bcp14">SHOULD</span> be reported as they arrive.
 A value of <code>0</code> is valid and means the publisher is offering no initial active broadcasts; all subsequent ANNOUNCEs (if any) are live updates.<a href="#section-7.5-4" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="announce-1">
+<div id="announce-broadcast">
 <section id="section-7.6">
-        <h3 id="name-announce-2">
-<a href="#section-7.6" class="section-number selfRef">7.6. </a><a href="#name-announce-2" class="section-name selfRef">ANNOUNCE</a>
+        <h3 id="name-announce_broadcast">
+<a href="#section-7.6" class="section-number selfRef">7.6. </a><a href="#name-announce_broadcast" class="section-name selfRef">ANNOUNCE_BROADCAST</a>
         </h3>
-<p id="section-7.6-1">A publisher sends an ANNOUNCE message to advertise a change in broadcast availability.
+<p id="section-7.6-1">A publisher sends an ANNOUNCE_BROADCAST message to advertise a change in broadcast availability.
 Only the suffix is encoded on the wire, as the full path can be constructed by prepending the requested prefix.<a href="#section-7.6-1" class="pilcrow">¶</a></p>
-<p id="section-7.6-2">The status is relative to all prior ANNOUNCE messages for the same path on the same stream.
+<p id="section-7.6-2">The status is relative to all prior ANNOUNCE_BROADCAST messages for the same path on the same stream.
 A publisher <span class="bcp14">MAY</span> send an <code>active</code> for a path that is already <code>active</code>: the new announcement atomically replaces the prior one, including any change to the Hop ID list.
 An <code>ended</code> <span class="bcp14">MUST</span> follow a corresponding <code>active</code>; an <code>ended</code> for a path that is not currently <code>active</code> is a protocol violation.
-An ANNOUNCE before ANNOUNCE_OK is a protocol violation.<a href="#section-7.6-2" class="pilcrow">¶</a></p>
+An ANNOUNCE_BROADCAST before ANNOUNCE_OK is a protocol violation.<a href="#section-7.6-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-7.6-3">
 <pre>
-ANNOUNCE Message {
+ANNOUNCE_BROADCAST Message {
   Message Length (i)
   Announce Status (i),
   Broadcast Path Suffix (s),
+  Epoch (i),
   Hop Count (i),
   Hop ID (64) ...,
 }
@@ -2281,16 +2285,25 @@ A flag indicating the announce status.<a href="#section-7.6-4" class="pilcrow">�
         </ul>
 <p id="section-7.6-6"><strong>Broadcast Path Suffix</strong>:
 This is combined with the broadcast path prefix to form the full broadcast path.<a href="#section-7.6-6" class="pilcrow">¶</a></p>
-<p id="section-7.6-7"><strong>Hop Count</strong>:
+<p id="section-7.6-7"><strong>Epoch</strong>:
+An opaque value identifying this instance of the broadcast.
+Its meaning is application-defined; moq-lite requires only that a newer instance of the same broadcast carries a larger value than an older one (for example a timestamp, but any monotonically increasing counter works).
+It is assigned once by the origin publisher, and relays <span class="bcp14">MUST</span> forward it unchanged; unlike the Hop ID list it is not modified along the path.<a href="#section-7.6-7" class="pilcrow">¶</a></p>
+<p id="section-7.6-8">When the subscriber learns of the same broadcast (same path) from more than one current <code>active</code> advertisement — for example a reconnecting publisher whose new session races the not-yet-timed-out session of a prior instance — it <span class="bcp14">SHOULD</span> route subscriptions to the advertisement with the larger Epoch, and use total path length (see Hop Count) only to break ties between equal Epochs.
+This lets a subscriber switch to a freshly reconnected publisher immediately, rather than waiting for the stale session to time out.
+For an <code>ended</code> advertisement, the Epoch identifies which instance ended: a subscriber that has already moved to a larger Epoch <span class="bcp14">MAY</span> ignore an <code>ended</code> carrying a smaller one.
+A value of 0 means the publisher does not assign an Epoch; such advertisements are resolved by path length alone.<a href="#section-7.6-8" class="pilcrow">¶</a></p>
+<p id="section-7.6-9">The Epoch is a variable-length integer, so smaller values are more compact on the wire; a publisher deriving it from a timestamp <span class="bcp14">SHOULD</span> measure from a recent reference point (e.g. seconds since 2020) rather than the Unix epoch to keep the value within a 4-byte varint.<a href="#section-7.6-9" class="pilcrow">¶</a></p>
+<p id="section-7.6-10"><strong>Hop Count</strong>:
 The number of Hop ID entries that follow, NOT including the publisher's own <code>Hop ID</code> from ANNOUNCE_OK.
 A value of 0 means no Hop ID entries are present, indicating either that the announcement originated locally on the publisher (the publisher itself is the origin) or that the upstream peer does not support hop tracking.
-A receiver <span class="bcp14">MUST</span> close the stream with a PROTOCOL_VIOLATION if the Hop Count does not match the number of subsequent Hop ID entries.<a href="#section-7.6-7" class="pilcrow">¶</a></p>
-<p id="section-7.6-8"><strong>Hop ID</strong>:
+A receiver <span class="bcp14">MUST</span> close the stream with a PROTOCOL_VIOLATION if the Hop Count does not match the number of subsequent Hop ID entries.<a href="#section-7.6-10" class="pilcrow">¶</a></p>
+<p id="section-7.6-11"><strong>Hop ID</strong>:
 A unique identifier for each relay in the path from the origin publisher, ordered from origin to the upstream of the responding publisher, each encoded as a 64-bit integer (see ANNOUNCE_OK's <code>Hop ID</code> for the rationale).
 The responding publisher's own Hop ID is NOT included in this list; it is carried once in ANNOUNCE_OK as <code>Hop ID</code>.
 When forwarding an announcement received from an upstream peer, a relay <span class="bcp14">MUST</span> append the upstream peer's ANNOUNCE_OK <code>Hop ID</code> to this list (since that ID is no longer implicit downstream) and then send its own <code>Hop ID</code> in the ANNOUNCE_OK it sends to the downstream subscriber.
-The total path length is <code>Hop Count + 1</code> (including the implicit ANNOUNCE_OK <code>Hop ID</code>); this total is used as a tiebreaker when there are multiple paths to the same broadcast.
-A Hop ID value of 0 indicates an unknown or bridged relay hop (e.g. when bridging from an older protocol version that does not assign Hop IDs); the Hop Count still reflects the total number of entries including unknown hops.<a href="#section-7.6-8" class="pilcrow">¶</a></p>
+The total path length is <code>Hop Count + 1</code> (including the implicit ANNOUNCE_OK <code>Hop ID</code>); this total breaks ties between multiple paths to the same broadcast that carry the same <code>Epoch</code> (the larger <code>Epoch</code> wins outright).
+A Hop ID value of 0 indicates an unknown or bridged relay hop (e.g. when bridging from an older protocol version that does not assign Hop IDs); the Hop Count still reflects the total number of entries including unknown hops.<a href="#section-7.6-11" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="subscribe-1">
@@ -2684,58 +2697,64 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
         </h3>
 <ul class="normal">
 <li class="normal" id="section-8.1-1.1">
-            <p id="section-8.1-1.1.1">Added a SETUP message, sent once on a unidirectional Setup Stream (0x1) at the start of the session and FIN'd immediately. It carries a list of Setup Parameters for negotiating optional capabilities and extensions per-hop, replacing the prior stream-probing approach (version is still negotiated via ALPN, not SETUP). Endpoints keep exchanging non-Setup streams without waiting for SETUP, buffering only a stream whose encoding a negotiated extension would change; unknown stream types are still reset as a fallback.<a href="#section-8.1-1.1.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.1.1">Added an <code>Epoch</code> field to ANNOUNCE_BROADCAST (a varint, before the Hop ID list): an opaque, application-defined value ordering instances of a broadcast, where larger means newer. It is origin-assigned and forwarded unchanged by relays. Subscribers resolve duplicate advertisements of the same broadcast by largest <code>Epoch</code> first (path length only breaks ties), so a reconnecting publisher can take over immediately instead of waiting for the stale session to time out.<a href="#section-8.1-1.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.2">
-            <p id="section-8.1-1.2.1">Added a SETUP <code>Probe</code> parameter advertising the publisher's capability level: <code>None</code>, <code>Report</code> (measure and report the estimated bitrate), or <code>Increase</code> (additionally pad to probe for bandwidth above the current sending rate). The levels are nested since probing without measuring is meaningless. A subscriber must not rely on a level the publisher did not advertise.<a href="#section-8.1-1.2.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.2.1">Renamed ANNOUNCE_INTEREST to ANNOUNCE_REQUEST (the subscriber's request to receive announcements) and ANNOUNCE to ANNOUNCE_BROADCAST (the publisher's per-broadcast advertisement). ANNOUNCE_OK is unchanged. Wire format otherwise unchanged.<a href="#section-8.1-1.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.3">
-            <p id="section-8.1-1.3.1">Added <code>Frame Start</code> to FETCH so a subscriber can begin partway through a group instead of always at frame <code>0</code>, allowing resumption of a partially-received group.<a href="#section-8.1-1.3.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.3.1">Added a SETUP message, sent once on a unidirectional Setup Stream (0x1) at the start of the session and FIN'd immediately. It carries a list of Setup Parameters for negotiating optional capabilities and extensions per-hop, replacing the prior stream-probing approach (version is still negotiated via ALPN, not SETUP). Endpoints keep exchanging non-Setup streams without waiting for SETUP, buffering only a stream whose encoding a negotiated extension would change; unknown stream types are still reset as a fallback.<a href="#section-8.1-1.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.4">
-            <p id="section-8.1-1.4.1">Added a Track Stream (0x6): a TRACK request that the publisher answers with a single TRACK_INFO message and then FINs. TRACK_INFO carries the Track's immutable publisher properties (<code>Publisher Priority</code>, <code>Publisher Ordered</code>, <code>Publisher Timescale</code>, <code>Publisher Compression</code>). It is fetched once and cached, so the properties are no longer echoed on every response — notably, group-by-group FETCHes reuse one lookup.<a href="#section-8.1-1.4.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.4.1">Added a SETUP <code>Probe</code> parameter advertising the publisher's capability level: <code>None</code>, <code>Report</code> (measure and report the estimated bitrate), or <code>Increase</code> (additionally pad to probe for bandwidth above the current sending rate). The levels are nested since probing without measuring is meaningless. A subscriber must not rely on a level the publisher did not advertise.<a href="#section-8.1-1.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.5">
-            <p id="section-8.1-1.5.1">Removed FETCH_OK and trimmed SUBSCRIBE_OK down to a single resolved start group. Publisher properties moved to TRACK_INFO; a FETCH returns bare FRAME messages. All publisher properties are immutable for the lifetime of the Track — a publisher-side change would otherwise have to fan <em>out</em> to every downstream of a relay, whereas subscriber properties fan <em>in</em> and may still change via SUBSCRIBE_UPDATE.<a href="#section-8.1-1.5.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.5.1">Added <code>Frame Start</code> to FETCH so a subscriber can begin partway through a group instead of always at frame <code>0</code>, allowing resumption of a partially-received group.<a href="#section-8.1-1.5.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.6">
-            <p id="section-8.1-1.6.1">Split the resolved group range across SUBSCRIBE_OK and a new SUBSCRIBE_END. SUBSCRIBE_OK resolves the absolute start (<code>&gt;=</code> the requested start; a larger value implicitly drops the leading range), and SUBSCRIBE_END signals that no group will follow a given sequence (stragglers within the range may still be dropped before FIN). SUBSCRIBE_OK keeps the MoqTransport name and its role as the publisher's positive response.<a href="#section-8.1-1.6.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.6.1">Added a Track Stream (0x6): a TRACK request that the publisher answers with a single TRACK_INFO message and then FINs. TRACK_INFO carries the Track's immutable publisher properties (<code>Publisher Priority</code>, <code>Publisher Ordered</code>, <code>Publisher Timescale</code>, <code>Publisher Compression</code>). It is fetched once and cached, so the properties are no longer echoed on every response — notably, group-by-group FETCHes reuse one lookup.<a href="#section-8.1-1.6.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.7">
-            <p id="section-8.1-1.7.1">Renamed <code>Start Group</code>/<code>End Group</code> to <code>Group Start</code>/<code>Group End</code> in SUBSCRIBE, SUBSCRIBE_UPDATE, and SUBSCRIBE_DROP for consistency with the entity-first naming used elsewhere (e.g. <code>Group Sequence</code>). Wire format unchanged.<a href="#section-8.1-1.7.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.7.1">Removed FETCH_OK and trimmed SUBSCRIBE_OK down to a single resolved start group. Publisher properties moved to TRACK_INFO; a FETCH returns bare FRAME messages. All publisher properties are immutable for the lifetime of the Track — a publisher-side change would otherwise have to fan <em>out</em> to every downstream of a relay, whereas subscriber properties fan <em>in</em> and may still change via SUBSCRIBE_UPDATE.<a href="#section-8.1-1.7.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.8">
-            <p id="section-8.1-1.8.1">Allowed a duplicate <code>active</code> ANNOUNCE to atomically replace the prior advertisement (equivalent to UNANNOUNCE+ANNOUNCE). Used when only the origin or hop path changes (e.g. relay failover) without interrupting the broadcast. No new wire enum value — the existing <code>active</code> status carries the new metadata.<a href="#section-8.1-1.8.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.8.1">Split the resolved group range across SUBSCRIBE_OK and a new SUBSCRIBE_END. SUBSCRIBE_OK resolves the absolute start (<code>&gt;=</code> the requested start; a larger value implicitly drops the leading range), and SUBSCRIBE_END signals that no group will follow a given sequence (stragglers within the range may still be dropped before FIN). SUBSCRIBE_OK keeps the MoqTransport name and its role as the publisher's positive response.<a href="#section-8.1-1.8.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.9">
-            <p id="section-8.1-1.9.1">Added ANNOUNCE_OK message, sent once at the head of the Announce Stream response. Carries the publisher's <code>Hop ID</code> (hoisted out of every ANNOUNCE's Hop ID list) and an <code>Active Count</code> so subscribers can batch the initial set instead of reporting each ANNOUNCE as it trickles in.<a href="#section-8.1-1.9.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.9.1">Renamed <code>Start Group</code>/<code>End Group</code> to <code>Group Start</code>/<code>Group End</code> in SUBSCRIBE, SUBSCRIBE_UPDATE, and SUBSCRIBE_DROP for consistency with the entity-first naming used elsewhere (e.g. <code>Group Sequence</code>). Wire format unchanged.<a href="#section-8.1-1.9.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.10">
-            <p id="section-8.1-1.10.1">Encoded <code>Hop ID</code> (in ANNOUNCE and ANNOUNCE_OK) and <code>Exclude Hop</code> (in ANNOUNCE_INTEREST) as fixed-width 64-bit integers instead of varints. Hop IDs are random, so a varint would almost never be shorter, and the fixed width restores the 2 bits a 62-bit varint would have cost.<a href="#section-8.1-1.10.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.10.1">Allowed a duplicate <code>active</code> ANNOUNCE_BROADCAST to atomically replace the prior advertisement (equivalent to UNANNOUNCE+ANNOUNCE_BROADCAST). Used when only the origin or hop path changes (e.g. relay failover) without interrupting the broadcast. No new wire enum value — the existing <code>active</code> status carries the new metadata.<a href="#section-8.1-1.10.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.11">
-            <p id="section-8.1-1.11.1">Added <code>Publisher Timescale</code> to TRACK_INFO for per-track timestamp negotiation. When <code>Publisher Timescale</code> is 0, the per-frame timestamp field is omitted entirely from FRAME and datagram bodies.<a href="#section-8.1-1.11.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.11.1">Added ANNOUNCE_OK message, sent once at the head of the Announce Stream response. Carries the publisher's <code>Hop ID</code> (hoisted out of every ANNOUNCE_BROADCAST's Hop ID list) and an <code>Active Count</code> so subscribers can batch the initial set instead of reporting each ANNOUNCE_BROADCAST as it trickles in.<a href="#section-8.1-1.11.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.12">
-            <p id="section-8.1-1.12.1">Added <code>Timestamp Delta</code> to FRAME, a zigzag-encoded signed varint (present only when timescale is non-zero).<a href="#section-8.1-1.12.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.12.1">Encoded <code>Hop ID</code> (in ANNOUNCE_BROADCAST and ANNOUNCE_OK) and <code>Exclude Hop</code> (in ANNOUNCE_REQUEST) as fixed-width 64-bit integers instead of varints. Hop IDs are random, so a varint would almost never be shorter, and the fixed width restores the 2 bits a 62-bit varint would have cost.<a href="#section-8.1-1.12.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.13">
-            <p id="section-8.1-1.13.1">Added <code>Timestamp</code> to the QUIC datagram body (absolute, present only when timescale is non-zero).<a href="#section-8.1-1.13.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.13.1">Added <code>Publisher Timescale</code> to TRACK_INFO for per-track timestamp negotiation. When <code>Publisher Timescale</code> is 0, the per-frame timestamp field is omitted entirely from FRAME and datagram bodies.<a href="#section-8.1-1.13.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.14">
-            <p id="section-8.1-1.14.1">Removed <code>Publisher Max Latency</code>. The publisher's retention guarantee is no longer part of the wire format; retention for FETCH and future subscriptions is best-effort and left to the publisher.<a href="#section-8.1-1.14.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.14.1">Added <code>Timestamp Delta</code> to FRAME, a zigzag-encoded signed varint (present only when timescale is non-zero).<a href="#section-8.1-1.14.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.15">
-            <p id="section-8.1-1.15.1">Timestamp-based expiration replaces wall-clock arrival time when a Track timescale is negotiated.<a href="#section-8.1-1.15.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.15.1">Added <code>Timestamp</code> to the QUIC datagram body (absolute, present only when timescale is non-zero).<a href="#section-8.1-1.15.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.16">
-            <p id="section-8.1-1.16.1">Added QUIC datagram delivery for groups, sharing Subscribe IDs with existing subscriptions (no separate control stream).<a href="#section-8.1-1.16.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.16.1">Removed <code>Publisher Max Latency</code>. The publisher's retention guarantee is no longer part of the wire format; retention for FETCH and future subscriptions is best-effort and left to the publisher.<a href="#section-8.1-1.16.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.17">
-            <p id="section-8.1-1.17.1">Added <code>Publisher Compression</code> to TRACK_INFO for per-frame payload compression (<code>none</code> or <code>deflate</code>).<a href="#section-8.1-1.17.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.17.1">Timestamp-based expiration replaces wall-clock arrival time when a Track timescale is negotiated.<a href="#section-8.1-1.17.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.18">
-            <p id="section-8.1-1.18.1">Added Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span> transport bindings for TCP/TLS and WebSocket, for environments where UDP is unavailable. The WebSocket binding uses the WebSocket message framing in place of the Qmux Record <code>Size</code> field.<a href="#section-8.1-1.18.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.18.1">Added QUIC datagram delivery for groups, sharing Subscribe IDs with existing subscriptions (no separate control stream).<a href="#section-8.1-1.18.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-1.19">
+            <p id="section-8.1-1.19.1">Added <code>Publisher Compression</code> to TRACK_INFO for per-frame payload compression (<code>none</code> or <code>deflate</code>).<a href="#section-8.1-1.19.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-1.20">
+            <p id="section-8.1-1.20.1">Added Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span> transport bindings for TCP/TLS and WebSocket, for environments where UDP is unavailable. The WebSocket binding uses the WebSocket message framing in place of the Qmux Record <code>Size</code> field.<a href="#section-8.1-1.20.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -2747,13 +2766,13 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
         </h3>
 <ul class="normal">
 <li class="normal" id="section-8.2-1.1">
-            <p id="section-8.2-1.1.1">Renamed ANNOUNCE_PLEASE to ANNOUNCE_INTEREST.<a href="#section-8.2-1.1.1" class="pilcrow">¶</a></p>
+            <p id="section-8.2-1.1.1">Renamed ANNOUNCE_PLEASE to ANNOUNCE_REQUEST.<a href="#section-8.2-1.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.2-1.2">
-            <p id="section-8.2-1.2.1">ANNOUNCE <code>Hops</code> count replaced with explicit <code>Hop ID</code> list for loop detection.<a href="#section-8.2-1.2.1" class="pilcrow">¶</a></p>
+            <p id="section-8.2-1.2.1">ANNOUNCE_BROADCAST <code>Hops</code> count replaced with explicit <code>Hop ID</code> list for loop detection.<a href="#section-8.2-1.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.2-1.3">
-            <p id="section-8.2-1.3.1">Added <code>Exclude Hop</code> to ANNOUNCE_INTEREST for relay loop avoidance.<a href="#section-8.2-1.3.1" class="pilcrow">¶</a></p>
+            <p id="section-8.2-1.3.1">Added <code>Exclude Hop</code> to ANNOUNCE_REQUEST for relay loop avoidance.<a href="#section-8.2-1.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.2-1.4">
             <p id="section-8.2-1.4.1">Added GOAWAY stream for graceful session shutdown and migration.<a href="#section-8.2-1.4.1" class="pilcrow">¶</a></p>
@@ -2798,7 +2817,7 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
             <p id="section-8.3-1.9.1">Removed ANNOUNCE_INIT message.<a href="#section-8.3-1.9.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.3-1.10">
-            <p id="section-8.3-1.10.1">Added <code>Hops</code> to ANNOUNCE.<a href="#section-8.3-1.10.1" class="pilcrow">¶</a></p>
+            <p id="section-8.3-1.10.1">Added <code>Hops</code> to ANNOUNCE_BROADCAST.<a href="#section-8.3-1.10.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.3-1.11">
             <p id="section-8.3-1.11.1">Added <code>Subscriber Max Latency</code> and <code>Subscriber Ordered</code> to SUBSCRIBE and SUBSCRIBE_UPDATE.<a href="#section-8.3-1.11.1" class="pilcrow">¶</a></p>
@@ -2970,7 +2989,7 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
         </h3>
 <ul class="normal">
 <li class="normal" id="section-9.2-1.1">
-            <p id="section-9.2-1.1.1">SUBSCRIBE_NAMESPACE -&gt; ANNOUNCE_INTEREST<a href="#section-9.2-1.1.1" class="pilcrow">¶</a></p>
+            <p id="section-9.2-1.1.1">SUBSCRIBE_NAMESPACE -&gt; ANNOUNCE_REQUEST<a href="#section-9.2-1.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.2-1.2">
             <p id="section-9.2-1.2.1">SUBGROUP_HEADER -&gt; GROUP<a href="#section-9.2-1.2.1" class="pilcrow">¶</a></p>
