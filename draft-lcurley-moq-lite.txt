@@ -262,8 +262,8 @@ Table of Contents
    relationships, and encoding of tracks are determined by the
    application.
 
-   Each broadcast carries an opaque Epoch that orders its instances,
-   larger meaning newer (see ANNOUNCE_BROADCAST (Section 7.6)).  When a
+   Each broadcast carries an Epoch that orders its instances, larger
+   meaning newer (see ANNOUNCE_BROADCAST (Section 7.6)).  When a
    subscriber discovers the same broadcast from more than one publisher
    — most commonly a reconnecting publisher whose new session overlaps a
    not-yet-expired prior one — it uses the Epoch to route subscriptions
@@ -1152,13 +1152,14 @@ Table of Contents
    *Broadcast Path Suffix*: This is combined with the broadcast path
    prefix to form the full broadcast path.
 
-   *Epoch*: An opaque value identifying this instance of the broadcast.
-   Its meaning is application-defined; moq-lite requires only that a
-   newer instance of the same broadcast carries a larger value than an
-   older one (for example a timestamp, but any monotonically increasing
-   counter works).  It is assigned once by the origin publisher, and
-   relays MUST forward it unchanged; unlike the Hop ID list it is not
-   modified along the path.
+   *Epoch*: The time at which the origin publisher created this instance
+   of the broadcast, in seconds since 2020-01-01T00:00:00Z (ignoring
+   leap seconds).  The reference point is 2020 rather than the Unix
+   epoch so that current timestamps stay within a 4-byte varint instead
+   of needing 8.  A newer instance of the same broadcast therefore
+   carries a larger value than an older one.  It is assigned once by the
+   origin publisher, and relays MUST forward it unchanged; unlike the
+   Hop ID list it is not modified along the path.
 
    When the subscriber learns of the same broadcast (same path) from
    more than one current active advertisement — for example a
@@ -1174,10 +1175,11 @@ Table of Contents
    not assign an Epoch; such advertisements are resolved by path length
    alone.
 
-   The Epoch is a variable-length integer, so smaller values are more
-   compact on the wire; a publisher deriving it from a timestamp SHOULD
-   measure from a recent reference point (e.g. seconds since 2020)
-   rather than the Unix epoch to keep the value within a 4-byte varint.
+   A publisher with a sufficiently accurate clock can derive the Epoch
+   directly; ordering only requires that successive instances of the
+   same broadcast have increasing timestamps, so a publisher whose clock
+   is coarse or skewed MUST ensure a reconnecting instance never reports
+   a smaller value than a prior one.
 
    *Hop Count*: The number of Hop ID entries that follow, NOT including
    the publisher's own Hop ID from ANNOUNCE_OK.  A value of 0 means no
@@ -1595,13 +1597,14 @@ Table of Contents
 8.1.  moq-lite-05
 
    *  Added an Epoch field to ANNOUNCE_BROADCAST (a varint, before the
-      Hop ID list): an opaque, application-defined value ordering
-      instances of a broadcast, where larger means newer.  It is origin-
-      assigned and forwarded unchanged by relays.  Subscribers resolve
-      duplicate advertisements of the same broadcast by largest Epoch
-      first (path length only breaks ties), so a reconnecting publisher
-      can take over immediately instead of waiting for the stale session
-      to time out.
+      Hop ID list): the time the origin publisher created this instance
+      of the broadcast, in seconds since 2020-01-01T00:00:00Z (the 2020
+      reference point keeps current timestamps within a 4-byte varint),
+      where larger means newer.  It is origin-assigned and forwarded
+      unchanged by relays.  Subscribers resolve duplicate advertisements
+      of the same broadcast by largest Epoch first (path length only
+      breaks ties), so a reconnecting publisher can take over
+      immediately instead of waiting for the stale session to time out.
 
    *  Renamed ANNOUNCE_INTEREST to ANNOUNCE_REQUEST (the subscriber's
       request to receive announcements) and ANNOUNCE to

@@ -1476,7 +1476,7 @@ The subscriber uses the ANNOUNCE_REQUEST message to discover available broadcast
 These announcements are live and can change over time, allowing for dynamic origin discovery.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
 <p id="section-3.2-3">A broadcast consists of any number of Tracks.
 The contents, relationships, and encoding of tracks are determined by the application.<a href="#section-3.2-3" class="pilcrow">¶</a></p>
-<p id="section-3.2-4">Each broadcast carries an opaque <code>Epoch</code> that orders its instances, larger meaning newer (see <span><a href="#announce-broadcast" class="internal xref">ANNOUNCE_BROADCAST</a> (<a href="#announce-broadcast" class="auto internal xref">Section 7.6</a>)</span>).
+<p id="section-3.2-4">Each broadcast carries an <code>Epoch</code> that orders its instances, larger meaning newer (see <span><a href="#announce-broadcast" class="internal xref">ANNOUNCE_BROADCAST</a> (<a href="#announce-broadcast" class="auto internal xref">Section 7.6</a>)</span>).
 When a subscriber discovers the same broadcast from more than one publisher — most commonly a reconnecting publisher whose new session overlaps a not-yet-expired prior one — it uses the Epoch to route subscriptions to the newest instance instead of waiting for the stale one to time out.<a href="#section-3.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -2286,14 +2286,15 @@ A flag indicating the announce status.<a href="#section-7.6-4" class="pilcrow">�
 <p id="section-7.6-6"><strong>Broadcast Path Suffix</strong>:
 This is combined with the broadcast path prefix to form the full broadcast path.<a href="#section-7.6-6" class="pilcrow">¶</a></p>
 <p id="section-7.6-7"><strong>Epoch</strong>:
-An opaque value identifying this instance of the broadcast.
-Its meaning is application-defined; moq-lite requires only that a newer instance of the same broadcast carries a larger value than an older one (for example a timestamp, but any monotonically increasing counter works).
+The time at which the origin publisher created this instance of the broadcast, in seconds since 2020-01-01T00:00:00Z (ignoring leap seconds).
+The reference point is 2020 rather than the Unix epoch so that current timestamps stay within a 4-byte varint instead of needing 8.
+A newer instance of the same broadcast therefore carries a larger value than an older one.
 It is assigned once by the origin publisher, and relays <span class="bcp14">MUST</span> forward it unchanged; unlike the Hop ID list it is not modified along the path.<a href="#section-7.6-7" class="pilcrow">¶</a></p>
 <p id="section-7.6-8">When the subscriber learns of the same broadcast (same path) from more than one current <code>active</code> advertisement — for example a reconnecting publisher whose new session races the not-yet-timed-out session of a prior instance — it <span class="bcp14">SHOULD</span> route subscriptions to the advertisement with the larger Epoch, and use total path length (see Hop Count) only to break ties between equal Epochs.
 This lets a subscriber switch to a freshly reconnected publisher immediately, rather than waiting for the stale session to time out.
 For an <code>ended</code> advertisement, the Epoch identifies which instance ended: a subscriber that has already moved to a larger Epoch <span class="bcp14">MAY</span> ignore an <code>ended</code> carrying a smaller one.
 A value of 0 means the publisher does not assign an Epoch; such advertisements are resolved by path length alone.<a href="#section-7.6-8" class="pilcrow">¶</a></p>
-<p id="section-7.6-9">The Epoch is a variable-length integer, so smaller values are more compact on the wire; a publisher deriving it from a timestamp <span class="bcp14">SHOULD</span> measure from a recent reference point (e.g. seconds since 2020) rather than the Unix epoch to keep the value within a 4-byte varint.<a href="#section-7.6-9" class="pilcrow">¶</a></p>
+<p id="section-7.6-9">A publisher with a sufficiently accurate clock can derive the Epoch directly; ordering only requires that successive instances of the same broadcast have increasing timestamps, so a publisher whose clock is coarse or skewed <span class="bcp14">MUST</span> ensure a reconnecting instance never reports a smaller value than a prior one.<a href="#section-7.6-9" class="pilcrow">¶</a></p>
 <p id="section-7.6-10"><strong>Hop Count</strong>:
 The number of Hop ID entries that follow, NOT including the publisher's own <code>Hop ID</code> from ANNOUNCE_OK.
 A value of 0 means no Hop ID entries are present, indicating either that the announcement originated locally on the publisher (the publisher itself is the origin) or that the upstream peer does not support hop tracking.
@@ -2697,7 +2698,7 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
         </h3>
 <ul class="normal">
 <li class="normal" id="section-8.1-1.1">
-            <p id="section-8.1-1.1.1">Added an <code>Epoch</code> field to ANNOUNCE_BROADCAST (a varint, before the Hop ID list): an opaque, application-defined value ordering instances of a broadcast, where larger means newer. It is origin-assigned and forwarded unchanged by relays. Subscribers resolve duplicate advertisements of the same broadcast by largest <code>Epoch</code> first (path length only breaks ties), so a reconnecting publisher can take over immediately instead of waiting for the stale session to time out.<a href="#section-8.1-1.1.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.1.1">Added an <code>Epoch</code> field to ANNOUNCE_BROADCAST (a varint, before the Hop ID list): the time the origin publisher created this instance of the broadcast, in seconds since 2020-01-01T00:00:00Z (the 2020 reference point keeps current timestamps within a 4-byte varint), where larger means newer. It is origin-assigned and forwarded unchanged by relays. Subscribers resolve duplicate advertisements of the same broadcast by largest <code>Epoch</code> first (path length only breaks ties), so a reconnecting publisher can take over immediately instead of waiting for the stale session to time out.<a href="#section-8.1-1.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.2">
             <p id="section-8.1-1.2.1">Renamed ANNOUNCE_INTEREST to ANNOUNCE_REQUEST (the subscriber's request to receive announcements) and ANNOUNCE to ANNOUNCE_BROADCAST (the publisher's per-broadcast advertisement). ANNOUNCE_OK is unchanged. Wire format otherwise unchanged.<a href="#section-8.1-1.2.1" class="pilcrow">¶</a></p>
