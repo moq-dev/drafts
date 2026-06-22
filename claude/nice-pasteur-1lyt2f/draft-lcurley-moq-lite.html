@@ -1314,16 +1314,19 @@ While primarily designed for media, the transport is payload agnostic and can be
                 <p id="section-toc.1-1.7.2.15.1"><a href="#section-7.15" class="auto internal xref">7.15</a>. <a href="#name-fetch-2" class="internal xref">FETCH</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.16">
-                <p id="section-toc.1-1.7.2.16.1"><a href="#section-7.16" class="auto internal xref">7.16</a>. <a href="#name-probe-2" class="internal xref">PROBE</a></p>
+                <p id="section-toc.1-1.7.2.16.1"><a href="#section-7.16" class="auto internal xref">7.16</a>. <a href="#name-fetch_ok" class="internal xref">FETCH_OK</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.17">
-                <p id="section-toc.1-1.7.2.17.1"><a href="#section-7.17" class="auto internal xref">7.17</a>. <a href="#name-goaway-2" class="internal xref">GOAWAY</a></p>
+                <p id="section-toc.1-1.7.2.17.1"><a href="#section-7.17" class="auto internal xref">7.17</a>. <a href="#name-probe-2" class="internal xref">PROBE</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.18">
-                <p id="section-toc.1-1.7.2.18.1"><a href="#section-7.18" class="auto internal xref">7.18</a>. <a href="#name-group-3" class="internal xref">GROUP</a></p>
+                <p id="section-toc.1-1.7.2.18.1"><a href="#section-7.18" class="auto internal xref">7.18</a>. <a href="#name-goaway-2" class="internal xref">GOAWAY</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.19">
-                <p id="section-toc.1-1.7.2.19.1"><a href="#section-7.19" class="auto internal xref">7.19</a>. <a href="#name-frame-2" class="internal xref">FRAME</a></p>
+                <p id="section-toc.1-1.7.2.19.1"><a href="#section-7.19" class="auto internal xref">7.19</a>. <a href="#name-group-3" class="internal xref">GROUP</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.20">
+                <p id="section-toc.1-1.7.2.20.1"><a href="#section-7.20" class="auto internal xref">7.20</a>. <a href="#name-frame-2" class="internal xref">FRAME</a></p>
 </li>
             </ul>
 </li>
@@ -1791,7 +1794,7 @@ When the accepted track has already ended with no matching groups there is no st
 A rejection is a stream reset: if the publisher cannot serve the subscription — the track does not exist, or it otherwise refuses — it <span class="bcp14">MUST</span> reset the stream rather than leave it pending, and <span class="bcp14">SHOULD</span> do so promptly (within roughly a round trip) so the subscriber is not left waiting.
 A subscription the publisher accepts but has no groups for yet is not a rejection: for a live track the publisher <span class="bcp14">MAY</span> withhold SUBSCRIBE_OK until the first matching group resolves the start. A subscriber therefore distinguishes "pending" from "refused" by the stream reset, not by a timeout.
 The Subscribe Stream does not carry the track's publisher properties — those are immutable and fetched once via a <span><a href="#track-stream" class="internal xref">Track Stream</a> (<a href="#track-stream" class="auto internal xref">Section 5.1.4</a>)</span> (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>).
-The subscriber <span class="bcp14">MUST</span> have the track's TRACK_INFO before it can parse the FRAME messages that arrive on Group Streams, since the timescale and compression determine the frame wire format; it <span class="bcp14">MAY</span> open the Track and Subscribe streams concurrently and buffer frames until TRACK_INFO arrives.<a href="#section-5.1.2-2" class="pilcrow">¶</a></p>
+The subscriber <span class="bcp14">MUST</span> have the track's TRACK_INFO before it can parse the FRAME messages that arrive on Group Streams, since the timescale determines the frame wire format and the compression hint determines whether the stream is DEFLATE-compressed; it <span class="bcp14">MAY</span> open the Track and Subscribe streams concurrently and buffer frames until TRACK_INFO arrives.<a href="#section-5.1.2-2" class="pilcrow">¶</a></p>
 <p id="section-5.1.2-3">The publisher sends SUBSCRIBE_OK once the absolute start group is resolved, and SUBSCRIBE_END once no further groups will be produced (see <span><a href="#subscribe-ok" class="internal xref">SUBSCRIBE_OK</a> (<a href="#subscribe-ok" class="auto internal xref">Section 7.12</a>)</span> and <span><a href="#subscribe-end" class="internal xref">SUBSCRIBE_END</a> (<a href="#subscribe-end" class="auto internal xref">Section 7.13</a>)</span>).
 The publisher closes the stream (FIN) only once every group from start to end has been accounted for, either via a GROUP stream (completed or reset) or a SUBSCRIBE_DROP message.
 This <span class="bcp14">MAY</span> occur after SUBSCRIBE_END, since stragglers within the range can still be dropped.
@@ -1806,7 +1809,7 @@ Either endpoint <span class="bcp14">MAY</span> reset/cancel the stream at any ti
           </h4>
 <p id="section-5.1.3-1">A subscriber opens a Fetch Stream (0x3) to request a single Group from a Track.<a href="#section-5.1.3-1" class="pilcrow">¶</a></p>
 <p id="section-5.1.3-2">The subscriber sends a FETCH message containing the broadcast path, track name, priority, and group sequence.
-The publisher responds with FRAME messages directly on the same bidirectional stream — there is no response header.
+The publisher responds on the same bidirectional stream. When the Track's <code>Publisher Compression</code> hint is non-zero (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>) the response begins with a <span><a href="#fetch-ok" class="internal xref">FETCH_OK</a> (<a href="#fetch-ok" class="auto internal xref">Section 7.16</a>)</span> message carrying the group's <code>Compression</code> field, followed by the FRAME messages; otherwise it is bare FRAME messages with no response header.
 The Subscribe ID and Group Sequence for the returned FRAME messages are implicit, taken from the original FETCH request.
 As with a subscription, the subscriber <span class="bcp14">MUST</span> already have the track's <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span> to parse the returned frames; because the properties are immutable, a single Track Stream lookup is reused across every FETCH of that track (group-by-group fetches do not re-fetch it).
 The publisher FINs the stream after the last frame, or resets the stream on error.<a href="#section-5.1.3-2" class="pilcrow">¶</a></p>
@@ -2000,6 +2003,7 @@ An endpoint with no optional capabilities sends a SETUP with an empty parameter 
           </h4>
 <p id="section-6.3.2-1">A publisher creates Group Streams in response to a Subscribe Stream.<a href="#section-6.3.2-1" class="pilcrow">¶</a></p>
 <p id="section-6.3.2-2">A Group Stream <span class="bcp14">MUST</span> start with a GROUP message and <span class="bcp14">MAY</span> be followed by any number of FRAME messages.
+When the Track is compressed on this hop (see <a href="#compression" class="auto internal xref">Section 7.11</a>), the FRAME messages following the GROUP message form a single DEFLATE stream.
 A Group <span class="bcp14">MAY</span> contain zero FRAME messages, potentially indicating a gap in the track.
 A frame <span class="bcp14">MAY</span> contain an empty payload, potentially indicating a gap in the group.<a href="#section-6.3.2-2" class="pilcrow">¶</a></p>
 <p id="section-6.3.2-3">Both the publisher and subscriber <span class="bcp14">MAY</span> reset the stream at any time.
@@ -2034,7 +2038,7 @@ DATAGRAM Body {
 </pre><a href="#section-6.4-5" class="pilcrow">¶</a>
 </div>
 <p id="section-6.4-6"><code>Timestamp</code> is present only when the Track's <code>Publisher Timescale</code> (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>) is non-zero.
-<code>Compression</code> is present only when the Track's <code>Publisher Compression</code> hint is non-zero (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>).
+<code>Compression</code> is present only when the Track's <code>Publisher Compression</code> hint is non-zero (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>), with the same meaning as in the <a href="#group" class="auto internal xref">Section 3.4</a> message: <code>0</code> verbatim, <code>1</code> raw DEFLATE.
 Each field is independently omitted when its condition does not hold; with both absent the datagram body is just <code>Subscribe ID</code>, <code>Group Sequence</code>, and <code>Payload</code>.<a href="#section-6.4-6" class="pilcrow">¶</a></p>
 <p id="section-6.4-7"><strong>Subscribe ID</strong>:
 The Subscribe ID of an active subscription on the same session.
@@ -2047,7 +2051,7 @@ The absolute timestamp of the single frame in the group, expressed in the Track'
 Any varint value (including 0) is a valid absolute timestamp.<a href="#section-6.4-9" class="pilcrow">¶</a></p>
 <p id="section-6.4-10"><strong>Payload</strong>:
 The frame payload, extending to the end of the datagram.
-When the <code>Compression</code> field is present and non-<code>none</code>, the payload is compressed with that <span><a href="#compression-algorithms" class="internal xref">algorithm</a> (<a href="#compression-algorithms" class="auto internal xref">Section 7.11</a>)</span>; the per-hop negotiation and per-frame choice are the same as for <a href="#frame" class="auto internal xref">Section 3.5</a>.
+A datagram is a single-frame group: when <code>Compression</code> is <code>1</code> the payload is a single raw DEFLATE stream, and when <code>0</code> (or absent) it is verbatim (see <a href="#compression" class="auto internal xref">Section 7.11</a>).
 The total datagram body (including all header fields above and the compressed payload if applicable) <span class="bcp14">MUST NOT</span> exceed 1200 bytes.
 This limit ensures the datagram fits within the minimum QUIC path MTU without IP-layer fragmentation.
 Payloads that would not fit <span class="bcp14">MUST</span> be sent as a Group Stream instead.
@@ -2148,7 +2152,7 @@ The following Setup Parameters are defined:<a href="#section-7.3-7" class="pilcr
             <tr>
               <td class="text-right" rowspan="1" colspan="1">0x3</td>
               <td class="text-left" rowspan="1" colspan="1">Compression</td>
-              <td class="text-left" rowspan="1" colspan="1">Algorithm (i) ...</td>
+              <td class="text-left" rowspan="1" colspan="1">(empty)</td>
             </tr>
           </tbody>
         </table>
@@ -2218,11 +2222,10 @@ The remaining bindings convey the path in their own handshake.<a href="#section-
           <h4 id="name-compression-parameter">
 <a href="#section-7.3.3" class="section-number selfRef">7.3.3. </a><a href="#name-compression-parameter" class="section-name selfRef">Compression Parameter</a>
           </h4>
-<p id="section-7.3.3-1">The Compression Parameter advertises the payload compression <span><a href="#compression-algorithms" class="internal xref">algorithms</a> (<a href="#compression-algorithms" class="auto internal xref">Section 7.11</a>)</span> the sender can <em>decompress</em> on this hop.
-The Parameter Value is a sequence of algorithm identifiers, each a variable-length integer, packed back-to-back to fill the Parameter Length; the identifier <code>none</code> (0) <span class="bcp14">MUST NOT</span> be listed, since verbatim transfer needs no negotiation.<a href="#section-7.3.3-1" class="pilcrow">¶</a></p>
+<p id="section-7.3.3-1">The Compression Parameter advertises that the sender can <em>decompress</em> payloads on this hop (see <a href="#compression" class="auto internal xref">Section 7.11</a>).
+Its Parameter Value is empty; presence alone is the capability.<a href="#section-7.3.3-1" class="pilcrow">¶</a></p>
 <p id="section-7.3.3-2">Negotiation is per direction and per hop: an endpoint's advertisement governs only what may be compressed when sending <em>to</em> it, and a relay <span class="bcp14">MUST NOT</span> forward the parameter (see <a href="#session" class="auto internal xref">Section 3.1</a>).
-A sender <span class="bcp14">MUST NOT</span> compress a frame with an algorithm the receiver did not advertise here, so an endpoint that omits the parameter (or advertises an empty list) receives every payload verbatim regardless of the Track's <code>Publisher Compression</code> hint.
-Which advertised algorithm is used for a given frame is the sender's choice, named in that frame (see <span><a href="#compression-algorithms" class="internal xref">Compression</a> (<a href="#compression-algorithms" class="auto internal xref">Section 7.11</a>)</span>).<a href="#section-7.3.3-2" class="pilcrow">¶</a></p>
+A sender <span class="bcp14">MUST NOT</span> compress when sending to a receiver that did not advertise this parameter, so an endpoint that omits it receives every Group Stream, Fetch Stream, and datagram verbatim regardless of the Track's <code>Publisher Compression</code> hint.<a href="#section-7.3.3-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2471,57 +2474,34 @@ A hint from the original publisher that this Track's payloads are worth compress
             <p id="section-7.10-8.1.1"><code>0</code>: not worth compressing; payloads are always sent verbatim (the default).<a href="#section-7.10-8.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-7.10-8.2">
-            <p id="section-7.10-8.2.1"><code>1</code>: worth compressing; payloads <span class="bcp14">MAY</span> be compressed on any hop that has negotiated an algorithm.<a href="#section-7.10-8.2.1" class="pilcrow">¶</a></p>
+            <p id="section-7.10-8.2.1"><code>1</code>: worth compressing; payloads <span class="bcp14">MAY</span> be compressed on any hop that has negotiated compression.<a href="#section-7.10-8.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-7.10-9">Values greater than <code>1</code> are reserved (e.g. for a future publisher-recommended algorithm); a subscriber that does not understand a reserved value <span class="bcp14">MUST</span> treat it as <code>1</code>, so the hint stays additive and never blocks the Track.<a href="#section-7.10-9" class="pilcrow">¶</a></p>
-<p id="section-7.10-10">The hint is carried end to end but names no algorithm and by itself causes no compression. Which algorithm is used, if any, is negotiated independently on each hop (see the <span><a href="#compression-parameter" class="internal xref">Compression Parameter</a> (<a href="#compression-parameter" class="auto internal xref">Section 7.3.3</a>)</span>) and named in each frame (see <span><a href="#compression-algorithms" class="internal xref">Compression</a> (<a href="#compression-algorithms" class="auto internal xref">Section 7.11</a>)</span>). When the hint is non-zero, every FRAME and datagram on the Track carries a <code>Compression</code> field; when it is <code>0</code>, that field is absent and all payloads are verbatim.<a href="#section-7.10-10" class="pilcrow">¶</a></p>
+<p id="section-7.10-9">Values greater than <code>1</code> are reserved for future use; a subscriber that does not understand a reserved value <span class="bcp14">MUST</span> treat it as <code>1</code>, so the hint stays additive and never blocks the Track.<a href="#section-7.10-9" class="pilcrow">¶</a></p>
+<p id="section-7.10-10">The hint is carried end to end but by itself causes no compression: compression also requires the receiving hop to advertise the <span><a href="#compression-parameter" class="internal xref">Compression Parameter</a> (<a href="#compression-parameter" class="auto internal xref">Section 7.3.3</a>)</span>, and is applied per group and signaled by a <code>Compression</code> field (see <a href="#compression" class="auto internal xref">Section 7.11</a>). When the hint is non-zero, that field is present in every GROUP message, FETCH_OK message, and datagram body; when it is <code>0</code>, the field is absent everywhere and all payloads are verbatim.<a href="#section-7.10-10" class="pilcrow">¶</a></p>
 <p id="section-7.10-11">The publisher <span class="bcp14">SHOULD</span> set the hint only for payload types that benefit from compression (e.g. JSON, text, uncompressed binary structures); already-compressed media (e.g. H.264, Opus, AV1) gains nothing and <span class="bcp14">SHOULD</span> leave it <code>0</code>. See <span><a href="#security-considerations" class="internal xref">Security Considerations</a> (<a href="#security-considerations" class="auto internal xref">Section 10</a>)</span> for content that <span class="bcp14">MUST NOT</span> be marked compressible.<a href="#section-7.10-11" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="compression-algorithms">
+<div id="compression">
 <section id="section-7.11">
         <h3 id="name-compression">
 <a href="#section-7.11" class="section-number selfRef">7.11. </a><a href="#name-compression" class="section-name selfRef">Compression</a>
         </h3>
-<p id="section-7.11-1">moq-lite can compress Frame payloads hop by hop, like HTTP Transfer-Encoding: the decompressed bytes <em>are</em> the payload and are identical end to end, but how they are carried <span class="bcp14">MAY</span> differ on each hop, and a payload compressed on one hop <span class="bcp14">MAY</span> be verbatim on the next. Compression is governed by three independent pieces:<a href="#section-7.11-1" class="pilcrow">¶</a></p>
+<p id="section-7.11-1">moq-lite can compress payloads hop by hop, like HTTP Transfer-Encoding: the decompressed bytes <em>are</em> the payload and are identical end to end, but how they are carried <span class="bcp14">MAY</span> differ on each hop — a group compressed on one hop is decompressed and <span class="bcp14">MAY</span> be re-sent verbatim on the next. Compression is governed by:<a href="#section-7.11-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-7.11-2.1">
             <p id="section-7.11-2.1.1">the Track's <code>Publisher Compression</code> hint (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>) — the publisher's end-to-end signal that payloads are worth compressing;<a href="#section-7.11-2.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-7.11-2.2">
-            <p id="section-7.11-2.2.1">the per-hop <span><a href="#compression-parameter" class="internal xref">Compression Parameter</a> (<a href="#compression-parameter" class="auto internal xref">Section 7.3.3</a>)</span> — each endpoint advertises the algorithms it can decompress; and<a href="#section-7.11-2.2.1" class="pilcrow">¶</a></p>
+            <p id="section-7.11-2.2.1">the per-hop <span><a href="#compression-parameter" class="internal xref">Compression Parameter</a> (<a href="#compression-parameter" class="auto internal xref">Section 7.3.3</a>)</span> — each endpoint advertises that it can decompress; and<a href="#section-7.11-2.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-7.11-2.3">
-            <p id="section-7.11-2.3.1">the per-frame <code>Compression</code> field (see <a href="#frame" class="auto internal xref">Section 3.5</a> and <a href="#datagrams" class="auto internal xref">Section 6.4</a>) — names the algorithm actually used for each payload.<a href="#section-7.11-2.3.1" class="pilcrow">¶</a></p>
+            <p id="section-7.11-2.3.1">a per-group <code>Compression</code> field — carried in each <a href="#group" class="auto internal xref">Section 3.4</a> message, <span><a href="#fetch-ok" class="internal xref">FETCH_OK</a> (<a href="#fetch-ok" class="auto internal xref">Section 7.16</a>)</span> message, and <span><a href="#datagrams" class="internal xref">datagram</a> (<a href="#datagrams" class="auto internal xref">Section 6.4</a>)</span> body, present only when the Track's hint is non-zero — that states whether that group is compressed and with which scheme.<a href="#section-7.11-2.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-7.11-3">The following algorithms are defined. The identifiers are shared with the MoQ Payload Compression Extension for MoQ Transport so that a relay bridging the two needs no translation.<a href="#section-7.11-3" class="pilcrow">¶</a></p>
-<table class="center" id="table-5">
-          <caption><a href="#table-5" class="selfRef">Table 5</a></caption>
-<thead>
-            <tr>
-              <th class="text-right" rowspan="1" colspan="1">ID</th>
-              <th class="text-left" rowspan="1" colspan="1">Name</th>
-              <th class="text-left" rowspan="1" colspan="1">Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="text-right" rowspan="1" colspan="1">0</td>
-              <td class="text-left" rowspan="1" colspan="1">none</td>
-              <td class="text-left" rowspan="1" colspan="1">The payload is carried verbatim. The default.</td>
-            </tr>
-            <tr>
-              <td class="text-right" rowspan="1" colspan="1">1</td>
-              <td class="text-left" rowspan="1" colspan="1">deflate</td>
-              <td class="text-left" rowspan="1" colspan="1">Raw DEFLATE <span>[<a href="#RFC1951" class="cite xref">RFC1951</a>]</span>, with no zlib or gzip framing.</td>
-            </tr>
-          </tbody>
-        </table>
-<p id="section-7.11-5">Each payload is compressed independently: it is a self-contained stream with no shared dictionary or state between frames, so every frame is independently decodable and there is no head-of-line decoding within a group. The Frame <code>Message Length</code> describes the compressed (on-wire) size. An empty payload (size 0) <span class="bcp14">MUST NOT</span> be compressed and <span class="bcp14">MUST</span> use <code>none</code>.<a href="#section-7.11-5" class="pilcrow">¶</a></p>
-<p id="section-7.11-6">A sender <span class="bcp14">MUST NOT</span> use an algorithm the receiver did not advertise in its <span><a href="#compression-parameter" class="internal xref">Compression Parameter</a> (<a href="#compression-parameter" class="auto internal xref">Section 7.3.3</a>)</span>; where the two have negotiated no algorithm, every payload is sent with <code>Compression</code> = <code>none</code>. A sender <span class="bcp14">SHOULD</span> use <code>none</code> for any individual payload that compression would not make smaller — for example a small JSON merge-patch delta that DEFLATE would enlarge — so the per-hop, per-frame decision stays decoupled from the publisher's whole-Track hint.<a href="#section-7.11-6" class="pilcrow">¶</a></p>
-<p id="section-7.11-7">A relay applies compression independently on each hop, driven by each downstream's negotiated algorithms — not by the relay's own initiative, and never on a Track the publisher did not mark. On its upstream subscription it reads the algorithm named in each frame and decompresses as needed; on each downstream subscription it (re)compresses each frame with an algorithm that downstream advertised, or sends <code>none</code>. A relay <span class="bcp14">MAY</span> transcode between algorithms, including bridging protocol versions (e.g. a moq-lite-05 publisher to a moq-lite-04 subscriber), provided the decompressed bytes are identical to what the publisher produced. A relay or generic library <span class="bcp14">MUST NOT</span> inspect or modify the decompressed contents unless otherwise negotiated.<a href="#section-7.11-7" class="pilcrow">¶</a></p>
+<p id="section-7.11-3"><code>Compression</code> is <code>0</code> (verbatim) or <code>1</code> (raw DEFLATE <span>[<a href="#RFC1951" class="cite xref">RFC1951</a>]</span>); other schemes are left to future extensions, with at most one in effect per hop. A sender <span class="bcp14">MUST NOT</span> use a non-zero value unless the receiver advertised the <span><a href="#compression-parameter" class="internal xref">Compression Parameter</a> (<a href="#compression-parameter" class="auto internal xref">Section 7.3.3</a>)</span>; it <span class="bcp14">SHOULD</span> leave a group at <code>0</code> when compression would not make it smaller — for example a one-frame group carrying a small JSON merge-patch delta that DEFLATE would enlarge.<a href="#section-7.11-3" class="pilcrow">¶</a></p>
+<p id="section-7.11-4">Compression is <strong>group-scoped</strong>. When a group is compressed, its entire sequence of FRAME messages is a single DEFLATE stream, reset at each group boundary: on a Group Stream this is the FRAME sequence following the GROUP message; on a Fetch Stream it is the FRAME sequence following the FETCH_OK; in a datagram it is the single frame's payload. The first frame of a group is therefore independently decodable — a subscriber joining at a group boundary needs nothing earlier — while later frames in the same group share the compression context, so both framing bytes and cross-frame redundancy are compressed. There is no shared state between groups. A group with no frames carries no DEFLATE stream.<a href="#section-7.11-4" class="pilcrow">¶</a></p>
+<p id="section-7.11-5">A relay applies compression independently on each hop, driven by each downstream's negotiation — not by the relay's own initiative, and never on a Track the publisher did not mark. On its upstream subscription it decompresses each compressed group as needed; on each downstream subscription it sets <code>Compression</code> per group, compressing when that downstream advertised the capability and sending <code>0</code> otherwise. A relay <span class="bcp14">MAY</span> bridge protocol versions (e.g. a moq-lite-05 publisher to a moq-lite-04 subscriber) provided the decompressed bytes are identical to what the publisher produced. A relay or generic library <span class="bcp14">MUST NOT</span> inspect or modify the decompressed contents unless otherwise negotiated.<a href="#section-7.11-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="subscribe-ok">
@@ -2628,126 +2608,148 @@ The priority of the fetch within the session, represented as a u8.
 See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> section for more information.<a href="#section-7.15-5" class="pilcrow">¶</a></p>
 <p id="section-7.15-6"><strong>Group Sequence</strong>:
 The sequence number of the group to fetch.<a href="#section-7.15-6" class="pilcrow">¶</a></p>
-<p id="section-7.15-7">The publisher responds with FRAME messages directly on the same stream — there is no response header.
+<p id="section-7.15-7">The publisher responds on the same stream: when the Track's <code>Publisher Compression</code> hint is non-zero the response begins with a <span><a href="#fetch-ok" class="internal xref">FETCH_OK</a> (<a href="#fetch-ok" class="auto internal xref">Section 7.16</a>)</span> message, followed by the FRAME messages; otherwise it is bare FRAME messages with no response header.
 The subscriber parses them using the track's <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>, which it <span class="bcp14">MUST</span> already have (see the <span><a href="#track-stream" class="internal xref">Track Stream</a> (<a href="#track-stream" class="auto internal xref">Section 5.1.4</a>)</span>); the group sequence is implicit from the FETCH request.
 The publisher FINs the stream after the last frame, or resets on error.
 There is no FETCH_ERROR message — the publisher signals failure by resetting the stream.<a href="#section-7.15-7" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="probe-1">
+<div id="fetch-ok">
 <section id="section-7.16">
-        <h3 id="name-probe-2">
-<a href="#section-7.16" class="section-number selfRef">7.16. </a><a href="#name-probe-2" class="section-name selfRef">PROBE</a>
+        <h3 id="name-fetch_ok">
+<a href="#section-7.16" class="section-number selfRef">7.16. </a><a href="#name-fetch_ok" class="section-name selfRef">FETCH_OK</a>
         </h3>
-<p id="section-7.16-1">PROBE is used to measure the available bitrate of the connection.<a href="#section-7.16-1" class="pilcrow">¶</a></p>
+<p id="section-7.16-1">FETCH_OK is the first message of a fetch response, sent by the publisher only when the Track's <code>Publisher Compression</code> hint is non-zero (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>).
+It carries the <code>Compression</code> field for the single group being fetched; the FRAME messages follow on the same stream.
+When the hint is <code>0</code> it is omitted and the response is bare FRAME messages.<a href="#section-7.16-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-7.16-2">
+<pre>
+FETCH_OK Message {
+  Message Length (i)
+  Compression (i)
+}
+</pre><a href="#section-7.16-2" class="pilcrow">¶</a>
+</div>
+<p id="section-7.16-3"><strong>Compression</strong>:
+The compression scheme for the fetched group, with the same meaning as in the <a href="#group" class="auto internal xref">Section 3.4</a> message: <code>0</code> verbatim, <code>1</code> raw DEFLATE.
+When <code>1</code>, the FRAME messages following this FETCH_OK form a single DEFLATE stream (see <a href="#compression" class="auto internal xref">Section 7.11</a>).<a href="#section-7.16-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="probe-1">
+<section id="section-7.17">
+        <h3 id="name-probe-2">
+<a href="#section-7.17" class="section-number selfRef">7.17. </a><a href="#name-probe-2" class="section-name selfRef">PROBE</a>
+        </h3>
+<p id="section-7.17-1">PROBE is used to measure the available bitrate of the connection.<a href="#section-7.17-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.17-2">
 <pre>
 PROBE Message {
   Message Length (i)
   Bitrate (i)
   RTT (i)
 }
-</pre><a href="#section-7.16-2" class="pilcrow">¶</a>
+</pre><a href="#section-7.17-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.16-3"><strong>Bitrate</strong>:
+<p id="section-7.17-3"><strong>Bitrate</strong>:
 When sent by the subscriber (stream opener): the target bitrate in bits per second that the publisher should pad up to.
 The publisher only honors a target above its current sending rate if it advertised the Increase capability (see <span><a href="#probe-parameter" class="internal xref">Probe Parameter</a> (<a href="#probe-parameter" class="auto internal xref">Section 7.3.1</a>)</span>); otherwise the target is ignored and the publisher only reports.
 When sent by the publisher (responder): the current estimated bitrate in bits per second.
-A value of 0 means unknown.<a href="#section-7.16-3" class="pilcrow">¶</a></p>
-<p id="section-7.16-4"><strong>RTT</strong>:
+A value of 0 means unknown.<a href="#section-7.17-3" class="pilcrow">¶</a></p>
+<p id="section-7.17-4"><strong>RTT</strong>:
 The smoothed round-trip time in milliseconds, as defined in <span>[<a href="#RFC9002" class="cite xref">RFC9002</a>]</span>.
-A value of 0 means unknown.<a href="#section-7.16-4" class="pilcrow">¶</a></p>
+A value of 0 means unknown.<a href="#section-7.17-4" class="pilcrow">¶</a></p>
 <ul class="normal ulEmpty">
-<li class="normal ulEmpty" id="section-7.16-5.1">
-            <p id="section-7.16-5.1.1">NOTE: RTT is included in the PROBE message because not all QUIC implementations and browser WebTransport APIs expose RTT statistics directly. This field may be deprecated once RTT is universally available via the underlying transport API.<a href="#section-7.16-5.1.1" class="pilcrow">¶</a></p>
+<li class="normal ulEmpty" id="section-7.17-5.1">
+            <p id="section-7.17-5.1.1">NOTE: RTT is included in the PROBE message because not all QUIC implementations and browser WebTransport APIs expose RTT statistics directly. This field may be deprecated once RTT is universally available via the underlying transport API.<a href="#section-7.17-5.1.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
 </div>
 <div id="goaway-1">
-<section id="section-7.17">
+<section id="section-7.18">
         <h3 id="name-goaway-2">
-<a href="#section-7.17" class="section-number selfRef">7.17. </a><a href="#name-goaway-2" class="section-name selfRef">GOAWAY</a>
+<a href="#section-7.18" class="section-number selfRef">7.18. </a><a href="#name-goaway-2" class="section-name selfRef">GOAWAY</a>
         </h3>
-<p id="section-7.17-1">A GOAWAY message is sent to initiate a graceful session shutdown with an optional redirect.<a href="#section-7.17-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.17-2">
+<p id="section-7.18-1">A GOAWAY message is sent to initiate a graceful session shutdown with an optional redirect.<a href="#section-7.18-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.18-2">
 <pre>
 GOAWAY Message {
   Message Length (i)
   New Session URI (s)
 }
-</pre><a href="#section-7.17-2" class="pilcrow">¶</a>
+</pre><a href="#section-7.18-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.17-3"><strong>New Session URI</strong>:
+<p id="section-7.18-3"><strong>New Session URI</strong>:
 A URI for the peer to reconnect to.
 An empty string indicates no redirect; the peer should simply close the session.
 A recipient <span class="bcp14">MUST</span> validate the URI against local policy before reconnecting, including verifying the scheme, authority, and port are permitted.
-If validation fails, the recipient <span class="bcp14">MUST</span> close the session without reconnecting.<a href="#section-7.17-3" class="pilcrow">¶</a></p>
+If validation fails, the recipient <span class="bcp14">MUST</span> close the session without reconnecting.<a href="#section-7.18-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="group-2">
-<section id="section-7.18">
+<section id="section-7.19">
         <h3 id="name-group-3">
-<a href="#section-7.18" class="section-number selfRef">7.18. </a><a href="#name-group-3" class="section-name selfRef">GROUP</a>
+<a href="#section-7.19" class="section-number selfRef">7.19. </a><a href="#name-group-3" class="section-name selfRef">GROUP</a>
         </h3>
-<p id="section-7.18-1">The GROUP message contains information about a Group, as well as a reference to the subscription being served.<a href="#section-7.18-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.18-2">
+<p id="section-7.19-1">The GROUP message contains information about a Group, as well as a reference to the subscription being served.<a href="#section-7.19-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.19-2">
 <pre>
 GROUP Message {
   Message Length (i)
   Subscribe ID (i)
   Group Sequence (i)
-}
-</pre><a href="#section-7.18-2" class="pilcrow">¶</a>
-</div>
-<p id="section-7.18-3"><strong>Subscribe ID</strong>:
-The corresponding Subscribe ID.
-This ID is used to distinguish between multiple subscriptions for the same track.<a href="#section-7.18-3" class="pilcrow">¶</a></p>
-<p id="section-7.18-4"><strong>Group Sequence</strong>:
-The sequence number of the group.
-This <span class="bcp14">SHOULD</span> increase by 1 for each new group.
-A subscriber <span class="bcp14">MUST</span> handle gaps, potentially caused by congestion.<a href="#section-7.18-4" class="pilcrow">¶</a></p>
-</section>
-</div>
-<div id="frame-1">
-<section id="section-7.19">
-        <h3 id="name-frame-2">
-<a href="#section-7.19" class="section-number selfRef">7.19. </a><a href="#name-frame-2" class="section-name selfRef">FRAME</a>
-        </h3>
-<p id="section-7.19-1">The FRAME message is a payload within a group.<a href="#section-7.19-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.19-2">
-<pre>
-FRAME Message {
-  [Timestamp Delta (i)]
   [Compression (i)]
-  Message Length (i)
-  Payload (b)
 }
 </pre><a href="#section-7.19-2" class="pilcrow">¶</a>
 </div>
-<p id="section-7.19-3"><code>Timestamp Delta</code> is present only when the Track's <code>Publisher Timescale</code> is non-zero, and <code>Compression</code> only when the Track's <code>Publisher Compression</code> hint is non-zero (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>).
-Each is independently omitted when its condition does not hold; with both absent the FRAME is just <code>Message Length</code> and <code>Payload</code>.<a href="#section-7.19-3" class="pilcrow">¶</a></p>
-<p id="section-7.19-4"><strong>Timestamp Delta</strong>:
+<p id="section-7.19-3"><strong>Subscribe ID</strong>:
+The corresponding Subscribe ID.
+This ID is used to distinguish between multiple subscriptions for the same track.<a href="#section-7.19-3" class="pilcrow">¶</a></p>
+<p id="section-7.19-4"><strong>Group Sequence</strong>:
+The sequence number of the group.
+This <span class="bcp14">SHOULD</span> increase by 1 for each new group.
+A subscriber <span class="bcp14">MUST</span> handle gaps, potentially caused by congestion.<a href="#section-7.19-4" class="pilcrow">¶</a></p>
+<p id="section-7.19-5"><strong>Compression</strong>:
+The compression scheme applied to this group's frame sequence, present only when the Track's <code>Publisher Compression</code> hint is non-zero (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>).
+<code>0</code> means the FRAME messages following this GROUP message are verbatim; <code>1</code> means they are a single raw DEFLATE stream (see <a href="#compression" class="auto internal xref">Section 7.11</a>).
+When the hint is <code>0</code>, the field is absent and the frames are always verbatim.<a href="#section-7.19-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="frame-1">
+<section id="section-7.20">
+        <h3 id="name-frame-2">
+<a href="#section-7.20" class="section-number selfRef">7.20. </a><a href="#name-frame-2" class="section-name selfRef">FRAME</a>
+        </h3>
+<p id="section-7.20-1">The FRAME message is a payload within a group.<a href="#section-7.20-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.20-2">
+<pre>
+FRAME Message {
+  [Timestamp Delta (i)]
+  Message Length (i)
+  Payload (b)
+}
+</pre><a href="#section-7.20-2" class="pilcrow">¶</a>
+</div>
+<p id="section-7.20-3"><code>Timestamp Delta</code> is present only when the Track's <code>Publisher Timescale</code> (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>) is non-zero.
+When <code>Publisher Timescale</code> is 0, the field is omitted from the wire and the FRAME consists of just <code>Message Length</code> and <code>Payload</code>.
+The FRAME fields are always the uncompressed contents; when the group is compressed (see <a href="#compression" class="auto internal xref">Section 7.11</a>) the whole frame sequence is carried inside the group's DEFLATE stream, so <code>Message Length</code> remains the uncompressed payload size.<a href="#section-7.20-3" class="pilcrow">¶</a></p>
+<p id="section-7.20-4"><strong>Timestamp Delta</strong>:
 A signed delta from the previous frame's timestamp, in the Track's negotiated <code>Timescale</code>.
-Encoded as a zigzag-mapped variable-length integer:<a href="#section-7.19-4" class="pilcrow">¶</a></p>
+Encoded as a zigzag-mapped variable-length integer:<a href="#section-7.20-4" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-7.19-5.1">
-            <p id="section-7.19-5.1.1">Encode: <code>unsigned = (signed &lt;&lt; 1) ^ (signed &gt;&gt; 63)</code> (arithmetic right shift).<a href="#section-7.19-5.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-7.20-5.1">
+            <p id="section-7.20-5.1.1">Encode: <code>unsigned = (signed &lt;&lt; 1) ^ (signed &gt;&gt; 63)</code> (arithmetic right shift).<a href="#section-7.20-5.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-7.19-5.2">
-            <p id="section-7.19-5.2.1">Decode: <code>signed = (unsigned &gt;&gt; 1) ^ -(unsigned &amp; 1)</code>.<a href="#section-7.19-5.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-7.20-5.2">
+            <p id="section-7.20-5.2.1">Decode: <code>signed = (unsigned &gt;&gt; 1) ^ -(unsigned &amp; 1)</code>.<a href="#section-7.20-5.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-7.19-6">Zigzag interleaves non-negative and negative values (<code>0 → 0, -1 → 1, 1 → 2, -2 → 3, 2 → 4, ...</code>) so small magnitudes of either sign fit in a 1-byte varint and there is exactly one wire encoding for zero.
-The first frame of a group is delta-encoded from <code>0</code>, so its <code>Timestamp Delta</code> is the zigzag encoding of the absolute timestamp.<a href="#section-7.19-6" class="pilcrow">¶</a></p>
-<p id="section-7.19-7"><strong>Compression</strong>:
-The <span><a href="#compression-algorithms" class="internal xref">algorithm</a> (<a href="#compression-algorithms" class="auto internal xref">Section 7.11</a>)</span> used for this frame's <code>Payload</code>, present only when the Track's <code>Publisher Compression</code> hint is non-zero (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>); when the hint is <code>0</code> the field is absent and the payload is always verbatim.
-<code>none</code> (0) carries the payload verbatim; any other identifier names the algorithm whose output the payload is.
-The sender chooses per frame and <span class="bcp14">MUST NOT</span> use an algorithm the receiver did not advertise in its <span><a href="#compression-parameter" class="internal xref">Compression Parameter</a> (<a href="#compression-parameter" class="auto internal xref">Section 7.3.3</a>)</span>; it <span class="bcp14">SHOULD</span> use <code>none</code> whenever compression would not shrink the payload. An empty payload <span class="bcp14">MUST</span> use <code>none</code>.<a href="#section-7.19-7" class="pilcrow">¶</a></p>
-<p id="section-7.19-8"><strong>Payload</strong>:
+<p id="section-7.20-6">Zigzag interleaves non-negative and negative values (<code>0 → 0, -1 → 1, 1 → 2, -2 → 3, 2 → 4, ...</code>) so small magnitudes of either sign fit in a 1-byte varint and there is exactly one wire encoding for zero.
+The first frame of a group is delta-encoded from <code>0</code>, so its <code>Timestamp Delta</code> is the zigzag encoding of the absolute timestamp.<a href="#section-7.20-6" class="pilcrow">¶</a></p>
+<p id="section-7.20-7"><strong>Payload</strong>:
 An application-specific payload.
-When the <code>Compression</code> field is present and non-<code>none</code>, the payload is the compressed form and <code>Message Length</code> describes its compressed (on-wire) size; the receiver decompresses it with the named <span><a href="#compression-algorithms" class="internal xref">algorithm</a> (<a href="#compression-algorithms" class="auto internal xref">Section 7.11</a>)</span> before delivery.
-A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify the decompressed contents unless otherwise negotiated; recompression that preserves the decompressed bytes exactly is allowed (see <span><a href="#compression-algorithms" class="internal xref">Compression</a> (<a href="#compression-algorithms" class="auto internal xref">Section 7.11</a>)</span>).<a href="#section-7.19-8" class="pilcrow">¶</a></p>
+<code>Message Length</code> is the uncompressed payload size; any compression is group-scoped (see <a href="#compression" class="auto internal xref">Section 7.11</a>) and applied to the whole frame sequence on the stream, not to this field individually.
+A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify the decompressed contents unless otherwise negotiated; recompression that preserves the decompressed bytes exactly is allowed (see <a href="#compression" class="auto internal xref">Section 7.11</a>).<a href="#section-7.20-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2779,7 +2781,7 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
             <p id="section-8.1-1.5.1">Added a Track Stream (0x6): a TRACK request that the publisher answers with a single TRACK_INFO message and then FINs. TRACK_INFO carries the Track's immutable publisher properties (<code>Publisher Priority</code>, <code>Publisher Ordered</code>, <code>Publisher Timescale</code>, <code>Publisher Compression</code>). It is fetched once and cached, so the properties are no longer echoed on every response — notably, group-by-group FETCHes reuse one lookup.<a href="#section-8.1-1.5.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.6">
-            <p id="section-8.1-1.6.1">Removed FETCH_OK and trimmed SUBSCRIBE_OK down to a single resolved start group. Publisher properties moved to TRACK_INFO; a FETCH returns bare FRAME messages. All publisher properties are immutable for the lifetime of the Track — a publisher-side change would otherwise have to fan <em>out</em> to every downstream of a relay, whereas subscriber properties fan <em>in</em> and may still change via SUBSCRIBE_UPDATE.<a href="#section-8.1-1.6.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.6.1">Removed FETCH_OK and trimmed SUBSCRIBE_OK down to a single resolved start group. Publisher properties moved to TRACK_INFO; a FETCH returns bare FRAME messages (a minimal FETCH_OK is reintroduced only for compressible tracks, to carry the per-group compression flag; see the compression entry). All publisher properties are immutable for the lifetime of the Track — a publisher-side change would otherwise have to fan <em>out</em> to every downstream of a relay, whereas subscriber properties fan <em>in</em> and may still change via SUBSCRIBE_UPDATE.<a href="#section-8.1-1.6.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.7">
             <p id="section-8.1-1.7.1">Split the resolved group range across SUBSCRIBE_OK and a new SUBSCRIBE_END. SUBSCRIBE_OK resolves the absolute start (<code>&gt;=</code> the requested start; a larger value implicitly drops the leading range), and SUBSCRIBE_END signals that no group will follow a given sequence (stragglers within the range may still be dropped before FIN). SUBSCRIBE_OK keeps the MoqTransport name and its role as the publisher's positive response.<a href="#section-8.1-1.7.1" class="pilcrow">¶</a></p>
@@ -2815,7 +2817,7 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
             <p id="section-8.1-1.17.1">Added QUIC datagram delivery for groups, sharing Subscribe IDs with existing subscriptions (no separate control stream).<a href="#section-8.1-1.17.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.18">
-            <p id="section-8.1-1.18.1">Added payload compression. <code>Publisher Compression</code> in TRACK_INFO is now a boolean end-to-end hint that a Track's payloads are worth compressing; the algorithm is negotiated per hop via a new SETUP <code>Compression</code> parameter (each endpoint advertises the algorithms it can decompress) and named per frame by a new <code>Compression</code> field in FRAME and datagram bodies (present only when the hint is set). <code>none</code> (0) and <code>deflate</code> (1) are defined, sharing identifiers with the MoQ Payload Compression Extension. Because each payload is an independent stream, a frame can opt out (<code>none</code>) when compression would not shrink it — e.g. a small JSON merge-patch delta — while larger payloads on the same Track are compressed, and different hops can use different algorithms.<a href="#section-8.1-1.18.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.18.1">Added payload compression, scoped per group. <code>Publisher Compression</code> in TRACK_INFO is a boolean end-to-end hint that a Track's payloads are worth compressing; a new SETUP <code>Compression</code> parameter negotiates the capability per hop; and a per-group <code>Compression</code> field — in each GROUP message, datagram body, and a reintroduced FETCH_OK message (present only when the hint is set) — states whether that group is compressed. When set, the group's entire FRAME sequence is a single raw DEFLATE stream, reset at each group boundary, so the first frame stays independently decodable while later frames share the context. <code>0</code> is verbatim and <code>1</code> is DEFLATE; other schemes are left to future extensions (one in effect per hop). There is no per-frame compression.<a href="#section-8.1-1.18.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.19">
             <p id="section-8.1-1.19.1">Added Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span> transport bindings for TCP/TLS and WebSocket, for environments where UDP is unavailable. The WebSocket binding uses the WebSocket message framing in place of the Qmux Record <code>Size</code> field.<a href="#section-8.1-1.19.1" class="pilcrow">¶</a></p>
@@ -3128,7 +3130,7 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
         </h3>
 <p id="section-10.1-1">Compressing data that mixes attacker-controlled and secret material in the same payload can leak the secret through the compressed size, as in the CRIME and BREACH attacks.
 A publisher <span class="bcp14">MUST NOT</span> set a non-zero <code>Publisher Compression</code> hint on a Track whose payloads combine secret material with attacker-influenced material.
-Because compression is per-frame with no cross-frame dictionary, the exposure is bounded to within a single payload, but it is not eliminated.<a href="#section-10.1-1" class="pilcrow">¶</a></p>
+Because compression is group-scoped, the exposure is bounded to within a single group — which may combine several frames, a wider window than a single frame — but it is not eliminated.<a href="#section-10.1-1" class="pilcrow">¶</a></p>
 <p id="section-10.1-2">A malicious sender could emit a small compressed payload that decompresses to a very large buffer (a "decompression bomb").
 A receiver <span class="bcp14">MUST</span> bound the size of a decompressed payload; if the bound is exceeded it <span class="bcp14">MUST</span> reset the affected stream rather than allocate unbounded memory, and <span class="bcp14">MAY</span> close the session with a PROTOCOL_VIOLATION if it considers the peer abusive.<a href="#section-10.1-2" class="pilcrow">¶</a></p>
 <p id="section-10.1-3">Compression is orthogonal to end-to-end encryption: an encrypted payload is effectively incompressible, so a publisher using end-to-end encryption <span class="bcp14">SHOULD</span> leave <code>Publisher Compression</code> at <code>0</code>.<a href="#section-10.1-3" class="pilcrow">¶</a></p>

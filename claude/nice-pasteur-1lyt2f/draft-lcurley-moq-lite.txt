@@ -115,10 +115,11 @@ Table of Contents
      7.13. SUBSCRIBE_END
      7.14. SUBSCRIBE_DROP
      7.15. FETCH
-     7.16. PROBE
-     7.17. GOAWAY
-     7.18. GROUP
-     7.19. FRAME
+     7.16. FETCH_OK
+     7.17. PROBE
+     7.18. GOAWAY
+     7.19. GROUP
+     7.20. FRAME
    8.  Appendix A: Changelog
      8.1.  moq-lite-05
      8.2.  moq-lite-04
@@ -568,9 +569,10 @@ Table of Contents
    publisher properties — those are immutable and fetched once via a
    Track Stream (Section 5.1.4) (see TRACK_INFO (Section 7.10)).  The
    subscriber MUST have the track's TRACK_INFO before it can parse the
-   FRAME messages that arrive on Group Streams, since the timescale and
-   compression determine the frame wire format; it MAY open the Track
-   and Subscribe streams concurrently and buffer frames until TRACK_INFO
+   FRAME messages that arrive on Group Streams, since the timescale
+   determines the frame wire format and the compression hint determines
+   whether the stream is DEFLATE-compressed; it MAY open the Track and
+   Subscribe streams concurrently and buffer frames until TRACK_INFO
    arrives.
 
    The publisher sends SUBSCRIBE_OK once the absolute start group is
@@ -591,16 +593,19 @@ Table of Contents
    from a Track.
 
    The subscriber sends a FETCH message containing the broadcast path,
-   track name, priority, and group sequence.  The publisher responds
-   with FRAME messages directly on the same bidirectional stream — there
-   is no response header.  The Subscribe ID and Group Sequence for the
-   returned FRAME messages are implicit, taken from the original FETCH
-   request.  As with a subscription, the subscriber MUST already have
-   the track's TRACK_INFO (Section 7.10) to parse the returned frames;
-   because the properties are immutable, a single Track Stream lookup is
-   reused across every FETCH of that track (group-by-group fetches do
-   not re-fetch it).  The publisher FINs the stream after the last
-   frame, or resets the stream on error.
+   track name, priority, and group sequence.  The publisher responds on
+   the same bidirectional stream.  When the Track's Publisher
+   Compression hint is non-zero (see TRACK_INFO (Section 7.10)) the
+   response begins with a FETCH_OK (Section 7.16) message carrying the
+   group's Compression field, followed by the FRAME messages; otherwise
+   it is bare FRAME messages with no response header.  The Subscribe ID
+   and Group Sequence for the returned FRAME messages are implicit,
+   taken from the original FETCH request.  As with a subscription, the
+   subscriber MUST already have the track's TRACK_INFO (Section 7.10) to
+   parse the returned frames; because the properties are immutable, a
+   single Track Stream lookup is reused across every FETCH of that track
+   (group-by-group fetches do not re-fetch it).  The publisher FINs the
+   stream after the last frame, or resets the stream on error.
 
    Fetch behaves like HTTP: a single request/response per stream.
 
@@ -838,7 +843,9 @@ Table of Contents
    A publisher creates Group Streams in response to a Subscribe Stream.
 
    A Group Stream MUST start with a GROUP message and MAY be followed by
-   any number of FRAME messages.  A Group MAY contain zero FRAME
+   any number of FRAME messages.  When the Track is compressed on this
+   hop (see Section 7.11), the FRAME messages following the GROUP
+   message form a single DEFLATE stream.  A Group MAY contain zero FRAME
    messages, potentially indicating a gap in the track.  A frame MAY
    contain an empty payload, potentially indicating a gap in the group.
 
@@ -880,9 +887,11 @@ Table of Contents
    Timestamp is present only when the Track's Publisher Timescale (see
    TRACK_INFO (Section 7.10)) is non-zero.  Compression is present only
    when the Track's Publisher Compression hint is non-zero (see
-   TRACK_INFO (Section 7.10)).  Each field is independently omitted when
-   its condition does not hold; with both absent the datagram body is
-   just Subscribe ID, Group Sequence, and Payload.
+   TRACK_INFO (Section 7.10)), with the same meaning as in the
+   Section 3.4 message: 0 verbatim, 1 raw DEFLATE.  Each field is
+   independently omitted when its condition does not hold; with both
+   absent the datagram body is just Subscribe ID, Group Sequence, and
+   Payload.
 
    *Subscribe ID*: The Subscribe ID of an active subscription on the
    same session.  A subscriber receiving a datagram with an unknown
@@ -897,15 +906,14 @@ Table of Contents
    (including 0) is a valid absolute timestamp.
 
    *Payload*: The frame payload, extending to the end of the datagram.
-   When the Compression field is present and non-none, the payload is
-   compressed with that algorithm (Section 7.11); the per-hop
-   negotiation and per-frame choice are the same as for Section 3.5.
-   The total datagram body (including all header fields above and the
-   compressed payload if applicable) MUST NOT exceed 1200 bytes.  This
-   limit ensures the datagram fits within the minimum QUIC path MTU
-   without IP-layer fragmentation.  Payloads that would not fit MUST be
-   sent as a Group Stream instead.  A receiver MUST silently drop any
-   datagram that exceeds this limit.
+   A datagram is a single-frame group: when Compression is 1 the payload
+   is a single raw DEFLATE stream, and when 0 (or absent) it is verbatim
+   (see Section 7.11).  The total datagram body (including all header
+   fields above and the compressed payload if applicable) MUST NOT
+   exceed 1200 bytes.  This limit ensures the datagram fits within the
+   minimum QUIC path MTU without IP-layer fragmentation.  Payloads that
+   would not fit MUST be sent as a Group Stream instead.  A receiver
+   MUST silently drop any datagram that exceeds this limit.
 
 7.  Encoding
 
@@ -971,15 +979,15 @@ Table of Contents
    endpoint advertises it; an absent parameter means the sender does not
    support that capability.  The following Setup Parameters are defined:
 
-                 +=====+=============+===================+
-                 |  ID | Name        | Value             |
-                 +=====+=============+===================+
-                 | 0x1 | Probe       | Level (i)         |
-                 +-----+-------------+-------------------+
-                 | 0x2 | Path        | Path (s)          |
-                 +-----+-------------+-------------------+
-                 | 0x3 | Compression | Algorithm (i) ... |
-                 +-----+-------------+-------------------+
+                     +=====+=============+===========+
+                     |  ID | Name        | Value     |
+                     +=====+=============+===========+
+                     | 0x1 | Probe       | Level (i) |
+                     +-----+-------------+-----------+
+                     | 0x2 | Path        | Path (s)  |
+                     +-----+-------------+-----------+
+                     | 0x3 | Compression | (empty)   |
+                     +-----+-------------+-----------+
 
                                   Table 4
 
@@ -1065,22 +1073,17 @@ Table of Contents
 
 7.3.3.  Compression Parameter
 
-   The Compression Parameter advertises the payload compression
-   algorithms (Section 7.11) the sender can _decompress_ on this hop.
-   The Parameter Value is a sequence of algorithm identifiers, each a
-   variable-length integer, packed back-to-back to fill the Parameter
-   Length; the identifier none (0) MUST NOT be listed, since verbatim
-   transfer needs no negotiation.
+   The Compression Parameter advertises that the sender can _decompress_
+   payloads on this hop (see Section 7.11).  Its Parameter Value is
+   empty; presence alone is the capability.
 
    Negotiation is per direction and per hop: an endpoint's advertisement
    governs only what may be compressed when sending _to_ it, and a relay
    MUST NOT forward the parameter (see Section 3.1).  A sender MUST NOT
-   compress a frame with an algorithm the receiver did not advertise
-   here, so an endpoint that omits the parameter (or advertises an empty
-   list) receives every payload verbatim regardless of the Track's
-   Publisher Compression hint.  Which advertised algorithm is used for a
-   given frame is the sender's choice, named in that frame (see
-   Compression (Section 7.11)).
+   compress when sending to a receiver that did not advertise this
+   parameter, so an endpoint that omits it receives every Group Stream,
+   Fetch Stream, and datagram verbatim regardless of the Track's
+   Publisher Compression hint.
 
 7.4.  ANNOUNCE_REQUEST
 
@@ -1371,20 +1374,19 @@ Table of Contents
       default).
 
    *  1: worth compressing; payloads MAY be compressed on any hop that
-      has negotiated an algorithm.
+      has negotiated compression.
 
-   Values greater than 1 are reserved (e.g. for a future publisher-
-   recommended algorithm); a subscriber that does not understand a
-   reserved value MUST treat it as 1, so the hint stays additive and
-   never blocks the Track.
+   Values greater than 1 are reserved for future use; a subscriber that
+   does not understand a reserved value MUST treat it as 1, so the hint
+   stays additive and never blocks the Track.
 
-   The hint is carried end to end but names no algorithm and by itself
-   causes no compression.  Which algorithm is used, if any, is
-   negotiated independently on each hop (see the Compression Parameter
-   (Section 7.3.3)) and named in each frame (see Compression
-   (Section 7.11)).  When the hint is non-zero, every FRAME and datagram
-   on the Track carries a Compression field; when it is 0, that field is
-   absent and all payloads are verbatim.
+   The hint is carried end to end but by itself causes no compression:
+   compression also requires the receiving hop to advertise the
+   Compression Parameter (Section 7.3.3), and is applied per group and
+   signaled by a Compression field (see Section 7.11).  When the hint is
+   non-zero, that field is present in every GROUP message, FETCH_OK
+   message, and datagram body; when it is 0, the field is absent
+   everywhere and all payloads are verbatim.
 
    The publisher SHOULD set the hint only for payload types that benefit
    from compression (e.g. JSON, text, uncompressed binary structures);
@@ -1394,64 +1396,56 @@ Table of Contents
 
 7.11.  Compression
 
-   moq-lite can compress Frame payloads hop by hop, like HTTP Transfer-
+   moq-lite can compress payloads hop by hop, like HTTP Transfer-
    Encoding: the decompressed bytes _are_ the payload and are identical
-   end to end, but how they are carried MAY differ on each hop, and a
-   payload compressed on one hop MAY be verbatim on the next.
-   Compression is governed by three independent pieces:
+   end to end, but how they are carried MAY differ on each hop — a group
+   compressed on one hop is decompressed and MAY be re-sent verbatim on
+   the next.  Compression is governed by:
 
    *  the Track's Publisher Compression hint (see TRACK_INFO
       (Section 7.10)) — the publisher's end-to-end signal that payloads
       are worth compressing;
 
    *  the per-hop Compression Parameter (Section 7.3.3) — each endpoint
-      advertises the algorithms it can decompress; and
+      advertises that it can decompress; and
 
-   *  the per-frame Compression field (see Section 3.5 and Section 6.4)
-      — names the algorithm actually used for each payload.
+   *  a per-group Compression field — carried in each Section 3.4
+      message, FETCH_OK (Section 7.16) message, and datagram
+      (Section 6.4) body, present only when the Track's hint is non-zero
+      — that states whether that group is compressed and with which
+      scheme.
 
-   The following algorithms are defined.  The identifiers are shared
-   with the MoQ Payload Compression Extension for MoQ Transport so that
-   a relay bridging the two needs no translation.
+   Compression is 0 (verbatim) or 1 (raw DEFLATE [RFC1951]); other
+   schemes are left to future extensions, with at most one in effect per
+   hop.  A sender MUST NOT use a non-zero value unless the receiver
+   advertised the Compression Parameter (Section 7.3.3); it SHOULD leave
+   a group at 0 when compression would not make it smaller — for example
+   a one-frame group carrying a small JSON merge-patch delta that
+   DEFLATE would enlarge.
 
-     +====+=========+================================================+
-     | ID | Name    | Description                                    |
-     +====+=========+================================================+
-     |  0 | none    | The payload is carried verbatim.  The default. |
-     +----+---------+------------------------------------------------+
-     |  1 | deflate | Raw DEFLATE [RFC1951], with no zlib or gzip    |
-     |    |         | framing.                                       |
-     +----+---------+------------------------------------------------+
-
-                                  Table 5
-
-   Each payload is compressed independently: it is a self-contained
-   stream with no shared dictionary or state between frames, so every
-   frame is independently decodable and there is no head-of-line
-   decoding within a group.  The Frame Message Length describes the
-   compressed (on-wire) size.  An empty payload (size 0) MUST NOT be
-   compressed and MUST use none.
-
-   A sender MUST NOT use an algorithm the receiver did not advertise in
-   its Compression Parameter (Section 7.3.3); where the two have
-   negotiated no algorithm, every payload is sent with Compression =
-   none.  A sender SHOULD use none for any individual payload that
-   compression would not make smaller — for example a small JSON merge-
-   patch delta that DEFLATE would enlarge — so the per-hop, per-frame
-   decision stays decoupled from the publisher's whole-Track hint.
+   Compression is *group-scoped*. When a group is compressed, its entire
+   sequence of FRAME messages is a single DEFLATE stream, reset at each
+   group boundary: on a Group Stream this is the FRAME sequence
+   following the GROUP message; on a Fetch Stream it is the FRAME
+   sequence following the FETCH_OK; in a datagram it is the single
+   frame's payload.  The first frame of a group is therefore
+   independently decodable — a subscriber joining at a group boundary
+   needs nothing earlier — while later frames in the same group share
+   the compression context, so both framing bytes and cross-frame
+   redundancy are compressed.  There is no shared state between groups.
+   A group with no frames carries no DEFLATE stream.
 
    A relay applies compression independently on each hop, driven by each
-   downstream's negotiated algorithms — not by the relay's own
-   initiative, and never on a Track the publisher did not mark.  On its
-   upstream subscription it reads the algorithm named in each frame and
-   decompresses as needed; on each downstream subscription it
-   (re)compresses each frame with an algorithm that downstream
-   advertised, or sends none.  A relay MAY transcode between algorithms,
-   including bridging protocol versions (e.g. a moq-lite-05 publisher to
-   a moq-lite-04 subscriber), provided the decompressed bytes are
-   identical to what the publisher produced.  A relay or generic library
-   MUST NOT inspect or modify the decompressed contents unless otherwise
-   negotiated.
+   downstream's negotiation — not by the relay's own initiative, and
+   never on a Track the publisher did not mark.  On its upstream
+   subscription it decompresses each compressed group as needed; on each
+   downstream subscription it sets Compression per group, compressing
+   when that downstream advertised the capability and sending 0
+   otherwise.  A relay MAY bridge protocol versions (e.g. a moq-lite-05
+   publisher to a moq-lite-04 subscriber) provided the decompressed
+   bytes are identical to what the publisher produced.  A relay or
+   generic library MUST NOT inspect or modify the decompressed contents
+   unless otherwise negotiated.
 
 7.12.  SUBSCRIBE_OK
 
@@ -1550,15 +1544,37 @@ Table of Contents
 
    *Group Sequence*: The sequence number of the group to fetch.
 
-   The publisher responds with FRAME messages directly on the same
-   stream — there is no response header.  The subscriber parses them
-   using the track's TRACK_INFO (Section 7.10), which it MUST already
-   have (see the Track Stream (Section 5.1.4)); the group sequence is
-   implicit from the FETCH request.  The publisher FINs the stream after
-   the last frame, or resets on error.  There is no FETCH_ERROR message
-   — the publisher signals failure by resetting the stream.
+   The publisher responds on the same stream: when the Track's Publisher
+   Compression hint is non-zero the response begins with a FETCH_OK
+   (Section 7.16) message, followed by the FRAME messages; otherwise it
+   is bare FRAME messages with no response header.  The subscriber
+   parses them using the track's TRACK_INFO (Section 7.10), which it
+   MUST already have (see the Track Stream (Section 5.1.4)); the group
+   sequence is implicit from the FETCH request.  The publisher FINs the
+   stream after the last frame, or resets on error.  There is no
+   FETCH_ERROR message — the publisher signals failure by resetting the
+   stream.
 
-7.16.  PROBE
+7.16.  FETCH_OK
+
+   FETCH_OK is the first message of a fetch response, sent by the
+   publisher only when the Track's Publisher Compression hint is non-
+   zero (see TRACK_INFO (Section 7.10)).  It carries the Compression
+   field for the single group being fetched; the FRAME messages follow
+   on the same stream.  When the hint is 0 it is omitted and the
+   response is bare FRAME messages.
+
+   FETCH_OK Message {
+     Message Length (i)
+     Compression (i)
+   }
+
+   *Compression*: The compression scheme for the fetched group, with the
+   same meaning as in the Section 3.4 message: 0 verbatim, 1 raw
+   DEFLATE.  When 1, the FRAME messages following this FETCH_OK form a
+   single DEFLATE stream (see Section 7.11).
+
+7.17.  PROBE
 
    PROBE is used to measure the available bitrate of the connection.
 
@@ -1584,7 +1600,7 @@ Table of Contents
       statistics directly.  This field may be deprecated once RTT is
       universally available via the underlying transport API.
 
-7.17.  GOAWAY
+7.18.  GOAWAY
 
    A GOAWAY message is sent to initiate a graceful session shutdown with
    an optional redirect.
@@ -1601,7 +1617,7 @@ Table of Contents
    port are permitted.  If validation fails, the recipient MUST close
    the session without reconnecting.
 
-7.18.  GROUP
+7.19.  GROUP
 
    The GROUP message contains information about a Group, as well as a
    reference to the subscription being served.
@@ -1610,6 +1626,7 @@ Table of Contents
      Message Length (i)
      Subscribe ID (i)
      Group Sequence (i)
+     [Compression (i)]
    }
 
    *Subscribe ID*: The corresponding Subscribe ID.  This ID is used to
@@ -1619,22 +1636,31 @@ Table of Contents
    increase by 1 for each new group.  A subscriber MUST handle gaps,
    potentially caused by congestion.
 
-7.19.  FRAME
+   *Compression*: The compression scheme applied to this group's frame
+   sequence, present only when the Track's Publisher Compression hint is
+   non-zero (see TRACK_INFO (Section 7.10)). 0 means the FRAME messages
+   following this GROUP message are verbatim; 1 means they are a single
+   raw DEFLATE stream (see Section 7.11).  When the hint is 0, the field
+   is absent and the frames are always verbatim.
+
+7.20.  FRAME
 
    The FRAME message is a payload within a group.
 
    FRAME Message {
      [Timestamp Delta (i)]
-     [Compression (i)]
      Message Length (i)
      Payload (b)
    }
 
    Timestamp Delta is present only when the Track's Publisher Timescale
-   is non-zero, and Compression only when the Track's Publisher
-   Compression hint is non-zero (see TRACK_INFO (Section 7.10)).  Each
-   is independently omitted when its condition does not hold; with both
-   absent the FRAME is just Message Length and Payload.
+   (see TRACK_INFO (Section 7.10)) is non-zero.  When Publisher
+   Timescale is 0, the field is omitted from the wire and the FRAME
+   consists of just Message Length and Payload.  The FRAME fields are
+   always the uncompressed contents; when the group is compressed (see
+   Section 7.11) the whole frame sequence is carried inside the group's
+   DEFLATE stream, so Message Length remains the uncompressed payload
+   size.
 
    *Timestamp Delta*: A signed delta from the previous frame's
    timestamp, in the Track's negotiated Timescale.  Encoded as a zigzag-
@@ -1651,24 +1677,13 @@ Table of Contents
    first frame of a group is delta-encoded from 0, so its Timestamp
    Delta is the zigzag encoding of the absolute timestamp.
 
-   *Compression*: The algorithm (Section 7.11) used for this frame's
-   Payload, present only when the Track's Publisher Compression hint is
-   non-zero (see TRACK_INFO (Section 7.10)); when the hint is 0 the
-   field is absent and the payload is always verbatim. none (0) carries
-   the payload verbatim; any other identifier names the algorithm whose
-   output the payload is.  The sender chooses per frame and MUST NOT use
-   an algorithm the receiver did not advertise in its Compression
-   Parameter (Section 7.3.3); it SHOULD use none whenever compression
-   would not shrink the payload.  An empty payload MUST use none.
-
-   *Payload*: An application-specific payload.  When the Compression
-   field is present and non-none, the payload is the compressed form and
-   Message Length describes its compressed (on-wire) size; the receiver
-   decompresses it with the named algorithm (Section 7.11) before
-   delivery.  A generic library or relay MUST NOT inspect or modify the
-   decompressed contents unless otherwise negotiated; recompression that
-   preserves the decompressed bytes exactly is allowed (see Compression
-   (Section 7.11)).
+   *Payload*: An application-specific payload.  Message Length is the
+   uncompressed payload size; any compression is group-scoped (see
+   Section 7.11) and applied to the whole frame sequence on the stream,
+   not to this field individually.  A generic library or relay MUST NOT
+   inspect or modify the decompressed contents unless otherwise
+   negotiated; recompression that preserves the decompressed bytes
+   exactly is allowed (see Section 7.11).
 
 8.  Appendix A: Changelog
 
@@ -1716,11 +1731,13 @@ Table of Contents
 
    *  Removed FETCH_OK and trimmed SUBSCRIBE_OK down to a single
       resolved start group.  Publisher properties moved to TRACK_INFO; a
-      FETCH returns bare FRAME messages.  All publisher properties are
-      immutable for the lifetime of the Track — a publisher-side change
-      would otherwise have to fan _out_ to every downstream of a relay,
-      whereas subscriber properties fan _in_ and may still change via
-      SUBSCRIBE_UPDATE.
+      FETCH returns bare FRAME messages (a minimal FETCH_OK is
+      reintroduced only for compressible tracks, to carry the per-group
+      compression flag; see the compression entry).  All publisher
+      properties are immutable for the lifetime of the Track — a
+      publisher-side change would otherwise have to fan _out_ to every
+      downstream of a relay, whereas subscriber properties fan _in_ and
+      may still change via SUBSCRIBE_UPDATE.
 
    *  Split the resolved group range across SUBSCRIBE_OK and a new
       SUBSCRIBE_END.  SUBSCRIBE_OK resolves the absolute start (>= the
@@ -1776,18 +1793,18 @@ Table of Contents
    *  Added QUIC datagram delivery for groups, sharing Subscribe IDs
       with existing subscriptions (no separate control stream).
 
-   *  Added payload compression.  Publisher Compression in TRACK_INFO is
-      now a boolean end-to-end hint that a Track's payloads are worth
-      compressing; the algorithm is negotiated per hop via a new SETUP
-      Compression parameter (each endpoint advertises the algorithms it
-      can decompress) and named per frame by a new Compression field in
-      FRAME and datagram bodies (present only when the hint is set).
-      none (0) and deflate (1) are defined, sharing identifiers with the
-      MoQ Payload Compression Extension.  Because each payload is an
-      independent stream, a frame can opt out (none) when compression
-      would not shrink it — e.g. a small JSON merge-patch delta — while
-      larger payloads on the same Track are compressed, and different
-      hops can use different algorithms.
+   *  Added payload compression, scoped per group.  Publisher
+      Compression in TRACK_INFO is a boolean end-to-end hint that a
+      Track's payloads are worth compressing; a new SETUP Compression
+      parameter negotiates the capability per hop; and a per-group
+      Compression field — in each GROUP message, datagram body, and a
+      reintroduced FETCH_OK message (present only when the hint is set)
+      — states whether that group is compressed.  When set, the group's
+      entire FRAME sequence is a single raw DEFLATE stream, reset at
+      each group boundary, so the first frame stays independently
+      decodable while later frames share the context. 0 is verbatim and
+      1 is DEFLATE; other schemes are left to future extensions (one in
+      effect per hop).  There is no per-frame compression.
 
    *  Added Qmux [qmux] transport bindings for TCP/TLS and WebSocket,
       for environments where UDP is unavailable.  The WebSocket binding
@@ -1981,8 +1998,9 @@ Table of Contents
    as in the CRIME and BREACH attacks.  A publisher MUST NOT set a non-
    zero Publisher Compression hint on a Track whose payloads combine
    secret material with attacker-influenced material.  Because
-   compression is per-frame with no cross-frame dictionary, the exposure
-   is bounded to within a single payload, but it is not eliminated.
+   compression is group-scoped, the exposure is bounded to within a
+   single group — which may combine several frames, a wider window than
+   a single frame — but it is not eliminated.
 
    A malicious sender could emit a small compressed payload that
    decompresses to a very large buffer (a "decompression bomb").  A
