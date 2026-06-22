@@ -571,8 +571,8 @@ Table of Contents
    subscriber MUST have the track's TRACK_INFO before it can parse the
    FRAME messages that arrive on Group Streams, since the timescale
    determines the frame wire format and the compression hint determines
-   whether the stream is DEFLATE-compressed; it MAY open the Track and
-   Subscribe streams concurrently and buffer frames until TRACK_INFO
+   whether frame payloads are DEFLATE-compressed; it MAY open the Track
+   and Subscribe streams concurrently and buffer frames until TRACK_INFO
    arrives.
 
    The publisher sends SUBSCRIBE_OK once the absolute start group is
@@ -844,10 +844,11 @@ Table of Contents
 
    A Group Stream MUST start with a GROUP message and MAY be followed by
    any number of FRAME messages.  When the Track is compressed on this
-   hop (see Section 7.11), the FRAME messages following the GROUP
-   message form a single DEFLATE stream.  A Group MAY contain zero FRAME
-   messages, potentially indicating a gap in the track.  A frame MAY
-   contain an empty payload, potentially indicating a gap in the group.
+   hop (see Section 7.11), each frame's payload is a slice of the
+   group's single DEFLATE stream, while the FRAME framing stays
+   uncompressed.  A Group MAY contain zero FRAME messages, potentially
+   indicating a gap in the track.  A frame MAY contain an empty payload,
+   potentially indicating a gap in the group.
 
    Both the publisher and subscriber MAY reset the stream at any time.
    This is not a fatal error and the session remains active.  The
@@ -1423,17 +1424,26 @@ Table of Contents
    a one-frame group carrying a small JSON merge-patch delta that
    DEFLATE would enlarge.
 
-   Compression is *group-scoped*. When a group is compressed, its entire
-   sequence of FRAME messages is a single DEFLATE stream, reset at each
-   group boundary: on a Group Stream this is the FRAME sequence
-   following the GROUP message; on a Fetch Stream it is the FRAME
-   sequence following the FETCH_OK; in a datagram it is the single
-   frame's payload.  The first frame of a group is therefore
-   independently decodable — a subscriber joining at a group boundary
-   needs nothing earlier — while later frames in the same group share
-   the compression context, so both framing bytes and cross-frame
-   redundancy are compressed.  There is no shared state between groups.
-   A group with no frames carries no DEFLATE stream.
+   Compression is *group-scoped* but applied only to frame payloads,
+   never to the FRAME framing.  Within a group the payloads are
+   compressed as a single DEFLATE stream — reset at each group boundary
+   — whose output is partitioned at frame boundaries: the compressor
+   MUST flush at the end of each frame so that frame's portion of the
+   stream is exactly the bytes stored in its Payload (delimited by
+   Message Length).  The first frame of a group starts the stream fresh,
+   so a subscriber joining at a group boundary needs nothing earlier,
+   while later frames share the compression context and so retain cross-
+   frame redundancy across the group.  There is no shared state between
+   groups; a frame with an empty payload contributes nothing to the
+   stream.
+
+   Compressing only the payloads, and leaving the framing in the clear,
+   is deliberate.  A relay or cache can hold the payloads compressed in
+   memory and forward them without inflating, and can re-frame a group —
+   for example to bridge a future transport version that changes the
+   GROUP or FRAME headers — without touching the compressed payloads.
+   Neither is possible if the framing is buried inside the compressed
+   stream.
 
    A relay applies compression independently on each hop, driven by each
    downstream's negotiation — not by the relay's own initiative, and
@@ -1570,9 +1580,9 @@ Table of Contents
    }
 
    *Compression*: The compression scheme for the fetched group, with the
-   same meaning as in the Section 3.4 message: 0 verbatim, 1 raw
-   DEFLATE.  When 1, the FRAME messages following this FETCH_OK form a
-   single DEFLATE stream (see Section 7.11).
+   same meaning as in the Section 3.4 message: 0 verbatim, 1 the frame
+   payloads form a single raw DEFLATE stream sliced per frame (see
+   Section 7.11).
 
 7.17.  PROBE
 
@@ -1637,11 +1647,12 @@ Table of Contents
    potentially caused by congestion.
 
    *Compression*: The compression scheme applied to this group's frame
-   sequence, present only when the Track's Publisher Compression hint is
-   non-zero (see TRACK_INFO (Section 7.10)). 0 means the FRAME messages
-   following this GROUP message are verbatim; 1 means they are a single
-   raw DEFLATE stream (see Section 7.11).  When the hint is 0, the field
-   is absent and the frames are always verbatim.
+   payloads, present only when the Track's Publisher Compression hint is
+   non-zero (see TRACK_INFO (Section 7.10)). 0 means each frame Payload
+   is verbatim; 1 means the payloads form a single raw DEFLATE stream,
+   sliced per frame (see Section 7.11).  The FRAME framing is never
+   compressed either way.  When the hint is 0, the field is absent and
+   the payloads are always verbatim.
 
 7.20.  FRAME
 
@@ -1656,11 +1667,9 @@ Table of Contents
    Timestamp Delta is present only when the Track's Publisher Timescale
    (see TRACK_INFO (Section 7.10)) is non-zero.  When Publisher
    Timescale is 0, the field is omitted from the wire and the FRAME
-   consists of just Message Length and Payload.  The FRAME fields are
-   always the uncompressed contents; when the group is compressed (see
-   Section 7.11) the whole frame sequence is carried inside the group's
-   DEFLATE stream, so Message Length remains the uncompressed payload
-   size.
+   consists of just Message Length and Payload.  The framing is never
+   compressed; only the Payload is (see Section 7.11), so Message Length
+   is always the on-wire Payload size.
 
    *Timestamp Delta*: A signed delta from the previous frame's
    timestamp, in the Track's negotiated Timescale.  Encoded as a zigzag-
@@ -1677,13 +1686,14 @@ Table of Contents
    first frame of a group is delta-encoded from 0, so its Timestamp
    Delta is the zigzag encoding of the absolute timestamp.
 
-   *Payload*: An application-specific payload.  Message Length is the
-   uncompressed payload size; any compression is group-scoped (see
-   Section 7.11) and applied to the whole frame sequence on the stream,
-   not to this field individually.  A generic library or relay MUST NOT
-   inspect or modify the decompressed contents unless otherwise
-   negotiated; recompression that preserves the decompressed bytes
-   exactly is allowed (see Section 7.11).
+   *Payload*: An application-specific payload.  When the group is
+   compressed (see Section 7.11) this holds this frame's slice of the
+   group's DEFLATE stream and Message Length is its compressed size;
+   otherwise it is verbatim.  The framing around it is never compressed.
+   A generic library or relay MUST NOT inspect or modify the
+   decompressed contents unless otherwise negotiated; recompression that
+   preserves the decompressed bytes exactly is allowed (see
+   Section 7.11).
 
 8.  Appendix A: Changelog
 
@@ -1800,11 +1810,14 @@ Table of Contents
       Compression field — in each GROUP message, datagram body, and a
       reintroduced FETCH_OK message (present only when the hint is set)
       — states whether that group is compressed.  When set, the group's
-      entire FRAME sequence is a single raw DEFLATE stream, reset at
-      each group boundary, so the first frame stays independently
-      decodable while later frames share the context. 0 is verbatim and
-      1 is DEFLATE; other schemes are left to future extensions (one in
-      effect per hop).  There is no per-frame compression.
+      frame payloads (only the payloads, never the framing) form a
+      single raw DEFLATE stream, reset at each group boundary and sliced
+      per frame into each frame's opaque Payload; the first frame starts
+      the stream fresh while later frames share the context.  Keeping
+      the framing uncompressed lets a relay store payloads compressed
+      and re-frame across transport versions without recompressing. 0 is
+      verbatim and 1 is DEFLATE; other schemes are left to future
+      extensions (one in effect per hop).
 
    *  Added Qmux [qmux] transport bindings for TCP/TLS and WebSocket,
       for environments where UDP is unavailable.  The WebSocket binding
