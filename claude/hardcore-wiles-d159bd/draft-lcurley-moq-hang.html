@@ -1242,7 +1242,7 @@ A quick recap:<a href="#section-2-1" class="pilcrow">¶</a></p>
           <p id="section-2-4.4.1"><strong>Container</strong>: A tiny header in front of each media payload containing the timestamp.<a href="#section-2-4.4.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-2-4.5">
-          <p id="section-2-4.5.1"><strong>Timeline</strong>: An optional index mapping each media Group to its presentation timestamp, used for seeking.<a href="#section-2-4.5.1" class="pilcrow">¶</a></p>
+          <p id="section-2-4.5.1"><strong>Timeline</strong>: An optional index mapping each media Group to the presentation timestamp of its first frame, used for seeking.<a href="#section-2-4.5.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 </section>
@@ -1450,7 +1450,7 @@ Audio and video do not share that structure and use separate timelines.<a href="
 <p id="section-6-3">The timeline track is a single Group that grows over the lifetime of the broadcast.
 Each frame appends one entry, in Group order, mapping a Group to the presentation timestamp of that Group's first frame.
 A subscriber builds the full index by reading the Group from its first frame; because moq-lite always retains the latest Group, a subscriber that joins late still receives every prior entry.
-A publisher <span class="bcp14">SHOULD</span> use a single Group, but <span class="bcp14">MAY</span> start a new Group to re-anchor the index for an exceptionally long broadcast.<a href="#section-6-3" class="pilcrow">¶</a></p>
+A publisher <span class="bcp14">SHOULD</span> keep the whole timeline in this single Group rather than starting a new one: moq-lite guarantees retention only of the latest Group, so splitting the index across Groups risks the earlier entries being dropped before a late subscriber can read them.<a href="#section-6-3" class="pilcrow">¶</a></p>
 <p id="section-6-4">To seek to a presentation timestamp, a subscriber selects the entry with the greatest timestamp not exceeding the target and subscribes to (or fetches) that Group, which begins with a keyframe (see <a href="#container" class="auto internal xref">Section 5</a>).<a href="#section-6-4" class="pilcrow">¶</a></p>
 <div id="encoding">
 <section id="section-6.1">
