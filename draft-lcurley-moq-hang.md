@@ -50,7 +50,7 @@ Hang introduces additional terminology:
 - **Participant**: A moq-lite broadcaster that may produce any number of media tracks.
 - **Catalog**: A JSON document that describes each available media track, supporting live updates.
 - **Container**: A tiny header in front of each media payload containing the timestamp.
-- **Timeline**: An optional index mapping each media Group to its presentation timestamp, used for seeking.
+- **Timeline**: An optional index mapping each media Group to the presentation timestamp of its first frame, used for seeking.
 
 
 # Discovery
@@ -239,7 +239,7 @@ Audio and video do not share that structure and use separate timelines.
 The timeline track is a single Group that grows over the lifetime of the broadcast.
 Each frame appends one entry, in Group order, mapping a Group to the presentation timestamp of that Group's first frame.
 A subscriber builds the full index by reading the Group from its first frame; because moq-lite always retains the latest Group, a subscriber that joins late still receives every prior entry.
-A publisher SHOULD use a single Group, but MAY start a new Group to re-anchor the index for an exceptionally long broadcast.
+A publisher SHOULD keep the whole timeline in this single Group rather than starting a new one: moq-lite guarantees retention only of the latest Group, so splitting the index across Groups risks the earlier entries being dropped before a late subscriber can read them.
 
 To seek to a presentation timestamp, a subscriber selects the entry with the greatest timestamp not exceeding the target and subscribes to (or fetches) that Group, which begins with a keyframe (see [Container](#container)).
 
