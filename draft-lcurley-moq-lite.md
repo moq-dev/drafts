@@ -631,7 +631,7 @@ The remaining bindings convey the path in their own handshake.
 A relay MUST NOT forward the Path Parameter; like other per-hop setup metadata it applies only to this hop (see [Session](#session)).
 
 ### Compression Parameter {#compression-parameter}
-The Compression Parameter advertises the payload compression [algorithms](#compression) the sender can *decompress* on this hop.
+The Compression Parameter advertises the payload compression [algorithms](#compression) the sender can *decompress* on this hop — its decode capability. An endpoint does not advertise which algorithms it can *produce*; when sending, it compresses with one the receiver advertised.
 The Parameter Value is a sequence of algorithm identifiers, each a variable-length integer, packed back-to-back to fill the Parameter Length.
 The identifier `none` (0) MUST NOT be listed. An endpoint that does not support compression omits the parameter.
 

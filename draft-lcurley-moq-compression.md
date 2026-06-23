@@ -65,8 +65,8 @@ COMPRESSION Setup Option {
 ~~~
 
 **Algorithm**:
-One or more Algorithm identifiers (see [Compression Algorithms](#compression-algorithms)) that the sender can decompress, each a varint, filling the Option Value.
-The identifier `none` (0) MUST NOT be listed (it requires no negotiation); an endpoint lists whichever other algorithms it supports.
+One or more Algorithm identifiers (see [Compression Algorithms](#compression-algorithms)) that the sender can decompress, each a varint, filling the Option Value — its decode capability. An endpoint does not advertise which algorithms it can *produce*; when sending, it compresses with one the receiver advertised.
+The identifier `none` (0) MUST NOT be listed (it requires no negotiation).
 An endpoint that does not support the extension omits the option.
 
 A sender MUST NOT compress with an algorithm the receiver did not advertise, and MUST NOT compress before it has received the receiver's COMPRESSION option.
