@@ -73,7 +73,8 @@ An endpoint that does not support the extension omits the option.
 Negotiation is per direction and per hop. For a given direction sender-to-receiver, the **selected algorithm** is the first identifier in the receiver's advertised list that also appears in the sender's advertised list; if the lists do not intersect, that direction is verbatim.
 Because each endpoint holds both advertised lists once SETUP has been exchanged, both compute the same selection with no further handshake — the receiver's preference governs its own inbound direction, the two directions are independent and MAY select different algorithms, and a simultaneous SETUP exchange creates no ambiguity.
 Since `deflate` is mandatory for any endpoint that advertises the option, two endpoints that both support the extension always share at least one algorithm.
-A sender MUST NOT compress with an algorithm the receiver did not advertise.
+Each endpoint lists only algorithms it can both produce and consume, so either side can compute the selection for either direction without a per-object signal.
+A sender MUST NOT compress with an algorithm the receiver did not advertise, and MUST NOT compress at all before it has received the receiver's COMPRESSION option.
 
 
 # COMPRESSION Track Property
@@ -149,7 +150,7 @@ A publisher MUST NOT set a non-zero COMPRESSION hint on a track whose object pay
 Because compression is scoped to a subgroup, the exposure is bounded to within a single subgroup — which may combine several objects, a wider window than a single object — but it is not eliminated.
 
 A malicious sender could emit a small compressed payload that decompresses to a very large buffer (a "decompression bomb").
-A receiver MUST bound the size of a decompressed object payload. If the bound is exceeded it MUST reset the affected stream (rather than allocate unbounded memory) and MAY close the session with a PROTOCOL_VIOLATION if it considers the peer abusive; the reset is stream-scoped so a single bad subgroup does not tear down unrelated subscriptions.
+Because compression is subgroup-scoped, a receiver MUST bound the cumulative decompressed size of a subgroup — not merely each object's payload, since many small payloads can otherwise accumulate without limit. If the bound is exceeded it MUST reset the affected stream (rather than allocate unbounded memory) and MAY close the session with a PROTOCOL_VIOLATION if it considers the peer abusive; the reset is stream-scoped so a single bad subgroup does not tear down unrelated subscriptions.
 
 Compression is orthogonal to {{moqt}} end-to-end encryption: an encrypted payload is effectively incompressible, so a publisher using end-to-end encryption SHOULD omit COMPRESSION (or use `0`).
 
