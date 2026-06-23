@@ -66,7 +66,7 @@ COMPRESSION Setup Option {
 
 **Algorithm**:
 One or more Algorithm identifiers (see [Compression Algorithms](#compression-algorithms)) that the sender can decompress, each a varint, filling the Option Value.
-An endpoint that includes this option MUST list `deflate` (1); the identifier `none` (0) MUST NOT be listed (it requires no negotiation).
+The identifier `none` (0) MUST NOT be listed (it requires no negotiation); an endpoint lists whichever other algorithms it supports.
 An endpoint that does not support the extension omits the option.
 
 A sender MUST NOT compress with an algorithm the receiver did not advertise, and MUST NOT compress before it has received the receiver's COMPRESSION option.
@@ -89,7 +89,7 @@ COMPRESSION Track Property {
 **Value**:
 The Algorithm identifier the publisher used for this track's payloads (see [Compression Algorithms](#compression-algorithms)).
 The absence of the property, or a value of `none` (0), means the track is uncompressed and its payloads are always transmitted verbatim.
-The publisher MUST choose an algorithm that its peer advertised in the [COMPRESSION Setup Option](#setup-negotiation); since `deflate` is mandatory to implement, it is always a safe choice.
+The publisher MUST choose an algorithm that its peer advertised in the [COMPRESSION Setup Option](#setup-negotiation), or `none` if the peer advertised none the publisher can produce.
 
 The property is fixed for the lifetime of the track and MUST NOT change.
 A relay MUST forward it unchanged on every hop, including a hop that has not negotiated the extension: there it is simply an ignored unknown Key-Value-Pair, but forwarding it lets a further-downstream hop that does negotiate the extension still act on the publisher's algorithm.
@@ -124,13 +124,13 @@ A relay or cache can hold the object payloads compressed in memory and forward t
 ## Compression Algorithms {#compression-algorithms}
 This document defines the following algorithms.
 
-| ID | Name    | Requirement | Description                                             |
-|---:|:--------|:------------|:--------------------------------------------------------|
-| 0  | none    | —           | Verbatim; the absence of compression. Never advertised. |
-| 1  | deflate | mandatory   | Raw DEFLATE {{RFC1951}}, with no zlib or gzip framing.   |
-| 2  | zstd    | optional    | Zstandard {{RFC8878}}.                                   |
+| ID | Name    | Description                                             |
+|---:|:--------|:--------------------------------------------------------|
+| 0  | none    | Verbatim; the absence of compression. Never advertised. |
+| 1  | deflate | Raw DEFLATE {{RFC1951}}, with no zlib or gzip framing.   |
+| 2  | zstd    | Zstandard {{RFC8878}}.                                   |
 
-Every endpoint that advertises this extension MUST implement `deflate`, so the publisher always has a safe choice; `zstd` is optional.
+Endpoints advertise whichever of these algorithms they support; none is mandatory, and a publisher uses one its peer advertised (or `none` if they share none).
 Further algorithms MAY be registered (see [IANA Considerations](#iana-considerations)).
 
 

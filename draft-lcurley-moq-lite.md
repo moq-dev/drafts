@@ -633,7 +633,7 @@ A relay MUST NOT forward the Path Parameter; like other per-hop setup metadata i
 ### Compression Parameter {#compression-parameter}
 The Compression Parameter advertises the payload compression [algorithms](#compression) the sender can *decompress* on this hop.
 The Parameter Value is a sequence of algorithm identifiers, each a variable-length integer, packed back-to-back to fill the Parameter Length.
-An endpoint that supports compression MUST include `deflate` (1); `none` (0) MUST NOT be listed. An endpoint that does not support compression omits the parameter.
+The identifier `none` (0) MUST NOT be listed. An endpoint that does not support compression omits the parameter.
 
 A relay MUST NOT forward the parameter (see [Session](#session)); it is negotiated independently on each hop.
 The list constrains what a publisher may use: a publisher MUST set `Publisher Compression` to an algorithm its peer advertised here (see [TRACK_INFO](#track-info)), and more generally a sender MUST NOT compress with an algorithm the receiver did not advertise, nor compress at all before it has received the receiver's Compression Parameter.
@@ -869,7 +869,7 @@ The compression algorithm the original publisher applied to this Track's payload
 - `0` (`none`): payloads are uncompressed (the default).
 - `1` (`deflate`) or `2` (`zstd`): payloads are compressed with that algorithm.
 
-The publisher MUST choose an algorithm its peer advertised in the [Compression Parameter](#compression-parameter); `deflate` is mandatory to support, so it is always a safe choice.
+The publisher MUST choose an algorithm its peer advertised in the [Compression Parameter](#compression-parameter), or `0` if the peer advertised none the publisher can produce.
 The value is fixed for the lifetime of the Track and forwarded unchanged by relays, so even a hop that does not compress passes it along for a further-downstream hop to act on.
 It does not by itself cause compression: a receiver decompresses if and only if the value names a non-`none` algorithm and the receiver advertised that algorithm in its own [Compression Parameter](#compression-parameter); otherwise the payloads are verbatim (see [Compression](#compression)). A subscriber that does not recognize the value treats the payloads as verbatim, so an unknown future algorithm degrades to uncompressed rather than blocking the Track.
 
@@ -885,13 +885,13 @@ A hop compresses a Track's payloads when, and only when, `Publisher Compression`
 
 The following algorithms are defined:
 
-| ID | Name    | Requirement | Description                                             |
-|---:|:--------|:------------|:--------------------------------------------------------|
-| 0  | none    | —           | Verbatim; the absence of compression. Never advertised. |
-| 1  | deflate | mandatory   | Raw DEFLATE {{!RFC1951}}, with no zlib or gzip framing.  |
-| 2  | zstd    | optional    | Zstandard {{!RFC8878}}.                                  |
+| ID | Name    | Description                                             |
+|---:|:--------|:--------------------------------------------------------|
+| 0  | none    | Verbatim; the absence of compression. Never advertised. |
+| 1  | deflate | Raw DEFLATE {{!RFC1951}}, with no zlib or gzip framing.  |
+| 2  | zstd    | Zstandard {{!RFC8878}}.                                  |
 
-Every endpoint that supports compression MUST implement `deflate`, so the publisher always has a safe choice; `zstd` is optional, and further algorithms MAY be defined by future extensions.
+Endpoints advertise whichever of these algorithms they support; none is mandatory, and a publisher uses one its peer advertised, or `none` if they share none. Further algorithms MAY be defined by future extensions.
 
 Compression is **group-scoped** and applied only to frame payloads, never to the FRAME framing. Within a group the payloads form a single compressed stream in the Track's algorithm, reset at each group boundary, whose output is partitioned at frame boundaries: the compressor flushes at the end of each frame so that frame's slice is exactly the bytes stored in its `Payload` (delimited by `Message Length`). Both algorithms provide such a flush that retains the window (DEFLATE's sync flush; Zstandard's `ZSTD_e_flush`), so later frames in a group reuse the compression context. A receiver maintains a single decoder per group, reset at each group boundary, and feeds each frame's `Payload` through it in order: the first frame starts the decoder fresh — so a subscriber joining at a group boundary needs nothing earlier — while later frames retain cross-frame redundancy across the group. There is no shared state between groups; a frame with an empty payload contributes nothing to the stream.
 
@@ -1114,7 +1114,7 @@ A generic library or relay MUST NOT inspect or modify the decompressed contents 
 - Removed `Publisher Max Latency`. The publisher's retention guarantee is no longer part of the wire format; retention for FETCH and future subscriptions is best-effort and left to the publisher.
 - Timestamp-based expiration replaces wall-clock arrival time when a Track timescale is negotiated.
 - Added QUIC datagram delivery for groups, sharing Subscribe IDs with existing subscriptions (no separate control stream).
-- Added payload compression, scoped per group. `Publisher Compression` in TRACK_INFO now names the algorithm the publisher used (`none`/`deflate`/`zstd`), and a new SETUP `Compression` parameter carries the algorithms each endpoint can decompress on a hop. The publisher MUST pick an algorithm its peer advertised; `deflate` is mandatory (so always safe) and `zstd` is optional. There is no per-group or per-frame flag on the wire — a receiver decompresses iff `Publisher Compression` names a non-`none` algorithm it advertised, else treats payloads as verbatim. When compressed, a group's frame payloads (only the payloads, never the framing) form a single stream in that algorithm, reset at each group boundary and sliced per frame into each frame's opaque `Payload`, with the algorithm's redundant container bytes omitted (the RFC 7692 trim for deflate; magicless, checksum-less frames for zstd) since moq-lite frames the slices itself; the decoder keeps one context per group. Keeping the framing uncompressed lets a relay store payloads compressed and re-frame across transport versions without recompressing.
+- Added payload compression, scoped per group. `Publisher Compression` in TRACK_INFO now names the algorithm the publisher used (`none`/`deflate`/`zstd`), and a new SETUP `Compression` parameter carries the algorithms each endpoint can decompress on a hop. The publisher MUST pick an algorithm its peer advertised (or `none` if they share none); `deflate` and `zstd` are defined, neither mandatory. There is no per-group or per-frame flag on the wire — a receiver decompresses iff `Publisher Compression` names a non-`none` algorithm it advertised, else treats payloads as verbatim. When compressed, a group's frame payloads (only the payloads, never the framing) form a single stream in that algorithm, reset at each group boundary and sliced per frame into each frame's opaque `Payload`, with the algorithm's redundant container bytes omitted (the RFC 7692 trim for deflate; magicless, checksum-less frames for zstd) since moq-lite frames the slices itself; the decoder keeps one context per group. Keeping the framing uncompressed lets a relay store payloads compressed and re-frame across transport versions without recompressing.
 - Added Qmux [qmux] transport bindings for TCP/TLS and WebSocket, for environments where UDP is unavailable. The WebSocket binding uses the WebSocket message framing in place of the Qmux Record `Size` field.
 
 ## moq-lite-04
