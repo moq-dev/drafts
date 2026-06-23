@@ -19,15 +19,17 @@ author:
 normative:
   moqt: I-D.ietf-moq-transport
   RFC1951:
+  RFC8878:
 
 informative:
+  RFC7692:
 
 --- abstract
 
 This document defines a payload compression extension for MoQ Transport {{moqt}}.
-A track-level Compression property lets the original publisher signal that a track's object payloads are worth compressing, and with which algorithm.
-Compression is then applied independently on each hop: a payload is compressed only on a hop that has negotiated the extension and whose receiver supports the algorithm, and is sent verbatim otherwise.
-Each object is compressed independently so objects remain individually decodable, and the decompressed bytes — the actual object — are unchanged end to end.
+A track-level Compression property is a boolean hint by which the original publisher marks a track's object payloads as good candidates for compression.
+The algorithm is negotiated independently on each hop, and compression is applied only on a hop where the publisher's hint is set and the sender and receiver share an algorithm; otherwise payloads travel verbatim.
+Compression is scoped to a subgroup: the object payloads of a subgroup form one compressed stream, sliced back into the individual object payloads so the object framing stays in the clear and the decompressed bytes — the actual objects — are unchanged end to end.
 
 --- middle
 
@@ -43,17 +45,17 @@ But MoQ also carries non-media tracks — JSON, text, telemetry, captions, uncom
 For these tracks there is no standard, transport-visible way to compress payloads, so each application reinvents it, and relays cannot help.
 
 Like HTTP Transfer-Encoding, the on-wire compression is a hop-by-hop optimization: it does not conceptually change the object payload — the decompressed bytes *are* the object — it only changes how those bytes are carried over a single hop.
-What this extension adds on top is an end-to-end *signal*: a track property by which the original publisher marks the content as worth compressing and names the algorithm. The signal travels end-to-end; the compression happens per hop.
+What this extension adds is an end-to-end *signal* — a boolean track property by which the original publisher marks the content as worth compressing — plus a per-hop negotiation of the algorithm.
 
-- **Publisher signals, hops apply**: the COMPRESSION track property is set by the original publisher and carried end-to-end, but a payload is only compressed on a hop that negotiated the extension and whose receiver supports the algorithm. Where the extension is not negotiated, the same payload travels verbatim.
-- **Per object, independently**: each object payload is an independent compressed stream with no shared dictionary or state between objects. This keeps every object individually decodable and avoids head-of-line decoding within a group.
+- **Publisher signals, hops apply**: the COMPRESSION track property is a boolean set by the original publisher and carried end to end, but a payload is only compressed on a hop that has negotiated a shared algorithm. Which algorithm is used is decided per hop, not by the publisher; a hop that has not negotiated compression forwards the property unchanged so a further-downstream hop can still act on it.
+- **Per subgroup, sliced into objects**: within a subgroup the object payloads form one compressed stream, flushed at each object boundary so every object still carries its own payload slice, while the object headers and framing stay in the clear. This keeps the subgroup — the unit a receiver already takes as one ordered, reliable stream — as the unit of compression, while letting relays and caches store payloads compressed and re-frame them without recompressing.
 
 
 # Setup Negotiation
 The Payload Compression extension is negotiated during the SETUP exchange as defined in {{moqt}} Section 10.3.
 Unlike a purely additive property, compression MUST be negotiated: a receiver that does not understand the algorithm would otherwise pass the compressed bytes to the application as if they were plaintext.
 
-Each endpoint advertises the algorithms it can decompress by including the following Setup Option:
+Each endpoint advertises the algorithms it can decompress, in preference order (most-preferred first), by including the following Setup Option:
 
 ~~~
 COMPRESSION Setup Option {
@@ -64,88 +66,99 @@ COMPRESSION Setup Option {
 ~~~
 
 **Algorithm**:
-One or more Algorithm identifiers (see [Compression Algorithms](#compression-algorithms)) that the sender can decompress, each a varint, filling the Option Value.
-The identifier `none` (0) MUST NOT be listed (it requires no negotiation).
+One or more Algorithm identifiers (see [Compression Algorithms](#compression-algorithms)) that the sender can compress and decompress, each a varint, filling the Option Value, most-preferred first.
+An endpoint that includes this option MUST list `deflate` (1); the identifier `none` (0) MUST NOT be listed (it requires no negotiation).
+An endpoint that does not support the extension omits the option.
 
-A sender MUST NOT compress with an algorithm the receiver did not advertise in its SETUP.
-This makes the on-wire state unambiguous on every hop without any per-object signaling: a receiver decompresses a track's payloads **if and only if** the COMPRESSION track property is present and the receiver advertised that algorithm in its own SETUP. In every other case — the property absent, the extension not negotiated, or the algorithm not advertised by the receiver — the sender was not permitted to compress, so the receiver treats the payloads as verbatim.
+Negotiation is per direction and per hop. For a given direction sender-to-receiver, the **selected algorithm** is the first identifier in the receiver's advertised list that also appears in the sender's advertised list; if the lists do not intersect, that direction is verbatim.
+Because each endpoint holds both advertised lists once SETUP has been exchanged, both compute the same selection with no further handshake — the receiver's preference governs its own inbound direction, the two directions are independent and MAY select different algorithms, and a simultaneous SETUP exchange creates no ambiguity.
+Since `deflate` is mandatory for any endpoint that advertises the option, two endpoints that both support the extension always share at least one algorithm.
+A sender MUST NOT compress with an algorithm the receiver did not advertise.
 
 
 # COMPRESSION Track Property
-The COMPRESSION property is the original publisher's signal that a track's object payloads are worth compressing, and which algorithm to use.
+The COMPRESSION property is the original publisher's end-to-end signal that a track's object payloads are good candidates for compression.
 It is a track-level Key-Value-Pair carried with the track's properties (see {{moqt}} Section 2.5 and Section 12), set by the original publisher and forwarded unchanged by relays.
 Because the value is a single integer, COMPRESSION uses an even Type so the value is a bare varint:
 
 ~~~
 COMPRESSION Track Property {
   Type (vi64) = 0xC03D0
-  Value (vi64)  ; Algorithm identifier
+  Value (vi64)  ; boolean hint
 }
 ~~~
 
 **Value**:
-The Algorithm identifier the publisher recommends for this track's payloads.
-The absence of the property, or a value of `none` (0), means the track is not marked for compression and its payloads are always transmitted verbatim.
+A boolean hint: `1` means the track's payloads are good candidates for compression, `0` (or absence of the property) means they are not and are always transmitted verbatim.
+Values greater than `1` are reserved for future use and MUST be treated as `1` by a receiver that does not understand them, so the hint stays additive.
+The property names no algorithm; which algorithm is used, if any, is the per-hop [selected algorithm](#setup-negotiation).
 
 The property is fixed for the lifetime of the track and MUST NOT change.
 A relay MUST forward it unchanged on every hop, including a hop that has not negotiated the extension: there it is simply an ignored unknown Key-Value-Pair, but forwarding it lets a further-downstream hop that does negotiate the extension still act on the publisher's signal.
 
-Compression is enabled only by the combination of this track property and the extension being negotiated on a hop.
-A publisher MUST NOT compress object payloads on a track that does not carry the COMPRESSION property, and there is no way to enable compression on a per-object basis: the property governs the whole track, and on a compressing hop every non-empty payload is compressed.
+Compression is enabled only by the combination of a non-zero hint and a shared algorithm being negotiated on a hop; there is no per-object or per-subgroup signal on the wire.
+A receiver decompresses a track's object payloads **if and only if** the COMPRESSION hint is non-zero and the hop selected an algorithm for that direction, in which case it uses the selected algorithm.
+In every other case — the hint absent or zero, the extension not negotiated, or the lists not intersecting — payloads are verbatim.
 
-Whether payloads are actually compressed is decided per hop:
-
-- On a hop where the extension is negotiated and the receiver advertised the property's algorithm, every non-empty object payload MUST be compressed with that algorithm, and the receiver decompresses it.
-- On any other hop — the extension not negotiated, or the receiver did not advertise that algorithm — payloads are sent verbatim. The receiver either never sees the property (an ignored unknown Key-Value-Pair) or sees it but knows the sender was not permitted to compress for it, so it treats the payloads as verbatim either way.
-
-Compression applies to the object payload only; object properties and message framing are never compressed.
-An empty payload (size 0) MUST NOT be compressed and remains empty on the wire.
-
-A publisher SHOULD set COMPRESSION only for payload types that benefit from it.
-Already-compressed media SHOULD omit it (or use `none`).
+A publisher SHOULD set COMPRESSION only for payload types that benefit from it (e.g. JSON, text, uncompressed binary structures).
+Already-compressed media SHOULD omit it (or use `0`).
 
 
-# Compression Algorithms {#compression-algorithms}
+# Compression {#compression}
+Compression is applied to object payloads only — object headers, properties, and message framing are never compressed — and is **scoped to a subgroup**.
+Within a subgroup the object payloads form a single compressed stream in the [selected algorithm](#setup-negotiation), reset at each subgroup boundary.
+The stream's output is partitioned at object boundaries: the compressor flushes at the end of each object so that object's slice is exactly the bytes carried as its payload, and the payload length in the object header gives the on-wire (compressed) slice size.
+Both algorithms provide a window-retaining flush (DEFLATE's sync flush; Zstandard's `ZSTD_e_flush`), so later objects in a subgroup reuse the compression context and retain cross-object redundancy.
+
+A receiver maintains a single decoder per subgroup, reset at each subgroup boundary, and feeds each object's payload through it in order: the first object of a subgroup starts the decoder fresh — so a receiver joining at a group boundary needs nothing earlier — while later objects build on it.
+There is no shared state between subgroups; an empty payload (size 0) contributes nothing to the stream and remains empty on the wire.
+An object delivered as a datagram is a single-object stream, compressed on its own.
+
+Because the object framing already delimits each slice, an algorithm's own redundant boundary and container bytes are omitted: for `deflate`, the trailing four `00 00 FF FF` bytes a sync flush emits are removed from each payload and the decoder re-inserts them (as in {{RFC7692}}); for `zstd`, the per-subgroup stream uses the magicless frame format and omits the content checksum.
+
+Leaving the framing uncompressed is deliberate.
+A relay or cache can hold the object payloads compressed in memory and forward them without inflating, and can re-frame a subgroup — for example to bridge a transport version that changes the subgroup or object headers — without touching the compressed payloads.
+Neither is possible if the framing is buried inside the compressed stream.
+
+## Compression Algorithms {#compression-algorithms}
 This document defines the following algorithms.
+
+| ID | Name    | Requirement | Description                                             |
+|---:|:--------|:------------|:--------------------------------------------------------|
+| 0  | none    | —           | Verbatim; the absence of compression. Never advertised. |
+| 1  | deflate | mandatory   | Raw DEFLATE {{RFC1951}}, with no zlib or gzip framing.   |
+| 2  | zstd    | optional    | Zstandard {{RFC8878}}.                                   |
+
+Every endpoint that advertises this extension MUST implement `deflate`, so a common algorithm always exists; `zstd` is optional.
 Further algorithms MAY be registered (see [IANA Considerations](#iana-considerations)).
-
-| ID | Name    | Description                                              |
-|---:|:--------|:--------------------------------------------------------|
-| 0  | none    | Payloads are transmitted verbatim. The default.        |
-| 1  | deflate | Raw DEFLATE {{RFC1951}}, with no zlib or gzip framing.  |
-
-For `deflate`, each object payload is an independent raw DEFLATE stream.
-There is no shared dictionary or state between objects, so each object decompresses on its own.
 
 
 # Relay Behavior
-A relay forwards the COMPRESSION track property unchanged — it is the publisher's end-to-end signal — and applies compression independently on each hop.
+A relay forwards the boolean COMPRESSION track property unchanged — it is the publisher's end-to-end signal — and applies compression independently on each hop, driven by each hop's negotiation rather than by its own initiative; a relay does not compress a track the publisher did not mark.
 
-On its upstream subscription, the relay receives payloads compressed if and only if that hop compressed them (the extension negotiated and the relay advertised the algorithm); it decompresses them as needed.
-On each downstream subscription the relay serves, it compresses payloads with the track's algorithm when that downstream negotiated the extension and advertised the algorithm, and sends them verbatim otherwise.
-
-Compression is thus driven by the publisher's track property, not by the relay: a relay does not compress a track the publisher did not mark.
+On its upstream subscription the relay receives each subgroup compressed with that hop's selected algorithm (or verbatim) and decompresses as needed.
+On each downstream subscription it (re)compresses each subgroup with that downstream's selected algorithm, or sends it verbatim when no algorithm is shared.
+A relay MAY transcode between algorithms.
 In every case the decompressed bytes delivered to the application MUST be identical to what the origin published.
-
 A relay or generic library MUST NOT inspect or modify the decompressed contents unless otherwise negotiated; only recompression that preserves the decompressed bytes exactly is permitted.
 
 
 # Security Considerations
-Compressing data that mixes attacker-controlled and secret content in the same object can leak the secret through compressed size, as in the CRIME and BREACH attacks.
-A publisher MUST NOT set COMPRESSION on a track whose object payloads combine secret material with attacker-influenced material.
-Because compression here is per-object with no cross-object dictionary, the exposure is bounded to within a single object, but it is not eliminated.
+Compressing data that mixes attacker-controlled and secret content can leak the secret through compressed size, as in the CRIME and BREACH attacks.
+A publisher MUST NOT set a non-zero COMPRESSION hint on a track whose object payloads combine secret material with attacker-influenced material.
+Because compression is scoped to a subgroup, the exposure is bounded to within a single subgroup — which may combine several objects, a wider window than a single object — but it is not eliminated.
 
 A malicious sender could emit a small compressed payload that decompresses to a very large buffer (a "decompression bomb").
-A receiver MUST bound the size of a decompressed object payload. If the bound is exceeded it MUST reset the affected Subscribe/Fetch stream (rather than allocate unbounded memory) and MAY close the session with a PROTOCOL_VIOLATION if it considers the peer abusive; the reset is stream-scoped so a single bad object does not tear down unrelated subscriptions.
+A receiver MUST bound the size of a decompressed object payload. If the bound is exceeded it MUST reset the affected stream (rather than allocate unbounded memory) and MAY close the session with a PROTOCOL_VIOLATION if it considers the peer abusive; the reset is stream-scoped so a single bad subgroup does not tear down unrelated subscriptions.
 
-Compression is orthogonal to {{moqt}} end-to-end encryption: an encrypted payload is effectively incompressible, so a publisher using end-to-end encryption SHOULD omit COMPRESSION (or use `none`).
+Compression is orthogonal to {{moqt}} end-to-end encryption: an encrypted payload is effectively incompressible, so a publisher using end-to-end encryption SHOULD omit COMPRESSION (or use `0`).
 
 
 # IANA Considerations
 
 This document requests the following registrations.
 High, distinctive values are requested to avoid the low ranges reserved by {{moqt}} and to minimize collisions with provisional registrations by other extensions; they also avoid the greasing pattern (`0x7f * N + 0x9D`).
-The parameter Type is even so that its value is a bare varint with no length prefix (see {{moqt}} Section 2.5).
+Each Type is even so that its value is a bare varint with no length prefix (see {{moqt}} Section 2.5).
 
 ## MOQT Setup Options
 
@@ -172,6 +185,7 @@ The initial contents are:
 |---:|:--------|:--------------|
 | 0  | none    | This Document |
 | 1  | deflate | This Document |
+| 2  | zstd    | This Document |
 
 
 --- back
