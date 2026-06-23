@@ -8,9 +8,9 @@
 <meta content="Luke Curley" name="author">
 <meta content="
        This document defines a payload compression extension for MoQ Transport  .
-A track-level Compression property lets the original publisher signal that a track's object payloads are worth compressing, and with which algorithm.
-Compression is then applied independently on each hop: a payload is compressed only on a hop that has negotiated the extension and whose receiver supports the algorithm, and is sent verbatim otherwise.
-Each object is compressed independently so objects remain individually decodable, and the decompressed bytes — the actual object — are unchanged end to end. 
+A track-level Compression property is a boolean hint by which the original publisher marks a track's object payloads as good candidates for compression.
+The algorithm is negotiated independently on each hop, and compression is applied only on a hop where the publisher's hint is set and the sender and receiver share an algorithm; otherwise payloads travel verbatim.
+Compression is scoped to a subgroup: the object payloads of a subgroup form one compressed stream, sliced back into the individual object payloads so the object framing stays in the clear and the decompressed bytes — the actual objects — are unchanged end to end. 
     " name="description">
 <meta content="xml2rfc 3.34.0" name="generator">
 <meta content="draft-lcurley-moq-compression-latest" name="ietf.draft">
@@ -1050,7 +1050,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Curley</td>
-<td class="center">Expires 24 December 2026</td>
+<td class="center">Expires 25 December 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1063,12 +1063,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-lcurley-moq-compression-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-06-22" class="published">22 June 2026</time>
+<time datetime="2026-06-23" class="published">23 June 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-12-24">24 December 2026</time></dd>
+<dd class="expires"><time datetime="2026-12-25">25 December 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1081,9 +1081,9 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
 <p id="section-abstract-1">This document defines a payload compression extension for MoQ Transport <span>[<a href="#moqt" class="cite xref">moqt</a>]</span>.
-A track-level Compression property lets the original publisher signal that a track's object payloads are worth compressing, and with which algorithm.
-Compression is then applied independently on each hop: a payload is compressed only on a hop that has negotiated the extension and whose receiver supports the algorithm, and is sent verbatim otherwise.
-Each object is compressed independently so objects remain individually decodable, and the decompressed bytes — the actual object — are unchanged end to end.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+A track-level Compression property is a boolean hint by which the original publisher marks a track's object payloads as good candidates for compression.
+The algorithm is negotiated independently on each hop, and compression is applied only on a hop where the publisher's hint is set and the sender and receiver share an algorithm; otherwise payloads travel verbatim.
+Compression is scoped to a subgroup: the object payloads of a subgroup form one compressed stream, sliced back into the individual object payloads so the object framing stays in the clear and the decompressed bytes — the actual objects — are unchanged end to end.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-discussion-venues">
@@ -1115,7 +1115,7 @@ Each object is compressed independently so objects remain individually decodable
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 24 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 25 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1157,7 +1157,12 @@ Each object is compressed independently so objects remain individually decodable
             <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-compression-track-property" class="internal xref">COMPRESSION Track Property</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
-            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-compression-algorithms" class="internal xref">Compression Algorithms</a></p>
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-compression" class="internal xref">Compression</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-compression-algorithms" class="internal xref">Compression Algorithms</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
             <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-relay-behavior" class="internal xref">Relay Behavior</a></p>
@@ -1180,7 +1185,15 @@ Each object is compressed independently so objects remain individually decodable
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
-            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-references" class="internal xref">References</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1">
+                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="auto internal xref">9.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.2">
+                <p id="section-toc.1-1.9.2.2.1"><a href="#section-9.2" class="auto internal xref">9.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
             <p id="section-toc.1-1.10.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
@@ -1213,13 +1226,13 @@ For media this is the right layering: already-compressed codecs (H.264, Opus, AV
 <p id="section-2-2">But MoQ also carries non-media tracks — JSON, text, telemetry, captions, uncompressed binary structures — where the payloads are highly compressible and where end-to-end encryption is often not in use.
 For these tracks there is no standard, transport-visible way to compress payloads, so each application reinvents it, and relays cannot help.<a href="#section-2-2" class="pilcrow">¶</a></p>
 <p id="section-2-3">Like HTTP Transfer-Encoding, the on-wire compression is a hop-by-hop optimization: it does not conceptually change the object payload — the decompressed bytes <em>are</em> the object — it only changes how those bytes are carried over a single hop.
-What this extension adds on top is an end-to-end <em>signal</em>: a track property by which the original publisher marks the content as worth compressing and names the algorithm. The signal travels end-to-end; the compression happens per hop.<a href="#section-2-3" class="pilcrow">¶</a></p>
+What this extension adds is an end-to-end <em>signal</em> — a boolean track property by which the original publisher marks the content as worth compressing — plus a per-hop negotiation of the algorithm.<a href="#section-2-3" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-2-4.1">
-          <p id="section-2-4.1.1"><strong>Publisher signals, hops apply</strong>: the COMPRESSION track property is set by the original publisher and carried end-to-end, but a payload is only compressed on a hop that negotiated the extension and whose receiver supports the algorithm. Where the extension is not negotiated, the same payload travels verbatim.<a href="#section-2-4.1.1" class="pilcrow">¶</a></p>
+          <p id="section-2-4.1.1"><strong>Publisher signals, hops apply</strong>: the COMPRESSION track property is a boolean set by the original publisher and carried end to end, but a payload is only compressed on a hop that has negotiated a shared algorithm. Which algorithm is used is decided per hop, not by the publisher; a hop that has not negotiated compression forwards the property unchanged so a further-downstream hop can still act on it.<a href="#section-2-4.1.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-2-4.2">
-          <p id="section-2-4.2.1"><strong>Per object, independently</strong>: each object payload is an independent compressed stream with no shared dictionary or state between objects. This keeps every object individually decodable and avoids head-of-line decoding within a group.<a href="#section-2-4.2.1" class="pilcrow">¶</a></p>
+          <p id="section-2-4.2.1"><strong>Per subgroup, sliced into objects</strong>: within a subgroup the object payloads form one compressed stream, flushed at each object boundary so every object still carries its own payload slice, while the object headers and framing stay in the clear. This keeps the subgroup — the unit a receiver already takes as one ordered, reliable stream — as the unit of compression, while letting relays and caches store payloads compressed and re-frame them without recompressing.<a href="#section-2-4.2.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 </section>
@@ -1231,7 +1244,7 @@ What this extension adds on top is an end-to-end <em>signal</em>: a track proper
       </h2>
 <p id="section-3-1">The Payload Compression extension is negotiated during the SETUP exchange as defined in <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 10.3.
 Unlike a purely additive property, compression <span class="bcp14">MUST</span> be negotiated: a receiver that does not understand the algorithm would otherwise pass the compressed bytes to the application as if they were plaintext.<a href="#section-3-1" class="pilcrow">¶</a></p>
-<p id="section-3-2">Each endpoint advertises the algorithms it can decompress by including the following Setup Option:<a href="#section-3-2" class="pilcrow">¶</a></p>
+<p id="section-3-2">Each endpoint advertises the algorithms it can decompress, in preference order (most-preferred first), by including the following Setup Option:<a href="#section-3-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-3-3">
 <pre>
 COMPRESSION Setup Option {
@@ -1242,10 +1255,13 @@ COMPRESSION Setup Option {
 </pre><a href="#section-3-3" class="pilcrow">¶</a>
 </div>
 <p id="section-3-4"><strong>Algorithm</strong>:
-One or more Algorithm identifiers (see <span><a href="#compression-algorithms" class="internal xref">Compression Algorithms</a> (<a href="#compression-algorithms" class="auto internal xref">Section 5</a>)</span>) that the sender can decompress, each a varint, filling the Option Value.
-The identifier <code>none</code> (0) <span class="bcp14">MUST NOT</span> be listed (it requires no negotiation).<a href="#section-3-4" class="pilcrow">¶</a></p>
-<p id="section-3-5">A sender <span class="bcp14">MUST NOT</span> compress with an algorithm the receiver did not advertise in its SETUP.
-This makes the on-wire state unambiguous on every hop without any per-object signaling: a receiver decompresses a track's payloads <strong>if and only if</strong> the COMPRESSION track property is present and the receiver advertised that algorithm in its own SETUP. In every other case — the property absent, the extension not negotiated, or the algorithm not advertised by the receiver — the sender was not permitted to compress, so the receiver treats the payloads as verbatim.<a href="#section-3-5" class="pilcrow">¶</a></p>
+One or more Algorithm identifiers (see <span><a href="#compression-algorithms" class="internal xref">Compression Algorithms</a> (<a href="#compression-algorithms" class="auto internal xref">Section 5.1</a>)</span>) that the sender can compress and decompress, each a varint, filling the Option Value, most-preferred first.
+An endpoint that includes this option <span class="bcp14">MUST</span> list <code>deflate</code> (1); the identifier <code>none</code> (0) <span class="bcp14">MUST NOT</span> be listed (it requires no negotiation).
+An endpoint that does not support the extension omits the option.<a href="#section-3-4" class="pilcrow">¶</a></p>
+<p id="section-3-5">Negotiation is per direction and per hop. For a given direction sender-to-receiver, the <strong>selected algorithm</strong> is the first identifier in the receiver's advertised list that also appears in the sender's advertised list; if the lists do not intersect, that direction is verbatim.
+Because each endpoint holds both advertised lists once SETUP has been exchanged, both compute the same selection with no further handshake — the receiver's preference governs its own inbound direction, the two directions are independent and <span class="bcp14">MAY</span> select different algorithms, and a simultaneous SETUP exchange creates no ambiguity.
+Since <code>deflate</code> is mandatory for any endpoint that advertises the option, two endpoints that both support the extension always share at least one algorithm.
+A sender <span class="bcp14">MUST NOT</span> compress with an algorithm the receiver did not advertise.<a href="#section-3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="compression-track-property">
@@ -1253,70 +1269,87 @@ This makes the on-wire state unambiguous on every hop without any per-object sig
       <h2 id="name-compression-track-property">
 <a href="#section-4" class="section-number selfRef">4. </a><a href="#name-compression-track-property" class="section-name selfRef">COMPRESSION Track Property</a>
       </h2>
-<p id="section-4-1">The COMPRESSION property is the original publisher's signal that a track's object payloads are worth compressing, and which algorithm to use.
+<p id="section-4-1">The COMPRESSION property is the original publisher's end-to-end signal that a track's object payloads are good candidates for compression.
 It is a track-level Key-Value-Pair carried with the track's properties (see <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 2.5 and Section 12), set by the original publisher and forwarded unchanged by relays.
 Because the value is a single integer, COMPRESSION uses an even Type so the value is a bare varint:<a href="#section-4-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4-2">
 <pre>
 COMPRESSION Track Property {
   Type (vi64) = 0xC03D0
-  Value (vi64)  ; Algorithm identifier
+  Value (vi64)  ; boolean hint
 }
 </pre><a href="#section-4-2" class="pilcrow">¶</a>
 </div>
 <p id="section-4-3"><strong>Value</strong>:
-The Algorithm identifier the publisher recommends for this track's payloads.
-The absence of the property, or a value of <code>none</code> (0), means the track is not marked for compression and its payloads are always transmitted verbatim.<a href="#section-4-3" class="pilcrow">¶</a></p>
+A boolean hint: <code>1</code> means the track's payloads are good candidates for compression, <code>0</code> (or absence of the property) means they are not and are always transmitted verbatim.
+Values greater than <code>1</code> are reserved for future use and <span class="bcp14">MUST</span> be treated as <code>1</code> by a receiver that does not understand them, so the hint stays additive.
+The property names no algorithm; which algorithm is used, if any, is the per-hop <span><a href="#setup-negotiation" class="internal xref">selected algorithm</a> (<a href="#setup-negotiation" class="auto internal xref">Section 3</a>)</span>.<a href="#section-4-3" class="pilcrow">¶</a></p>
 <p id="section-4-4">The property is fixed for the lifetime of the track and <span class="bcp14">MUST NOT</span> change.
 A relay <span class="bcp14">MUST</span> forward it unchanged on every hop, including a hop that has not negotiated the extension: there it is simply an ignored unknown Key-Value-Pair, but forwarding it lets a further-downstream hop that does negotiate the extension still act on the publisher's signal.<a href="#section-4-4" class="pilcrow">¶</a></p>
-<p id="section-4-5">Compression is enabled only by the combination of this track property and the extension being negotiated on a hop.
-A publisher <span class="bcp14">MUST NOT</span> compress object payloads on a track that does not carry the COMPRESSION property, and there is no way to enable compression on a per-object basis: the property governs the whole track, and on a compressing hop every non-empty payload is compressed.<a href="#section-4-5" class="pilcrow">¶</a></p>
-<p id="section-4-6">Whether payloads are actually compressed is decided per hop:<a href="#section-4-6" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-4-7.1">
-          <p id="section-4-7.1.1">On a hop where the extension is negotiated and the receiver advertised the property's algorithm, every non-empty object payload <span class="bcp14">MUST</span> be compressed with that algorithm, and the receiver decompresses it.<a href="#section-4-7.1.1" class="pilcrow">¶</a></p>
-</li>
-        <li class="normal" id="section-4-7.2">
-          <p id="section-4-7.2.1">On any other hop — the extension not negotiated, or the receiver did not advertise that algorithm — payloads are sent verbatim. The receiver either never sees the property (an ignored unknown Key-Value-Pair) or sees it but knows the sender was not permitted to compress for it, so it treats the payloads as verbatim either way.<a href="#section-4-7.2.1" class="pilcrow">¶</a></p>
-</li>
-      </ul>
-<p id="section-4-8">Compression applies to the object payload only; object properties and message framing are never compressed.
-An empty payload (size 0) <span class="bcp14">MUST NOT</span> be compressed and remains empty on the wire.<a href="#section-4-8" class="pilcrow">¶</a></p>
-<p id="section-4-9">A publisher <span class="bcp14">SHOULD</span> set COMPRESSION only for payload types that benefit from it.
-Already-compressed media <span class="bcp14">SHOULD</span> omit it (or use <code>none</code>).<a href="#section-4-9" class="pilcrow">¶</a></p>
+<p id="section-4-5">Compression is enabled only by the combination of a non-zero hint and a shared algorithm being negotiated on a hop; there is no per-object or per-subgroup signal on the wire.
+A receiver decompresses a track's object payloads <strong>if and only if</strong> the COMPRESSION hint is non-zero and the hop selected an algorithm for that direction, in which case it uses the selected algorithm.
+In every other case — the hint absent or zero, the extension not negotiated, or the lists not intersecting — payloads are verbatim.<a href="#section-4-5" class="pilcrow">¶</a></p>
+<p id="section-4-6">A publisher <span class="bcp14">SHOULD</span> set COMPRESSION only for payload types that benefit from it (e.g. JSON, text, uncompressed binary structures).
+Already-compressed media <span class="bcp14">SHOULD</span> omit it (or use <code>0</code>).<a href="#section-4-6" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="compression-algorithms">
+<div id="compression">
 <section id="section-5">
-      <h2 id="name-compression-algorithms">
-<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-compression-algorithms" class="section-name selfRef">Compression Algorithms</a>
+      <h2 id="name-compression">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-compression" class="section-name selfRef">Compression</a>
       </h2>
-<p id="section-5-1">This document defines the following algorithms.
-Further algorithms <span class="bcp14">MAY</span> be registered (see <span><a href="#iana-considerations" class="internal xref">IANA Considerations</a> (<a href="#iana-considerations" class="auto internal xref">Section 8</a>)</span>).<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-5-1">Compression is applied to object payloads only — object headers, properties, and message framing are never compressed — and is <strong>scoped to a subgroup</strong>.
+Within a subgroup the object payloads form a single compressed stream in the <span><a href="#setup-negotiation" class="internal xref">selected algorithm</a> (<a href="#setup-negotiation" class="auto internal xref">Section 3</a>)</span>, reset at each subgroup boundary.
+The stream's output is partitioned at object boundaries: the compressor flushes at the end of each object so that object's slice is exactly the bytes carried as its payload, and the payload length in the object header gives the on-wire (compressed) slice size.
+Both algorithms provide a window-retaining flush (DEFLATE's sync flush; Zstandard's <code>ZSTD_e_flush</code>), so later objects in a subgroup reuse the compression context and retain cross-object redundancy.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-5-2">A receiver maintains a single decoder per subgroup, reset at each subgroup boundary, and feeds each object's payload through it in order: the first object of a subgroup starts the decoder fresh — so a receiver joining at a group boundary needs nothing earlier — while later objects build on it.
+There is no shared state between subgroups; an empty payload (size 0) contributes nothing to the stream and remains empty on the wire.
+An object delivered as a datagram is a single-object stream, compressed on its own.<a href="#section-5-2" class="pilcrow">¶</a></p>
+<p id="section-5-3">Because the object framing already delimits each slice, an algorithm's own redundant boundary and container bytes are omitted: for <code>deflate</code>, the trailing four <code>00 00 FF FF</code> bytes a sync flush emits are removed from each payload and the decoder re-inserts them (as in <span>[<a href="#RFC7692" class="cite xref">RFC7692</a>]</span>); for <code>zstd</code>, the per-subgroup stream uses the magicless frame format and omits the content checksum.<a href="#section-5-3" class="pilcrow">¶</a></p>
+<p id="section-5-4">Leaving the framing uncompressed is deliberate.
+A relay or cache can hold the object payloads compressed in memory and forward them without inflating, and can re-frame a subgroup — for example to bridge a transport version that changes the subgroup or object headers — without touching the compressed payloads.
+Neither is possible if the framing is buried inside the compressed stream.<a href="#section-5-4" class="pilcrow">¶</a></p>
+<div id="compression-algorithms">
+<section id="section-5.1">
+        <h3 id="name-compression-algorithms">
+<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-compression-algorithms" class="section-name selfRef">Compression Algorithms</a>
+        </h3>
+<p id="section-5.1-1">This document defines the following algorithms.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
 <table class="center" id="table-1">
-        <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
+          <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
 <thead>
-          <tr>
-            <th class="text-right" rowspan="1" colspan="1">ID</th>
-            <th class="text-left" rowspan="1" colspan="1">Name</th>
-            <th class="text-left" rowspan="1" colspan="1">Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="text-right" rowspan="1" colspan="1">0</td>
-            <td class="text-left" rowspan="1" colspan="1">none</td>
-            <td class="text-left" rowspan="1" colspan="1">Payloads are transmitted verbatim. The default.</td>
-          </tr>
-          <tr>
-            <td class="text-right" rowspan="1" colspan="1">1</td>
-            <td class="text-left" rowspan="1" colspan="1">deflate</td>
-            <td class="text-left" rowspan="1" colspan="1">Raw DEFLATE <span>[<a href="#RFC1951" class="cite xref">RFC1951</a>]</span>, with no zlib or gzip framing.</td>
-          </tr>
-        </tbody>
-      </table>
-<p id="section-5-3">For <code>deflate</code>, each object payload is an independent raw DEFLATE stream.
-There is no shared dictionary or state between objects, so each object decompresses on its own.<a href="#section-5-3" class="pilcrow">¶</a></p>
+            <tr>
+              <th class="text-right" rowspan="1" colspan="1">ID</th>
+              <th class="text-left" rowspan="1" colspan="1">Name</th>
+              <th class="text-left" rowspan="1" colspan="1">Requirement</th>
+              <th class="text-left" rowspan="1" colspan="1">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0</td>
+              <td class="text-left" rowspan="1" colspan="1">none</td>
+              <td class="text-left" rowspan="1" colspan="1">—</td>
+              <td class="text-left" rowspan="1" colspan="1">Verbatim; the absence of compression. Never advertised.</td>
+            </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">1</td>
+              <td class="text-left" rowspan="1" colspan="1">deflate</td>
+              <td class="text-left" rowspan="1" colspan="1">mandatory</td>
+              <td class="text-left" rowspan="1" colspan="1">Raw DEFLATE <span>[<a href="#RFC1951" class="cite xref">RFC1951</a>]</span>, with no zlib or gzip framing.</td>
+            </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">2</td>
+              <td class="text-left" rowspan="1" colspan="1">zstd</td>
+              <td class="text-left" rowspan="1" colspan="1">optional</td>
+              <td class="text-left" rowspan="1" colspan="1">Zstandard <span>[<a href="#RFC8878" class="cite xref">RFC8878</a>]</span>.</td>
+            </tr>
+          </tbody>
+        </table>
+<p id="section-5.1-3">Every endpoint that advertises this extension <span class="bcp14">MUST</span> implement <code>deflate</code>, so a common algorithm always exists; <code>zstd</code> is optional.
+Further algorithms <span class="bcp14">MAY</span> be registered (see <span><a href="#iana-considerations" class="internal xref">IANA Considerations</a> (<a href="#iana-considerations" class="auto internal xref">Section 8</a>)</span>).<a href="#section-5.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
 </section>
 </div>
 <div id="relay-behavior">
@@ -1324,12 +1357,12 @@ There is no shared dictionary or state between objects, so each object decompres
       <h2 id="name-relay-behavior">
 <a href="#section-6" class="section-number selfRef">6. </a><a href="#name-relay-behavior" class="section-name selfRef">Relay Behavior</a>
       </h2>
-<p id="section-6-1">A relay forwards the COMPRESSION track property unchanged — it is the publisher's end-to-end signal — and applies compression independently on each hop.<a href="#section-6-1" class="pilcrow">¶</a></p>
-<p id="section-6-2">On its upstream subscription, the relay receives payloads compressed if and only if that hop compressed them (the extension negotiated and the relay advertised the algorithm); it decompresses them as needed.
-On each downstream subscription the relay serves, it compresses payloads with the track's algorithm when that downstream negotiated the extension and advertised the algorithm, and sends them verbatim otherwise.<a href="#section-6-2" class="pilcrow">¶</a></p>
-<p id="section-6-3">Compression is thus driven by the publisher's track property, not by the relay: a relay does not compress a track the publisher did not mark.
-In every case the decompressed bytes delivered to the application <span class="bcp14">MUST</span> be identical to what the origin published.<a href="#section-6-3" class="pilcrow">¶</a></p>
-<p id="section-6-4">A relay or generic library <span class="bcp14">MUST NOT</span> inspect or modify the decompressed contents unless otherwise negotiated; only recompression that preserves the decompressed bytes exactly is permitted.<a href="#section-6-4" class="pilcrow">¶</a></p>
+<p id="section-6-1">A relay forwards the boolean COMPRESSION track property unchanged — it is the publisher's end-to-end signal — and applies compression independently on each hop, driven by each hop's negotiation rather than by its own initiative; a relay does not compress a track the publisher did not mark.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">On its upstream subscription the relay receives each subgroup compressed with that hop's selected algorithm (or verbatim) and decompresses as needed.
+On each downstream subscription it (re)compresses each subgroup with that downstream's selected algorithm, or sends it verbatim when no algorithm is shared.
+A relay <span class="bcp14">MAY</span> transcode between algorithms.
+In every case the decompressed bytes delivered to the application <span class="bcp14">MUST</span> be identical to what the origin published.
+A relay or generic library <span class="bcp14">MUST NOT</span> inspect or modify the decompressed contents unless otherwise negotiated; only recompression that preserves the decompressed bytes exactly is permitted.<a href="#section-6-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="security-considerations">
@@ -1337,12 +1370,12 @@ In every case the decompressed bytes delivered to the application <span class="b
       <h2 id="name-security-considerations">
 <a href="#section-7" class="section-number selfRef">7. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
-<p id="section-7-1">Compressing data that mixes attacker-controlled and secret content in the same object can leak the secret through compressed size, as in the CRIME and BREACH attacks.
-A publisher <span class="bcp14">MUST NOT</span> set COMPRESSION on a track whose object payloads combine secret material with attacker-influenced material.
-Because compression here is per-object with no cross-object dictionary, the exposure is bounded to within a single object, but it is not eliminated.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<p id="section-7-1">Compressing data that mixes attacker-controlled and secret content can leak the secret through compressed size, as in the CRIME and BREACH attacks.
+A publisher <span class="bcp14">MUST NOT</span> set a non-zero COMPRESSION hint on a track whose object payloads combine secret material with attacker-influenced material.
+Because compression is scoped to a subgroup, the exposure is bounded to within a single subgroup — which may combine several objects, a wider window than a single object — but it is not eliminated.<a href="#section-7-1" class="pilcrow">¶</a></p>
 <p id="section-7-2">A malicious sender could emit a small compressed payload that decompresses to a very large buffer (a "decompression bomb").
-A receiver <span class="bcp14">MUST</span> bound the size of a decompressed object payload. If the bound is exceeded it <span class="bcp14">MUST</span> reset the affected Subscribe/Fetch stream (rather than allocate unbounded memory) and <span class="bcp14">MAY</span> close the session with a PROTOCOL_VIOLATION if it considers the peer abusive; the reset is stream-scoped so a single bad object does not tear down unrelated subscriptions.<a href="#section-7-2" class="pilcrow">¶</a></p>
-<p id="section-7-3">Compression is orthogonal to <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> end-to-end encryption: an encrypted payload is effectively incompressible, so a publisher using end-to-end encryption <span class="bcp14">SHOULD</span> omit COMPRESSION (or use <code>none</code>).<a href="#section-7-3" class="pilcrow">¶</a></p>
+A receiver <span class="bcp14">MUST</span> bound the size of a decompressed object payload. If the bound is exceeded it <span class="bcp14">MUST</span> reset the affected stream (rather than allocate unbounded memory) and <span class="bcp14">MAY</span> close the session with a PROTOCOL_VIOLATION if it considers the peer abusive; the reset is stream-scoped so a single bad subgroup does not tear down unrelated subscriptions.<a href="#section-7-2" class="pilcrow">¶</a></p>
+<p id="section-7-3">Compression is orthogonal to <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> end-to-end encryption: an encrypted payload is effectively incompressible, so a publisher using end-to-end encryption <span class="bcp14">SHOULD</span> omit COMPRESSION (or use <code>0</code>).<a href="#section-7-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="iana-considerations">
@@ -1352,7 +1385,7 @@ A receiver <span class="bcp14">MUST</span> bound the size of a decompressed obje
       </h2>
 <p id="section-8-1">This document requests the following registrations.
 High, distinctive values are requested to avoid the low ranges reserved by <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> and to minimize collisions with provisional registrations by other extensions; they also avoid the greasing pattern (<code>0x7f * N + 0x9D</code>).
-The parameter Type is even so that its value is a bare varint with no length prefix (see <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 2.5).<a href="#section-8-1" class="pilcrow">¶</a></p>
+Each Type is even so that its value is a bare varint with no length prefix (see <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> Section 2.5).<a href="#section-8-1" class="pilcrow">¶</a></p>
 <div id="moqt-setup-options">
 <section id="section-8.1">
         <h3 id="name-moqt-setup-options">
@@ -1432,35 +1465,64 @@ The initial contents are:<a href="#section-8.3-1" class="pilcrow">¶</a></p>
               <td class="text-left" rowspan="1" colspan="1">deflate</td>
               <td class="text-left" rowspan="1" colspan="1">This Document</td>
             </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">2</td>
+              <td class="text-left" rowspan="1" colspan="1">zstd</td>
+              <td class="text-left" rowspan="1" colspan="1">This Document</td>
+            </tr>
           </tbody>
         </table>
 </section>
 </div>
 </section>
 </div>
-<div id="sec-normative-references">
+<div id="sec-combined-references">
 <section id="section-9">
-      <h2 id="name-normative-references">
-<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+      <h2 id="name-references">
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-references" class="section-name selfRef">References</a>
       </h2>
+<div id="sec-normative-references">
+<section id="section-9.1">
+        <h3 id="name-normative-references">
+<a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+        </h3>
 <dl class="references">
 <dt id="moqt">[moqt]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Nandakumar, S.</span>, <span class="refAuthor">Vasiliev, V.</span>, <span class="refAuthor">Swett, I.</span>, and <span class="refAuthor">A. Frindell</span>, <span class="refTitle">"Media over QUIC Transport"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-moq-transport-18</span>, <time datetime="2026-05-12" class="refDate">12 May 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-18">https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-18</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC1951">[RFC1951]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Deutsch, P.</span>, <span class="refTitle">"DEFLATE Compressed Data Format Specification version 1.3"</span>, <span class="seriesInfo">RFC 1951</span>, <span class="seriesInfo">DOI 10.17487/RFC1951</span>, <time datetime="1996-05" class="refDate">May 1996</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc1951">https://www.rfc-editor.org/rfc/rfc1951</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC2119">[RFC2119]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC8174">[RFC8174]</dt>
-    <dd>
+        <dd>
 <span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
 <dd class="break"></dd>
+<dt id="RFC8878">[RFC8878]</dt>
+      <dd>
+<span class="refAuthor">Collet, Y.</span> and <span class="refAuthor">M. Kucherawy, Ed.</span>, <span class="refTitle">"Zstandard Compression and the 'application/zstd' Media Type"</span>, <span class="seriesInfo">RFC 8878</span>, <span class="seriesInfo">DOI 10.17487/RFC8878</span>, <time datetime="2021-02" class="refDate">February 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8878">https://www.rfc-editor.org/rfc/rfc8878</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 </dl>
+</section>
+</div>
+<div id="sec-informative-references">
+<section id="section-9.2">
+        <h3 id="name-informative-references">
+<a href="#section-9.2" class="section-number selfRef">9.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+        </h3>
+<dl class="references">
+<dt id="RFC7692">[RFC7692]</dt>
+      <dd>
+<span class="refAuthor">Yoshino, T.</span>, <span class="refTitle">"Compression Extensions for WebSocket"</span>, <span class="seriesInfo">RFC 7692</span>, <span class="seriesInfo">DOI 10.17487/RFC7692</span>, <time datetime="2015-12" class="refDate">December 2015</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7692">https://www.rfc-editor.org/rfc/rfc7692</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
 </section>
 </div>
 <div id="acknowledgments">
