@@ -1255,7 +1255,7 @@ COMPRESSION Setup Option {
 </div>
 <p id="section-3-4"><strong>Algorithm</strong>:
 One or more Algorithm identifiers (see <span><a href="#compression-algorithms" class="internal xref">Compression Algorithms</a> (<a href="#compression-algorithms" class="auto internal xref">Section 5.1</a>)</span>) that the sender can decompress, each a varint, filling the Option Value.
-An endpoint that includes this option <span class="bcp14">MUST</span> list <code>deflate</code> (1); the identifier <code>none</code> (0) <span class="bcp14">MUST NOT</span> be listed (it requires no negotiation).
+The identifier <code>none</code> (0) <span class="bcp14">MUST NOT</span> be listed (it requires no negotiation); an endpoint lists whichever other algorithms it supports.
 An endpoint that does not support the extension omits the option.<a href="#section-3-4" class="pilcrow">¶</a></p>
 <p id="section-3-5">A sender <span class="bcp14">MUST NOT</span> compress with an algorithm the receiver did not advertise, and <span class="bcp14">MUST NOT</span> compress before it has received the receiver's COMPRESSION option.
 This makes the on-wire state unambiguous with no per-object signaling: a receiver decompresses a track's object payloads <strong>if and only if</strong> the COMPRESSION property names a non-<code>none</code> algorithm and the receiver advertised that algorithm in its own SETUP.
@@ -1281,7 +1281,7 @@ COMPRESSION Track Property {
 <p id="section-4-3"><strong>Value</strong>:
 The Algorithm identifier the publisher used for this track's payloads (see <span><a href="#compression-algorithms" class="internal xref">Compression Algorithms</a> (<a href="#compression-algorithms" class="auto internal xref">Section 5.1</a>)</span>).
 The absence of the property, or a value of <code>none</code> (0), means the track is uncompressed and its payloads are always transmitted verbatim.
-The publisher <span class="bcp14">MUST</span> choose an algorithm that its peer advertised in the <span><a href="#setup-negotiation" class="internal xref">COMPRESSION Setup Option</a> (<a href="#setup-negotiation" class="auto internal xref">Section 3</a>)</span>; since <code>deflate</code> is mandatory to implement, it is always a safe choice.<a href="#section-4-3" class="pilcrow">¶</a></p>
+The publisher <span class="bcp14">MUST</span> choose an algorithm that its peer advertised in the <span><a href="#setup-negotiation" class="internal xref">COMPRESSION Setup Option</a> (<a href="#setup-negotiation" class="auto internal xref">Section 3</a>)</span>, or <code>none</code> if the peer advertised none the publisher can produce.<a href="#section-4-3" class="pilcrow">¶</a></p>
 <p id="section-4-4">The property is fixed for the lifetime of the track and <span class="bcp14">MUST NOT</span> change.
 A relay <span class="bcp14">MUST</span> forward it unchanged on every hop, including a hop that has not negotiated the extension: there it is simply an ignored unknown Key-Value-Pair, but forwarding it lets a further-downstream hop that does negotiate the extension still act on the publisher's algorithm.<a href="#section-4-4" class="pilcrow">¶</a></p>
 <p id="section-4-5">Whether a payload is actually compressed is decided per hop:<a href="#section-4-5" class="pilcrow">¶</a></p>
@@ -1326,7 +1326,6 @@ A relay or cache can hold the object payloads compressed in memory and forward t
             <tr>
               <th class="text-right" rowspan="1" colspan="1">ID</th>
               <th class="text-left" rowspan="1" colspan="1">Name</th>
-              <th class="text-left" rowspan="1" colspan="1">Requirement</th>
               <th class="text-left" rowspan="1" colspan="1">Description</th>
             </tr>
           </thead>
@@ -1334,24 +1333,21 @@ A relay or cache can hold the object payloads compressed in memory and forward t
             <tr>
               <td class="text-right" rowspan="1" colspan="1">0</td>
               <td class="text-left" rowspan="1" colspan="1">none</td>
-              <td class="text-left" rowspan="1" colspan="1">—</td>
               <td class="text-left" rowspan="1" colspan="1">Verbatim; the absence of compression. Never advertised.</td>
             </tr>
             <tr>
               <td class="text-right" rowspan="1" colspan="1">1</td>
               <td class="text-left" rowspan="1" colspan="1">deflate</td>
-              <td class="text-left" rowspan="1" colspan="1">mandatory</td>
               <td class="text-left" rowspan="1" colspan="1">Raw DEFLATE <span>[<a href="#RFC1951" class="cite xref">RFC1951</a>]</span>, with no zlib or gzip framing.</td>
             </tr>
             <tr>
               <td class="text-right" rowspan="1" colspan="1">2</td>
               <td class="text-left" rowspan="1" colspan="1">zstd</td>
-              <td class="text-left" rowspan="1" colspan="1">optional</td>
               <td class="text-left" rowspan="1" colspan="1">Zstandard <span>[<a href="#RFC8878" class="cite xref">RFC8878</a>]</span>.</td>
             </tr>
           </tbody>
         </table>
-<p id="section-5.1-3">Every endpoint that advertises this extension <span class="bcp14">MUST</span> implement <code>deflate</code>, so the publisher always has a safe choice; <code>zstd</code> is optional.
+<p id="section-5.1-3">Endpoints advertise whichever of these algorithms they support; none is mandatory, and a publisher uses one its peer advertised (or <code>none</code> if they share none).
 Further algorithms <span class="bcp14">MAY</span> be registered (see <span><a href="#iana-considerations" class="internal xref">IANA Considerations</a> (<a href="#iana-considerations" class="auto internal xref">Section 8</a>)</span>).<a href="#section-5.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>

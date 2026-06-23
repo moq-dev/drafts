@@ -1074,9 +1074,8 @@ Table of Contents
    algorithms (Section 7.11) the sender can _decompress_ on this hop.
    The Parameter Value is a sequence of algorithm identifiers, each a
    variable-length integer, packed back-to-back to fill the Parameter
-   Length.  An endpoint that supports compression MUST include deflate
-   (1); none (0) MUST NOT be listed.  An endpoint that does not support
-   compression omits the parameter.
+   Length.  The identifier none (0) MUST NOT be listed.  An endpoint
+   that does not support compression omits the parameter.
 
    A relay MUST NOT forward the parameter (see Section 3.1); it is
    negotiated independently on each hop.  The list constrains what a
@@ -1382,14 +1381,14 @@ Table of Contents
       algorithm.
 
    The publisher MUST choose an algorithm its peer advertised in the
-   Compression Parameter (Section 7.3.3); deflate is mandatory to
-   support, so it is always a safe choice.  The value is fixed for the
-   lifetime of the Track and forwarded unchanged by relays, so even a
-   hop that does not compress passes it along for a further-downstream
-   hop to act on.  It does not by itself cause compression: a receiver
-   decompresses if and only if the value names a non-none algorithm and
-   the receiver advertised that algorithm in its own Compression
-   Parameter (Section 7.3.3); otherwise the payloads are verbatim (see
+   Compression Parameter (Section 7.3.3), or 0 if the peer advertised
+   none the publisher can produce.  The value is fixed for the lifetime
+   of the Track and forwarded unchanged by relays, so even a hop that
+   does not compress passes it along for a further-downstream hop to act
+   on.  It does not by itself cause compression: a receiver decompresses
+   if and only if the value names a non-none algorithm and the receiver
+   advertised that algorithm in its own Compression Parameter
+   (Section 7.3.3); otherwise the payloads are verbatim (see
    Section 7.11).  A subscriber that does not recognize the value treats
    the payloads as verbatim, so an unknown future algorithm degrades to
    uncompressed rather than blocking the Track.
@@ -1427,23 +1426,24 @@ Table of Contents
 
    The following algorithms are defined:
 
-     +====+=========+=============+=================================+
-     | ID | Name    | Requirement | Description                     |
-     +====+=========+=============+=================================+
-     |  0 | none    | —           | Verbatim; the absence of        |
-     |    |         |             | compression.  Never advertised. |
-     +----+---------+-------------+---------------------------------+
-     |  1 | deflate | mandatory   | Raw DEFLATE [RFC1951], with no  |
-     |    |         |             | zlib or gzip framing.           |
-     +----+---------+-------------+---------------------------------+
-     |  2 | zstd    | optional    | Zstandard [RFC8878].            |
-     +----+---------+-------------+---------------------------------+
+            +====+=========+=================================+
+            | ID | Name    | Description                     |
+            +====+=========+=================================+
+            |  0 | none    | Verbatim; the absence of        |
+            |    |         | compression.  Never advertised. |
+            +----+---------+---------------------------------+
+            |  1 | deflate | Raw DEFLATE [RFC1951], with no  |
+            |    |         | zlib or gzip framing.           |
+            +----+---------+---------------------------------+
+            |  2 | zstd    | Zstandard [RFC8878].            |
+            +----+---------+---------------------------------+
 
                                  Table 5
 
-   Every endpoint that supports compression MUST implement deflate, so
-   the publisher always has a safe choice; zstd is optional, and further
-   algorithms MAY be defined by future extensions.
+   Endpoints advertise whichever of these algorithms they support; none
+   is mandatory, and a publisher uses one its peer advertised, or none
+   if they share none.  Further algorithms MAY be defined by future
+   extensions.
 
    Compression is *group-scoped* and applied only to frame payloads,
    never to the FRAME framing.  Within a group the payloads form a
@@ -1819,20 +1819,20 @@ Table of Contents
       Compression in TRACK_INFO now names the algorithm the publisher
       used (none/deflate/zstd), and a new SETUP Compression parameter
       carries the algorithms each endpoint can decompress on a hop.  The
-      publisher MUST pick an algorithm its peer advertised; deflate is
-      mandatory (so always safe) and zstd is optional.  There is no per-
-      group or per-frame flag on the wire — a receiver decompresses iff
-      Publisher Compression names a non-none algorithm it advertised,
-      else treats payloads as verbatim.  When compressed, a group's
-      frame payloads (only the payloads, never the framing) form a
-      single stream in that algorithm, reset at each group boundary and
-      sliced per frame into each frame's opaque Payload, with the
-      algorithm's redundant container bytes omitted (the RFC 7692 trim
-      for deflate; magicless, checksum-less frames for zstd) since moq-
-      lite frames the slices itself; the decoder keeps one context per
-      group.  Keeping the framing uncompressed lets a relay store
-      payloads compressed and re-frame across transport versions without
-      recompressing.
+      publisher MUST pick an algorithm its peer advertised (or none if
+      they share none); deflate and zstd are defined, neither mandatory.
+      There is no per-group or per-frame flag on the wire — a receiver
+      decompresses iff Publisher Compression names a non-none algorithm
+      it advertised, else treats payloads as verbatim.  When compressed,
+      a group's frame payloads (only the payloads, never the framing)
+      form a single stream in that algorithm, reset at each group
+      boundary and sliced per frame into each frame's opaque Payload,
+      with the algorithm's redundant container bytes omitted (the RFC
+      7692 trim for deflate; magicless, checksum-less frames for zstd)
+      since moq-lite frames the slices itself; the decoder keeps one
+      context per group.  Keeping the framing uncompressed lets a relay
+      store payloads compressed and re-frame across transport versions
+      without recompressing.
 
    *  Added Qmux [qmux] transport bindings for TCP/TLS and WebSocket,
       for environments where UDP is unavailable.  The WebSocket binding
