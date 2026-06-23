@@ -1254,8 +1254,8 @@ COMPRESSION Setup Option {
 </pre><a href="#section-3-3" class="pilcrow">¶</a>
 </div>
 <p id="section-3-4"><strong>Algorithm</strong>:
-One or more Algorithm identifiers (see <span><a href="#compression-algorithms" class="internal xref">Compression Algorithms</a> (<a href="#compression-algorithms" class="auto internal xref">Section 5.1</a>)</span>) that the sender can decompress, each a varint, filling the Option Value.
-The identifier <code>none</code> (0) <span class="bcp14">MUST NOT</span> be listed (it requires no negotiation); an endpoint lists whichever other algorithms it supports.
+One or more Algorithm identifiers (see <span><a href="#compression-algorithms" class="internal xref">Compression Algorithms</a> (<a href="#compression-algorithms" class="auto internal xref">Section 5.1</a>)</span>) that the sender can decompress, each a varint, filling the Option Value — its decode capability. An endpoint does not advertise which algorithms it can <em>produce</em>; when sending, it compresses with one the receiver advertised.
+The identifier <code>none</code> (0) <span class="bcp14">MUST NOT</span> be listed (it requires no negotiation).
 An endpoint that does not support the extension omits the option.<a href="#section-3-4" class="pilcrow">¶</a></p>
 <p id="section-3-5">A sender <span class="bcp14">MUST NOT</span> compress with an algorithm the receiver did not advertise, and <span class="bcp14">MUST NOT</span> compress before it has received the receiver's COMPRESSION option.
 This makes the on-wire state unambiguous with no per-object signaling: a receiver decompresses a track's object payloads <strong>if and only if</strong> the COMPRESSION property names a non-<code>none</code> algorithm and the receiver advertised that algorithm in its own SETUP.

@@ -1071,11 +1071,14 @@ Table of Contents
 7.3.3.  Compression Parameter
 
    The Compression Parameter advertises the payload compression
-   algorithms (Section 7.11) the sender can _decompress_ on this hop.
-   The Parameter Value is a sequence of algorithm identifiers, each a
-   variable-length integer, packed back-to-back to fill the Parameter
-   Length.  The identifier none (0) MUST NOT be listed.  An endpoint
-   that does not support compression omits the parameter.
+   algorithms (Section 7.11) the sender can _decompress_ on this hop —
+   its decode capability.  An endpoint does not advertise which
+   algorithms it can _produce_; when sending, it compresses with one the
+   receiver advertised.  The Parameter Value is a sequence of algorithm
+   identifiers, each a variable-length integer, packed back-to-back to
+   fill the Parameter Length.  The identifier none (0) MUST NOT be
+   listed.  An endpoint that does not support compression omits the
+   parameter.
 
    A relay MUST NOT forward the parameter (see Section 3.1); it is
    negotiated independently on each hop.  The list constrains what a

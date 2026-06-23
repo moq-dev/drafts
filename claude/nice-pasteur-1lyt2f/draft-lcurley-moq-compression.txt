@@ -149,10 +149,11 @@ Table of Contents
 
    *Algorithm*: One or more Algorithm identifiers (see Compression
    Algorithms (Section 5.1)) that the sender can decompress, each a
-   varint, filling the Option Value.  The identifier none (0) MUST NOT
-   be listed (it requires no negotiation); an endpoint lists whichever
-   other algorithms it supports.  An endpoint that does not support the
-   extension omits the option.
+   varint, filling the Option Value — its decode capability.  An
+   endpoint does not advertise which algorithms it can _produce_; when
+   sending, it compresses with one the receiver advertised.  The
+   identifier none (0) MUST NOT be listed (it requires no negotiation).
+   An endpoint that does not support the extension omits the option.
 
    A sender MUST NOT compress with an algorithm the receiver did not
    advertise, and MUST NOT compress before it has received the

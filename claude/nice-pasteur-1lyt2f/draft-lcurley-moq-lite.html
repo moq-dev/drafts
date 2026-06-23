@@ -2225,7 +2225,7 @@ The remaining bindings convey the path in their own handshake.<a href="#section-
           <h4 id="name-compression-parameter">
 <a href="#section-7.3.3" class="section-number selfRef">7.3.3. </a><a href="#name-compression-parameter" class="section-name selfRef">Compression Parameter</a>
           </h4>
-<p id="section-7.3.3-1">The Compression Parameter advertises the payload compression <span><a href="#compression" class="internal xref">algorithms</a> (<a href="#compression" class="auto internal xref">Section 7.11</a>)</span> the sender can <em>decompress</em> on this hop.
+<p id="section-7.3.3-1">The Compression Parameter advertises the payload compression <span><a href="#compression" class="internal xref">algorithms</a> (<a href="#compression" class="auto internal xref">Section 7.11</a>)</span> the sender can <em>decompress</em> on this hop — its decode capability. An endpoint does not advertise which algorithms it can <em>produce</em>; when sending, it compresses with one the receiver advertised.
 The Parameter Value is a sequence of algorithm identifiers, each a variable-length integer, packed back-to-back to fill the Parameter Length.
 The identifier <code>none</code> (0) <span class="bcp14">MUST NOT</span> be listed. An endpoint that does not support compression omits the parameter.<a href="#section-7.3.3-1" class="pilcrow">¶</a></p>
 <p id="section-7.3.3-2">A relay <span class="bcp14">MUST NOT</span> forward the parameter (see <a href="#session" class="auto internal xref">Section 3.1</a>); it is negotiated independently on each hop.
