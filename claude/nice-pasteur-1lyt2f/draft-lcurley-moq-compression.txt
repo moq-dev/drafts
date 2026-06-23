@@ -173,8 +173,12 @@ Table of Contents
    different algorithms, and a simultaneous SETUP exchange creates no
    ambiguity.  Since deflate is mandatory for any endpoint that
    advertises the option, two endpoints that both support the extension
-   always share at least one algorithm.  A sender MUST NOT compress with
-   an algorithm the receiver did not advertise.
+   always share at least one algorithm.  Each endpoint lists only
+   algorithms it can both produce and consume, so either side can
+   compute the selection for either direction without a per-object
+   signal.  A sender MUST NOT compress with an algorithm the receiver
+   did not advertise, and MUST NOT compress at all before it has
+   received the receiver's COMPRESSION option.
 
 4.  COMPRESSION Track Property
 
@@ -311,13 +315,15 @@ Table of Contents
    but it is not eliminated.
 
    A malicious sender could emit a small compressed payload that
-   decompresses to a very large buffer (a "decompression bomb").  A
-   receiver MUST bound the size of a decompressed object payload.  If
-   the bound is exceeded it MUST reset the affected stream (rather than
-   allocate unbounded memory) and MAY close the session with a
-   PROTOCOL_VIOLATION if it considers the peer abusive; the reset is
-   stream-scoped so a single bad subgroup does not tear down unrelated
-   subscriptions.
+   decompresses to a very large buffer (a "decompression bomb").
+   Because compression is subgroup-scoped, a receiver MUST bound the
+   cumulative decompressed size of a subgroup — not merely each object's
+   payload, since many small payloads can otherwise accumulate without
+   limit.  If the bound is exceeded it MUST reset the affected stream
+   (rather than allocate unbounded memory) and MAY close the session
+   with a PROTOCOL_VIOLATION if it considers the peer abusive; the reset
+   is stream-scoped so a single bad subgroup does not tear down
+   unrelated subscriptions.
 
    Compression is orthogonal to [moqt] end-to-end encryption: an
    encrypted payload is effectively incompressible, so a publisher using

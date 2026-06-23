@@ -1261,7 +1261,8 @@ An endpoint that does not support the extension omits the option.<a href="#secti
 <p id="section-3-5">Negotiation is per direction and per hop. For a given direction sender-to-receiver, the <strong>selected algorithm</strong> is the first identifier in the receiver's advertised list that also appears in the sender's advertised list; if the lists do not intersect, that direction is verbatim.
 Because each endpoint holds both advertised lists once SETUP has been exchanged, both compute the same selection with no further handshake — the receiver's preference governs its own inbound direction, the two directions are independent and <span class="bcp14">MAY</span> select different algorithms, and a simultaneous SETUP exchange creates no ambiguity.
 Since <code>deflate</code> is mandatory for any endpoint that advertises the option, two endpoints that both support the extension always share at least one algorithm.
-A sender <span class="bcp14">MUST NOT</span> compress with an algorithm the receiver did not advertise.<a href="#section-3-5" class="pilcrow">¶</a></p>
+Each endpoint lists only algorithms it can both produce and consume, so either side can compute the selection for either direction without a per-object signal.
+A sender <span class="bcp14">MUST NOT</span> compress with an algorithm the receiver did not advertise, and <span class="bcp14">MUST NOT</span> compress at all before it has received the receiver's COMPRESSION option.<a href="#section-3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="compression-track-property">
@@ -1374,7 +1375,7 @@ A relay or generic library <span class="bcp14">MUST NOT</span> inspect or modify
 A publisher <span class="bcp14">MUST NOT</span> set a non-zero COMPRESSION hint on a track whose object payloads combine secret material with attacker-influenced material.
 Because compression is scoped to a subgroup, the exposure is bounded to within a single subgroup — which may combine several objects, a wider window than a single object — but it is not eliminated.<a href="#section-7-1" class="pilcrow">¶</a></p>
 <p id="section-7-2">A malicious sender could emit a small compressed payload that decompresses to a very large buffer (a "decompression bomb").
-A receiver <span class="bcp14">MUST</span> bound the size of a decompressed object payload. If the bound is exceeded it <span class="bcp14">MUST</span> reset the affected stream (rather than allocate unbounded memory) and <span class="bcp14">MAY</span> close the session with a PROTOCOL_VIOLATION if it considers the peer abusive; the reset is stream-scoped so a single bad subgroup does not tear down unrelated subscriptions.<a href="#section-7-2" class="pilcrow">¶</a></p>
+Because compression is subgroup-scoped, a receiver <span class="bcp14">MUST</span> bound the cumulative decompressed size of a subgroup — not merely each object's payload, since many small payloads can otherwise accumulate without limit. If the bound is exceeded it <span class="bcp14">MUST</span> reset the affected stream (rather than allocate unbounded memory) and <span class="bcp14">MAY</span> close the session with a PROTOCOL_VIOLATION if it considers the peer abusive; the reset is stream-scoped so a single bad subgroup does not tear down unrelated subscriptions.<a href="#section-7-2" class="pilcrow">¶</a></p>
 <p id="section-7-3">Compression is orthogonal to <span>[<a href="#moqt" class="cite xref">moqt</a>]</span> end-to-end encryption: an encrypted payload is effectively incompressible, so a publisher using end-to-end encryption <span class="bcp14">SHOULD</span> omit COMPRESSION (or use <code>0</code>).<a href="#section-7-3" class="pilcrow">¶</a></p>
 </section>
 </div>

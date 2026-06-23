@@ -1071,13 +1071,13 @@ Table of Contents
 7.3.3.  Compression Parameter
 
    The Compression Parameter advertises the payload compression
-   algorithms (Section 7.11) the sender can _decompress_ on this hop, in
-   preference order (most-preferred first).  The Parameter Value is a
-   sequence of algorithm identifiers, each a variable-length integer,
-   packed back-to-back to fill the Parameter Length.  An endpoint that
-   supports compression MUST include deflate (1); none (0) MUST NOT be
-   listed.  An endpoint that does not support compression omits the
-   parameter.
+   algorithms (Section 7.11) the sender can both compress and decompress
+   on this hop, in preference order (most-preferred first).  The
+   Parameter Value is a sequence of algorithm identifiers, each a
+   variable-length integer, packed back-to-back to fill the Parameter
+   Length.  An endpoint that supports compression MUST include deflate
+   (1); none (0) MUST NOT be listed.  An endpoint that does not support
+   compression omits the parameter.
 
    Negotiation is per direction and per hop, and a relay MUST NOT
    forward the parameter (see Section 3.1).  For a given direction, the
@@ -1085,13 +1085,16 @@ Table of Contents
    appears in the *sender's* list: the receiver's preference governs,
    and because both endpoints hold both lists once SETUP has been
    exchanged, each computes the same result with no further handshake.
-   The two directions are independent and MAY select different
-   algorithms.  Since deflate is mandatory for any endpoint that
-   supports compression, two compression-capable endpoints always share
-   at least one algorithm.  A sender MUST NOT compress when sending to a
-   receiver that advertised no list, so such a receiver gets every Group
-   Stream, Fetch Stream, and datagram verbatim regardless of the Track's
-   Publisher Compression signal.
+   Listing only algorithms it can both produce and consume is what lets
+   either endpoint make this selection for either direction without a
+   per-message signal.  The two directions are independent and MAY
+   select different algorithms.  Since deflate is mandatory for any
+   endpoint that supports compression, two compression-capable endpoints
+   always share at least one algorithm.  A sender MUST NOT compress
+   until it has received the receiver's Compression Parameter; a
+   receiver that advertised no list gets every Group Stream, Fetch
+   Stream, and datagram verbatim regardless of the Track's Publisher
+   Compression signal.
 
 7.4.  ANNOUNCE_REQUEST
 
@@ -2027,11 +2030,13 @@ Table of Contents
    a single frame — but it is not eliminated.
 
    A malicious sender could emit a small compressed payload that
-   decompresses to a very large buffer (a "decompression bomb").  A
-   receiver MUST bound the size of a decompressed payload; if the bound
-   is exceeded it MUST reset the affected stream rather than allocate
-   unbounded memory, and MAY close the session with a PROTOCOL_VIOLATION
-   if it considers the peer abusive.
+   decompresses to a very large buffer (a "decompression bomb").
+   Because compression is group-scoped, a receiver MUST bound the
+   cumulative decompressed size of a group stream — not merely each
+   frame's slice, since many small slices can otherwise accumulate
+   without limit; if the bound is exceeded it MUST reset the affected
+   stream rather than allocate unbounded memory, and MAY close the
+   session with a PROTOCOL_VIOLATION if it considers the peer abusive.
 
    Compression is orthogonal to end-to-end encryption: an encrypted
    payload is effectively incompressible, so a publisher using end-to-
