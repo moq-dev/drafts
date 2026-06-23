@@ -499,12 +499,13 @@ DATAGRAM Body {
   Subscribe ID (i)
   Group Sequence (i)
   [Timestamp (i)]
+  [Decompressed Length (i)]
   Payload (b)
 }
 ~~~
 
-`Timestamp` is present only when the Track's `Publisher Timescale` (see [TRACK_INFO](#track-info)) is non-zero.
-When `Publisher Timescale` is 0, the field is omitted from the wire and the datagram body is just `Subscribe ID`, `Group Sequence`, and `Payload`.
+`Timestamp` is present only when the Track's `Publisher Timescale` (see [TRACK_INFO](#track-info)) is non-zero, and `Decompressed Length` only when the Track is compressed on this hop (see [Compression](#compression)).
+Each is independently omitted when its condition does not hold; with both absent the datagram body is just `Subscribe ID`, `Group Sequence`, and `Payload`.
 
 **Subscribe ID**:
 The Subscribe ID of an active subscription on the same session.
@@ -520,7 +521,7 @@ Any varint value (including 0) is a valid absolute timestamp.
 
 **Payload**:
 The frame payload, extending to the end of the datagram.
-A datagram is a single-frame group: when the Track is compressed on this hop (see [Compression](#compression)) the payload is a single compressed stream in the Track's algorithm, otherwise it is verbatim.
+A datagram is a single-frame group: when the Track is compressed on this hop (see [Compression](#compression)) the payload is a single compressed stream in the Track's algorithm — with `Decompressed Length` giving its post-decompression size for the same allocation and bound role as in [FRAME](#frame) — otherwise it is verbatim.
 The total datagram body (including all header fields above and the compressed payload if applicable) MUST NOT exceed 1200 bytes.
 This limit ensures the datagram fits within the minimum QUIC path MTU without IP-layer fragmentation.
 Payloads that would not fit MUST be sent as a Group Stream instead.
@@ -893,7 +894,7 @@ The following algorithms are defined:
 
 Endpoints advertise whichever of these algorithms they support; none is mandatory, and a publisher uses one its peer advertised, or `none` if they share none. Further algorithms MAY be defined by future extensions.
 
-Compression is **group-scoped** and applied only to frame payloads, never to the FRAME framing. Within a group the payloads form a single compressed stream in the Track's algorithm, reset at each group boundary, whose output is partitioned at frame boundaries: the compressor flushes at the end of each frame so that frame's slice is exactly the bytes stored in its `Payload` (delimited by `Message Length`). Both algorithms provide such a flush that retains the window (DEFLATE's sync flush; Zstandard's `ZSTD_e_flush`), so later frames in a group reuse the compression context. A receiver maintains a single decoder per group, reset at each group boundary, and feeds each frame's `Payload` through it in order: the first frame starts the decoder fresh — so a subscriber joining at a group boundary needs nothing earlier — while later frames retain cross-frame redundancy across the group. There is no shared state between groups; a frame with an empty payload contributes nothing to the stream.
+Compression is **group-scoped** and applied only to frame payloads, never to the FRAME framing. Within a group the payloads form a single compressed stream in the Track's algorithm, reset at each group boundary, whose output is partitioned at frame boundaries: the compressor flushes at the end of each frame so that frame's slice is exactly the bytes stored in its `Payload` (delimited by `Payload Length`, with the decompressed size in `Decompressed Length`). Both algorithms provide such a flush that retains the window (DEFLATE's sync flush; Zstandard's `ZSTD_e_flush`), so later frames in a group reuse the compression context. A receiver maintains a single decoder per group, reset at each group boundary, and feeds each frame's `Payload` through it in order: the first frame starts the decoder fresh — so a subscriber joining at a group boundary needs nothing earlier — while later frames retain cross-frame redundancy across the group. There is no shared state between groups; a frame with an empty payload contributes nothing to the stream.
 
 Because moq-lite delimits the slices itself, each algorithm's own redundant boundary and container bytes are omitted: for `deflate`, the four `00 00 FF FF` bytes a sync flush emits are removed from each `Payload` and the decoder re-inserts them (as in {{?RFC7692}}); for `zstd`, the per-group stream uses the magicless frame format and omits the content checksum.
 
@@ -1069,14 +1070,15 @@ The FRAME message is a payload within a group.
 ~~~
 FRAME Message {
   [Timestamp Delta (i)]
-  Message Length (i)
+  [Decompressed Length (i)]
+  Payload Length (i)
   Payload (b)
 }
 ~~~
 
-`Timestamp Delta` is present only when the Track's `Publisher Timescale` (see [TRACK_INFO](#track-info)) is non-zero.
-When `Publisher Timescale` is 0, the field is omitted from the wire and the FRAME consists of just `Message Length` and `Payload`.
-The framing is never compressed; only the `Payload` is (see [Compression](#compression)), so `Message Length` is always the on-wire `Payload` size.
+`Timestamp Delta` is present only when the Track's `Publisher Timescale` (see [TRACK_INFO](#track-info)) is non-zero, and `Decompressed Length` only when the group is compressed (see [Compression](#compression)).
+Each is independently omitted when its condition does not hold; with both absent the FRAME is just `Payload Length` and `Payload`.
+The framing is never compressed; only the `Payload` is, so `Payload Length` is always the on-wire `Payload` size.
 
 **Timestamp Delta**:
 A signed delta from the previous frame's timestamp, in the Track's negotiated `Timescale`.
@@ -1088,9 +1090,13 @@ Encoded as a zigzag-mapped variable-length integer:
 Zigzag interleaves non-negative and negative values (`0 → 0, -1 → 1, 1 → 2, -2 → 3, 2 → 4, ...`) so small magnitudes of either sign fit in a 1-byte varint and there is exactly one wire encoding for zero.
 The first frame of a group is delta-encoded from `0`, so its `Timestamp Delta` is the zigzag encoding of the absolute timestamp.
 
+**Decompressed Length**:
+The size in bytes of this frame's `Payload` after decompression, present only when the group is compressed.
+A receiver uses it to size the output buffer and as a per-frame bound: it MUST reject a value larger than its configured limit, and MUST reset the stream if decompressing the `Payload` yields a different number of bytes than this declares (see [Security Considerations](#security-considerations)).
+
 **Payload**:
 An application-specific payload.
-When the group is compressed (see [Compression](#compression)) this holds this frame's slice of the group's compressed stream and `Message Length` is its compressed size; otherwise it is verbatim. The framing around it is never compressed.
+When the group is compressed (see [Compression](#compression)) this holds this frame's slice of the group's compressed stream and `Payload Length` is its compressed (on-wire) size; otherwise it is verbatim. The framing around it is never compressed.
 A generic library or relay MUST NOT inspect or modify the decompressed contents unless otherwise negotiated; recompression that preserves the decompressed bytes exactly is allowed (see [Compression](#compression)).
 
 
@@ -1114,7 +1120,7 @@ A generic library or relay MUST NOT inspect or modify the decompressed contents 
 - Removed `Publisher Max Latency`. The publisher's retention guarantee is no longer part of the wire format; retention for FETCH and future subscriptions is best-effort and left to the publisher.
 - Timestamp-based expiration replaces wall-clock arrival time when a Track timescale is negotiated.
 - Added QUIC datagram delivery for groups, sharing Subscribe IDs with existing subscriptions (no separate control stream).
-- Added payload compression, scoped per group. `Publisher Compression` in TRACK_INFO now names the algorithm the publisher used (`none`/`deflate`/`zstd`), and a new SETUP `Compression` parameter carries the algorithms each endpoint can decompress on a hop. The publisher MUST pick an algorithm its peer advertised (or `none` if they share none); `deflate` and `zstd` are defined, neither mandatory. There is no per-group or per-frame flag on the wire — a receiver decompresses iff `Publisher Compression` names a non-`none` algorithm it advertised, else treats payloads as verbatim. When compressed, a group's frame payloads (only the payloads, never the framing) form a single stream in that algorithm, reset at each group boundary and sliced per frame into each frame's opaque `Payload`, with the algorithm's redundant container bytes omitted (the RFC 7692 trim for deflate; magicless, checksum-less frames for zstd) since moq-lite frames the slices itself; the decoder keeps one context per group. Keeping the framing uncompressed lets a relay store payloads compressed and re-frame across transport versions without recompressing.
+- Added payload compression, scoped per group. `Publisher Compression` in TRACK_INFO now names the algorithm the publisher used (`none`/`deflate`/`zstd`), and a new SETUP `Compression` parameter carries the algorithms each endpoint can decompress on a hop. The publisher MUST pick an algorithm its peer advertised (or `none` if they share none); `deflate` and `zstd` are defined, neither mandatory. There is no per-group or per-frame flag on the wire — a receiver decompresses iff `Publisher Compression` names a non-`none` algorithm it advertised, else treats payloads as verbatim. When compressed, a group's frame payloads (only the payloads, never the framing) form a single stream in that algorithm, reset at each group boundary and sliced per frame into each frame's opaque `Payload`, with the algorithm's redundant container bytes omitted (the RFC 7692 trim for deflate; magicless, checksum-less frames for zstd) since moq-lite frames the slices itself; the decoder keeps one context per group. Keeping the framing uncompressed lets a relay store payloads compressed and re-frame across transport versions without recompressing. A compressed frame also carries a `Decompressed Length` (post-decompression size, for buffer allocation and as a per-frame decompression bound), and FRAME's `Message Length` is renamed `Payload Length` (it has only ever delimited the payload).
 - Added Qmux [qmux] transport bindings for TCP/TLS and WebSocket, for environments where UDP is unavailable. The WebSocket binding uses the WebSocket message framing in place of the Qmux Record `Size` field.
 
 ## moq-lite-04
@@ -1215,11 +1221,11 @@ TODO: general security considerations.
 
 ## Payload Compression
 Compressing data that mixes attacker-controlled and secret material in the same payload can leak the secret through the compressed size, as in the CRIME and BREACH attacks.
-A publisher MUST NOT set a non-zero `Publisher Compression` hint on a Track whose payloads combine secret material with attacker-influenced material.
+A publisher MUST NOT compress a Track (set a non-`none` `Publisher Compression`) whose payloads combine secret material with attacker-influenced material.
 Because compression is group-scoped, the exposure is bounded to within a single group — which may combine several frames, a wider window than a single frame — but it is not eliminated.
 
 A malicious sender could emit a small compressed payload that decompresses to a very large buffer (a "decompression bomb").
-Because compression is group-scoped, a receiver MUST bound the cumulative decompressed size of a group stream — not merely each frame's slice, since many small slices can otherwise accumulate without limit; if the bound is exceeded it MUST reset the affected stream rather than allocate unbounded memory, and MAY close the session with a PROTOCOL_VIOLATION if it considers the peer abusive.
+Each compressed frame declares its post-decompression size in `Decompressed Length` (see [FRAME](#frame)): a receiver MUST reject a frame whose `Decompressed Length` exceeds its configured limit, and MUST reset the stream if decompressing the `Payload` yields more bytes than declared, so it never allocates or emits more than that bounded size. A receiver SHOULD also bound the cumulative decompressed size across a group, since many in-bound frames can still accumulate. On any breach it MUST reset the affected stream rather than allocate unbounded memory, and MAY close the session with a PROTOCOL_VIOLATION if it considers the peer abusive.
 
 Compression is orthogonal to end-to-end encryption: an encrypted payload is effectively incompressible, so a publisher using end-to-end encryption SHOULD leave `Publisher Compression` at `0`.
 
