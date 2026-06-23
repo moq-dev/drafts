@@ -571,9 +571,9 @@ Table of Contents
    Track Stream (Section 5.1.4) (see TRACK_INFO (Section 7.10)).  The
    subscriber MUST have the track's TRACK_INFO before it can parse the
    FRAME messages that arrive on Group Streams, since the timescale
-   determines the frame wire format and the compression signal
-   determines whether frame payloads are compressed; it MAY open the
-   Track and Subscribe streams concurrently and buffer frames until
+   determines the frame wire format and the Publisher Compression value
+   determines whether and how frame payloads are compressed; it MAY open
+   the Track and Subscribe streams concurrently and buffer frames until
    TRACK_INFO arrives.
 
    The publisher sends SUBSCRIBE_OK once the absolute start group is
@@ -904,7 +904,7 @@ Table of Contents
    *Payload*: The frame payload, extending to the end of the datagram.
    A datagram is a single-frame group: when the Track is compressed on
    this hop (see Section 7.11) the payload is a single compressed stream
-   in the negotiated algorithm, otherwise it is verbatim.  The total
+   in the Track's algorithm, otherwise it is verbatim.  The total
    datagram body (including all header fields above and the compressed
    payload if applicable) MUST NOT exceed 1200 bytes.  This limit
    ensures the datagram fits within the minimum QUIC path MTU without
@@ -1071,30 +1071,25 @@ Table of Contents
 7.3.3.  Compression Parameter
 
    The Compression Parameter advertises the payload compression
-   algorithms (Section 7.11) the sender can both compress and decompress
-   on this hop, in preference order (most-preferred first).  The
-   Parameter Value is a sequence of algorithm identifiers, each a
+   algorithms (Section 7.11) the sender can _decompress_ on this hop.
+   The Parameter Value is a sequence of algorithm identifiers, each a
    variable-length integer, packed back-to-back to fill the Parameter
    Length.  An endpoint that supports compression MUST include deflate
    (1); none (0) MUST NOT be listed.  An endpoint that does not support
    compression omits the parameter.
 
-   Negotiation is per direction and per hop, and a relay MUST NOT
-   forward the parameter (see Section 3.1).  For a given direction, the
-   algorithm is the first entry in the *receiver's* list that also
-   appears in the *sender's* list: the receiver's preference governs,
-   and because both endpoints hold both lists once SETUP has been
-   exchanged, each computes the same result with no further handshake.
-   Listing only algorithms it can both produce and consume is what lets
-   either endpoint make this selection for either direction without a
-   per-message signal.  The two directions are independent and MAY
-   select different algorithms.  Since deflate is mandatory for any
-   endpoint that supports compression, two compression-capable endpoints
-   always share at least one algorithm.  A sender MUST NOT compress
-   until it has received the receiver's Compression Parameter; a
-   receiver that advertised no list gets every Group Stream, Fetch
-   Stream, and datagram verbatim regardless of the Track's Publisher
-   Compression signal.
+   A relay MUST NOT forward the parameter (see Section 3.1); it is
+   negotiated independently on each hop.  The list constrains what a
+   publisher may use: a publisher MUST set Publisher Compression to an
+   algorithm its peer advertised here (see TRACK_INFO (Section 7.10)),
+   and more generally a sender MUST NOT compress with an algorithm the
+   receiver did not advertise, nor compress at all before it has
+   received the receiver's Compression Parameter.  A receiver
+   decompresses a Track's payloads if and only if Publisher Compression
+   names a non-none algorithm and the receiver advertised that
+   algorithm; a receiver that advertised no list, or not the Track's
+   algorithm, gets every Group Stream, Fetch Stream, and datagram
+   verbatim.
 
 7.4.  ANNOUNCE_REQUEST
 
@@ -1378,27 +1373,26 @@ Table of Contents
    (milliseconds), 1000000 (microseconds), 48000 (audio sample rate),
    and 90000 (RTP video clock).
 
-   *Publisher Compression*: The original publisher's end-to-end signal
-   that this Track's payloads are good candidates for compression.
+   *Publisher Compression*: The compression algorithm the original
+   publisher applied to this Track's payloads (see Section 7.11).
 
-   *  0: not a compression candidate; payloads are always sent verbatim
-      (the default).
+   *  0 (none): payloads are uncompressed (the default).
 
-   *  1: a compression candidate; payloads are compressed on any hop
-      that has negotiated compression, and verbatim elsewhere.
+   *  1 (deflate) or 2 (zstd): payloads are compressed with that
+      algorithm.
 
-   Values greater than 1 are reserved for future use; a subscriber that
-   does not understand a reserved value MUST treat it as 1, so the
-   signal stays additive and never blocks the Track.
-
-   The signal is carried end to end and forwarded unchanged by relays,
-   so even a hop that does not compress passes it along for a further-
-   downstream hop to act on.  It does not by itself cause compression:
-   that also requires the receiving hop to advertise a shared algorithm
-   via the Compression Parameter (Section 7.3.3), and there is no per-
-   group flag on the wire — a receiver decompresses if and only if it
-   holds a non-zero signal for the Track and the hop selected a shared
-   algorithm (see Section 7.11).
+   The publisher MUST choose an algorithm its peer advertised in the
+   Compression Parameter (Section 7.3.3); deflate is mandatory to
+   support, so it is always a safe choice.  The value is fixed for the
+   lifetime of the Track and forwarded unchanged by relays, so even a
+   hop that does not compress passes it along for a further-downstream
+   hop to act on.  It does not by itself cause compression: a receiver
+   decompresses if and only if the value names a non-none algorithm and
+   the receiver advertised that algorithm in its own Compression
+   Parameter (Section 7.3.3); otherwise the payloads are verbatim (see
+   Section 7.11).  A subscriber that does not recognize the value treats
+   the payloads as verbatim, so an unknown future algorithm degrades to
+   uncompressed rather than blocking the Track.
 
    The publisher SHOULD set it only for payload types that benefit from
    compression (e.g. JSON, text, uncompressed binary structures);
@@ -1411,27 +1405,25 @@ Table of Contents
    moq-lite can compress payloads hop by hop, like HTTP Transfer-
    Encoding: the decompressed bytes _are_ the payload and are identical
    end to end, but how they are carried MAY differ on each hop — a group
-   compressed on one hop is decompressed and MAY be re-sent verbatim, or
-   recompressed with a different algorithm, on the next.  Compression is
-   governed by two pieces, with no per-group flag on the wire:
+   compressed on one hop is decompressed and MAY be re-sent verbatim on
+   the next.  Compression is governed by two pieces, with no per-group
+   flag on the wire:
 
-   *  the Track's Publisher Compression signal (see TRACK_INFO
-      (Section 7.10)) — the original publisher's end-to-end mark that
-      the payloads are good candidates for compression; and
+   *  the Track's Publisher Compression value (see TRACK_INFO
+      (Section 7.10)) — the algorithm the original publisher used,
+      carried end to end; and
 
    *  the per-hop Compression Parameter (Section 7.3.3) — each endpoint
-      advertises, in preference order, the algorithms it can decompress.
+      advertises the algorithms it can decompress.
 
-   A hop compresses a Track's payloads when, and only when, the Track's
-   signal is non-zero *and* the sender and receiver share an algorithm
-   (the Compression Parameter (Section 7.3.3) defines how the single
-   per-direction algorithm is selected); otherwise they are verbatim.  A
-   receiver needs no per-group signal — neither a "compressed" flag nor
-   an algorithm identifier — because it derives both from the Track's
-   signal and the deterministic per-direction selection.  Because the
-   signal is carried end to end and forwarded unchanged, a hop that has
-   not negotiated compression still passes it along, so a further-
-   downstream hop that has can act on it.
+   A hop compresses a Track's payloads when, and only when, Publisher
+   Compression names a non-none algorithm *and* the receiver advertised
+   that algorithm; otherwise they are verbatim.  A receiver needs no
+   per-group signal — it takes the algorithm from Publisher Compression,
+   and whether the payloads are compressed from its own advertisement.
+   Because the value is carried end to end and forwarded unchanged, a
+   hop that has not negotiated compression still passes it along, so a
+   further-downstream hop that has can act on it.
 
    The following algorithms are defined:
 
@@ -1449,13 +1441,13 @@ Table of Contents
 
                                  Table 5
 
-   Every endpoint that supports compression MUST implement deflate, so a
-   common algorithm always exists; zstd is optional, and further
+   Every endpoint that supports compression MUST implement deflate, so
+   the publisher always has a safe choice; zstd is optional, and further
    algorithms MAY be defined by future extensions.
 
    Compression is *group-scoped* and applied only to frame payloads,
    never to the FRAME framing.  Within a group the payloads form a
-   single compressed stream in the negotiated algorithm, reset at each
+   single compressed stream in the Track's algorithm, reset at each
    group boundary, whose output is partitioned at frame boundaries: the
    compressor flushes at the end of each frame so that frame's slice is
    exactly the bytes stored in its Payload (delimited by Message
@@ -1488,14 +1480,25 @@ Table of Contents
    A relay applies compression independently on each hop, driven by each
    downstream's negotiation — not by the relay's own initiative, and
    never on a Track the publisher did not mark.  On its upstream
-   subscription it decompresses each compressed group as needed; on each
-   downstream subscription it (re)compresses with that downstream's
-   negotiated algorithm, or sends verbatim when no algorithm is shared.
-   A relay MAY transcode between algorithms, and bridge protocol
-   versions (e.g. a moq-lite-05 publisher to a moq-lite-04 subscriber),
-   provided the decompressed bytes are identical to what the publisher
-   produced.  A relay or generic library MUST NOT inspect or modify the
-   decompressed contents unless otherwise negotiated.
+   subscription it decompresses each compressed group as needed; on a
+   downstream subscription that advertised the Track's algorithm it
+   (re)compresses with that algorithm, and on one that did not it sends
+   the group verbatim.  A relay MUST NOT recompress with an algorithm
+   other than the one Publisher Compression names — that value tells the
+   receiver how to decode and is immutable — though it MAY recompress
+   with the same algorithm, and MAY bridge protocol versions (e.g. a
+   moq-lite-05 publisher to a moq-lite-04 subscriber) provided the
+   decompressed bytes are identical to what the publisher produced.  A
+   relay or generic library MUST NOT inspect or modify the decompressed
+   contents unless otherwise negotiated.
+
+   Open issue: because Publisher Compression both names the algorithm
+   and is immutable, a downstream that supports only a _different_
+   algorithm than the publisher chose (e.g. only deflate when the
+   publisher used zstd) receives the payloads verbatim rather than
+   transcoded — a relay cannot offer it an algorithm it does support
+   without rewriting the immutable value.  Whether to allow a per-hop
+   algorithm distinct from the publisher's is left as an open question.
 
 7.12.  SUBSCRIBE_OK
 
@@ -1813,25 +1816,23 @@ Table of Contents
       with existing subscriptions (no separate control stream).
 
    *  Added payload compression, scoped per group.  Publisher
-      Compression in TRACK_INFO is the original publisher's end-to-end
-      signal that a Track's payloads are good candidates for
-      compression; a new SETUP Compression parameter carries each
-      endpoint's decompressable algorithms in preference order.  For
-      each direction the algorithm is the receiver's most-preferred that
-      the sender also supports — computed identically by both ends, so
-      the two directions may differ; deflate is mandatory (guaranteeing
-      a common algorithm) and zstd is optional.  There is no per-group
-      or per-frame flag on the wire: the receiver infers both _whether_
-      and _which_ from the signal and the selection.  When compressed, a
-      group's frame payloads (only the payloads, never the framing) form
-      a single stream in the negotiated algorithm, reset at each group
-      boundary and sliced per frame into each frame's opaque Payload,
-      with the algorithm's redundant container bytes omitted (the RFC
-      7692 trim for deflate; magicless, checksum-less frames for zstd)
-      since moq-lite frames the slices itself; the decoder keeps one
-      context per group.  Keeping the framing uncompressed lets a relay
-      store payloads compressed and re-frame across transport versions
-      without recompressing.
+      Compression in TRACK_INFO now names the algorithm the publisher
+      used (none/deflate/zstd), and a new SETUP Compression parameter
+      carries the algorithms each endpoint can decompress on a hop.  The
+      publisher MUST pick an algorithm its peer advertised; deflate is
+      mandatory (so always safe) and zstd is optional.  There is no per-
+      group or per-frame flag on the wire — a receiver decompresses iff
+      Publisher Compression names a non-none algorithm it advertised,
+      else treats payloads as verbatim.  When compressed, a group's
+      frame payloads (only the payloads, never the framing) form a
+      single stream in that algorithm, reset at each group boundary and
+      sliced per frame into each frame's opaque Payload, with the
+      algorithm's redundant container bytes omitted (the RFC 7692 trim
+      for deflate; magicless, checksum-less frames for zstd) since moq-
+      lite frames the slices itself; the decoder keeps one context per
+      group.  Keeping the framing uncompressed lets a relay store
+      payloads compressed and re-frame across transport versions without
+      recompressing.
 
    *  Added Qmux [qmux] transport bindings for TCP/TLS and WebSocket,
       for environments where UDP is unavailable.  The WebSocket binding
