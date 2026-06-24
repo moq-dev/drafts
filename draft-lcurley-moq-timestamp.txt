@@ -3,9 +3,9 @@
 
 
 moq                                                            L. Curley
-Internet-Draft                                              22 June 2026
+Internet-Draft                                              24 June 2026
 Intended status: Informational                                          
-Expires: 24 December 2026
+Expires: 26 December 2026
 
 
                      MoQ Object Timestamp Extension
@@ -48,7 +48,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 24 December 2026.
+   This Internet-Draft will expire on 26 December 2026.
 
 Copyright Notice
 
@@ -68,15 +68,13 @@ Table of Contents
 
    1.  Conventions and Definitions
    2.  Introduction
-   3.  Setup Negotiation
-   4.  TIMESCALE Track Property
-   5.  TIMESTAMP Object Property
-     5.1.  Age-Based Dropping
-   6.  Security Considerations
-   7.  IANA Considerations
-     7.1.  MOQT Setup Options
-     7.2.  MOQT Properties
-   8.  Normative References
+   3.  TIMESCALE Track Property
+   4.  TIMESTAMP Object Property
+     4.1.  Age-Based Dropping
+   5.  Security Considerations
+   6.  IANA Considerations
+     6.1.  MOQT Properties
+   7.  Normative References
    Acknowledgments
    Author's Address
 
@@ -128,27 +126,15 @@ Table of Contents
    _meaning_ of the timeline (it is still the application's clock); it
    only uses the timestamp for relative age comparisons.
 
-3.  Setup Negotiation
+   These properties are self-describing and require no SETUP
+   negotiation: a receiver that understands the extension uses them
+   directly, and one that does not ignores them per [moqt].  Whenever a
+   property is absent — including when neither endpoint implements this
+   extension — the defaults defined below apply: a Timescale of 1000
+   (milliseconds), and for an object with no Timestamp, the wall-clock
+   arrival time of the object.
 
-   The Object Timestamp extension is negotiated during the SETUP
-   exchange as defined in [moqt] Section 10.3.  An endpoint indicates
-   support by including the following Setup Option:
-
-   TIMESTAMP Setup Option {
-     Option Key (vi64) = 0x915C1
-     Option Value Length (vi64) = 0
-   }
-
-   The properties defined below are ordinary Key-Value-Pairs and a
-   receiver that does not understand them ignores them per [moqt].
-   Negotiation is therefore not required for correctness, but a
-   publisher SHOULD send the Setup Option so that a relay knows it can
-   rely on object timestamps for age-based decisions rather than falling
-   back to wall-clock arrival time.  A relay MAY perform timestamp-based
-   dropping for a track only if the upstream publisher advertised this
-   option (or the track carries a non-zero Timescale).
-
-4.  TIMESCALE Track Property
+3.  TIMESCALE Track Property
 
    The TIMESCALE property establishes the units for every Timestamp on a
    track.  It is a track-level Key-Value-Pair, carried with the track's
@@ -163,25 +149,22 @@ Table of Contents
 
    *Value*: The number of timestamp units per second.  Common values
    include 1000 (milliseconds), 1000000 (microseconds), 48000 (a typical
-   audio sample rate), and 90000 (the RTP video clock).  A value of 0,
-   or the absence of the property, means the track has no media
-   timeline: Timestamp properties, if present, MUST be ignored, and a
-   relay MUST fall back to wall-clock arrival time for any age-based
-   decision.
+   audio sample rate), and 90000 (the RTP video clock).  The absence of
+   the property defaults to 1000 (milliseconds), so every track has a
+   usable timeline whether or not this extension is in use.  A value of
+   0 is invalid and MUST be treated as this default.
 
    The Timescale is fixed for the lifetime of the track and MUST NOT
    change.
 
-   The Timescale is required to interpret the units of every Timestamp,
-   so a receiver cannot resolve an object's timing until it has the
-   track's properties.  Those properties are delivered in SUBSCRIBE_OK
-   or TRACK_STATUS ([moqt] Section 12), so a receiver that begins
-   receiving objects before it has them MUST buffer the timing (or treat
-   it as unknown) until the Timescale arrives.  A relay that has not yet
-   learned the Timescale MUST fall back to wall-clock arrival time for
-   any age-based decision.
+   The Timescale is required to interpret the units of every Timestamp.
+   The track's properties are delivered in SUBSCRIBE_OK or TRACK_STATUS
+   ([moqt] Section 12); a receiver that begins receiving objects before
+   it has them cannot yet know whether a non-default Timescale applies,
+   so it MUST fall back to wall-clock arrival time for any age-based
+   decision until the properties arrive.
 
-5.  TIMESTAMP Object Property
+4.  TIMESTAMP Object Property
 
    The TIMESTAMP property carries the presentation time of an object, in
    the track's Timescale.  It is an object-level Key-Value-Pair carried
@@ -196,29 +179,35 @@ Table of Contents
    *Value*: The absolute presentation timestamp of the object, expressed
    in the track's Timescale.  Any value (including 0) is valid.
 
-   A publisher SHOULD attach TIMESTAMP to every object on a track whose
-   Timescale is non-zero.  An object with no TIMESTAMP on such a track
-   has no media time; for age comparisons a receiver MUST treat its
-   effective time as the wall-clock arrival time of the object, which
-   avoids stalling expiration on objects that intentionally carry no
-   timestamp (e.g. keep-alives or gap markers).
+   Each Timestamp is absolute, not delta-encoded against a previous
+   object. [moqt] does not guarantee reliable delivery of every object
+   within a group or subgroup, so an object may be dropped or lost
+   independently; an absolute timestamp remains correct regardless,
+   whereas a delta would be corrupted by any missing predecessor.
 
-5.1.  Age-Based Dropping
+   A publisher SHOULD attach TIMESTAMP to every object that has a media
+   time.  An object with no TIMESTAMP has no media time; for age
+   comparisons a receiver MUST treat its effective time as the wall-
+   clock arrival time of the object, which avoids stalling expiration on
+   objects that intentionally carry no timestamp (e.g. keep-alives or
+   gap markers).
 
-   Given two objects on the same track, both with TIMESTAMP and a non-
-   zero Timescale, a relay computes their relative age as the difference
-   of their timestamps divided by the Timescale.  A relay serving a live
-   subscription MAY drop an object whose age relative to the most recent
-   object on the track exceeds a locally configured or application-
-   supplied threshold, resetting the corresponding stream per [moqt].
-   This decision is identical at every hop because it depends only on
-   values embedded in the objects, not on arrival time.
+4.1.  Age-Based Dropping
+
+   Given two objects on the same track, both with TIMESTAMP, a relay
+   computes their relative age as the difference of their timestamps
+   divided by the Timescale.  A relay serving a live subscription MAY
+   drop an object whose age relative to the most recent object on the
+   track exceeds a locally configured or application-supplied threshold,
+   resetting the corresponding stream per [moqt].  This decision is
+   identical at every hop because it depends only on values embedded in
+   the objects, not on arrival time.
 
    A relay MUST NOT use timestamps to reorder delivery beyond what
    [moqt] already permits; this property informs _dropping_, not
    transmission order.
 
-6.  Security Considerations
+5.  Security Considerations
 
    Timestamps expose the media timeline to relays, which is the point of
    the extension, but a relay still treats payloads as opaque and gains
@@ -233,7 +222,7 @@ Table of Contents
    case is degraded delivery for that subscription, not a cross-
    subscription effect.
 
-7.  IANA Considerations
+6.  IANA Considerations
 
    This document requests the following registrations.  High,
    distinctive values are requested to avoid the low ranges reserved by
@@ -242,21 +231,7 @@ Table of Contents
    0x9D).  The property Types are even so that each value is a bare
    varint with no length prefix (see [moqt] Section 2.5).
 
-7.1.  MOQT Setup Options
-
-   This document requests a registration in the "MOQT Setup Options"
-   registry ([moqt] Section 15.4), whose policy is Specification
-   Required.
-
-                  +=========+===========+===============+
-                  | Value   | Name      | Reference     |
-                  +=========+===========+===============+
-                  | 0x915C1 | TIMESTAMP | This Document |
-                  +---------+-----------+---------------+
-
-                                  Table 1
-
-7.2.  MOQT Properties
+6.1.  MOQT Properties
 
    This document requests registrations in the "MOQT Properties"
    registry ([moqt] Section 15.8), used for object and track properties.
@@ -269,9 +244,9 @@ Table of Contents
              | 0x915C2 | TIMESTAMP | Object | This Document |
              +---------+-----------+--------+---------------+
 
-                                 Table 2
+                                 Table 1
 
-8.  Normative References
+7.  Normative References
 
    [moqt]     Nandakumar, S., Vasiliev, V., Swett, I., and A. Frindell,
               "Media over QUIC Transport", Work in Progress, Internet-
