@@ -1049,7 +1049,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Curley</td>
-<td class="center">Expires 26 December 2026</td>
+<td class="center">Expires 27 December 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1062,12 +1062,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-lcurley-moq-lite-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-06-24" class="published">24 June 2026</time>
+<time datetime="2026-06-25" class="published">25 June 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-12-26">26 December 2026</time></dd>
+<dd class="expires"><time datetime="2026-12-27">27 December 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1113,7 +1113,7 @@ While primarily designed for media, the transport is payload agnostic and can be
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 26 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 27 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -2205,7 +2205,7 @@ The remaining bindings convey the path in their own handshake.<a href="#section-
 ANNOUNCE_REQUEST Message {
   Message Length (i)
   Broadcast Path Prefix (s),
-  Exclude Hop (64),
+  Exclude Hop (i),
 }
 </pre><a href="#section-7.4-2" class="pilcrow">¶</a>
 </div>
@@ -2229,16 +2229,16 @@ It carries metadata that is constant for the lifetime of the stream and applies 
 <pre>
 ANNOUNCE_OK Message {
   Message Length (i)
-  Hop ID (64)
+  Hop ID (i)
   Active Count (i)
 }
 </pre><a href="#section-7.5-2" class="pilcrow">¶</a>
 </div>
 <p id="section-7.5-3"><strong>Hop ID</strong>:
-The publisher's own Hop ID, encoded as a 64-bit integer.
-Hop IDs are randomly assigned, so they are carried as fixed-width 64 bits rather than a variable-length integer: a varint would almost never be shorter, and the fixed width buys the full 64-bit space (a varint caps at 62 bits).
+The publisher's own Hop ID.
 This is treated as the implicit trailing entry of every ANNOUNCE_BROADCAST's Hop ID list on this stream; ANNOUNCE_BROADCAST messages <span class="bcp14">MUST NOT</span> repeat this value as the last entry of their <code>Hop ID</code> list.
-A value of 0 indicates the publisher does not assign Hop IDs (e.g. when bridging from an older protocol version).
+The value 0 is reserved to mean "unknown": either no Hop ID was assigned (e.g. when bridging from an older protocol version) or the endpoint deliberately withholds it to obscure the underlying routing.
+A publisher that assigns a Hop ID <span class="bcp14">MUST</span> choose a non-zero value.
 Receivers reconstruct the full path as <code>ANNOUNCE_BROADCAST.Hop IDs ++ [ANNOUNCE_OK.Hop ID]</code>.<a href="#section-7.5-3" class="pilcrow">¶</a></p>
 <p id="section-7.5-4"><strong>Active Count</strong>:
 The number of <code>active</code> ANNOUNCE_BROADCAST messages that the publisher will send immediately as the initial set.
@@ -2266,7 +2266,7 @@ ANNOUNCE_BROADCAST Message {
   Broadcast Path Suffix (s),
   Epoch (i),
   Hop Count (i),
-  Hop ID (64) ...,
+  Hop ID (i) ...,
 }
 </pre><a href="#section-7.6-3" class="pilcrow">¶</a>
 </div>
@@ -2297,11 +2297,11 @@ The number of Hop ID entries that follow, NOT including the publisher's own <cod
 A value of 0 means no Hop ID entries are present, indicating either that the announcement originated locally on the publisher (the publisher itself is the origin) or that the upstream peer does not support hop tracking.
 A receiver <span class="bcp14">MUST</span> close the stream with a PROTOCOL_VIOLATION if the Hop Count does not match the number of subsequent Hop ID entries.<a href="#section-7.6-10" class="pilcrow">¶</a></p>
 <p id="section-7.6-11"><strong>Hop ID</strong>:
-A unique identifier for each relay in the path from the origin publisher, ordered from origin to the upstream of the responding publisher, each encoded as a 64-bit integer (see ANNOUNCE_OK's <code>Hop ID</code> for the rationale).
+A unique identifier for each relay in the path from the origin publisher, ordered from origin to the upstream of the responding publisher.
 The responding publisher's own Hop ID is NOT included in this list; it is carried once in ANNOUNCE_OK as <code>Hop ID</code>.
 When forwarding an announcement received from an upstream peer, a relay <span class="bcp14">MUST</span> append the upstream peer's ANNOUNCE_OK <code>Hop ID</code> to this list (since that ID is no longer implicit downstream) and then send its own <code>Hop ID</code> in the ANNOUNCE_OK it sends to the downstream subscriber.
 The total path length is <code>Hop Count + 1</code> (including the implicit ANNOUNCE_OK <code>Hop ID</code>); this total breaks ties between multiple paths to the same broadcast that carry the same <code>Epoch</code> (the larger <code>Epoch</code> wins outright).
-A Hop ID value of 0 indicates an unknown or bridged relay hop (e.g. when bridging from an older protocol version that does not assign Hop IDs); the Hop Count still reflects the total number of entries including unknown hops.<a href="#section-7.6-11" class="pilcrow">¶</a></p>
+A Hop ID value of 0 means the hop is unknown: either it was never assigned (e.g. when bridging from an older protocol version) or a relay deliberately withholds it to obscure the underlying routing; the Hop Count still reflects the total number of entries including unknown hops.<a href="#section-7.6-11" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="subscribe-1">
@@ -2715,34 +2715,31 @@ A generic library or relay <span class="bcp14">MUST NOT</span> inspect or modify
             <p id="section-8.1-1.10.1">Added ANNOUNCE_OK message, sent once at the head of the Announce Stream response. Carries the publisher's <code>Hop ID</code> (hoisted out of every ANNOUNCE_BROADCAST's Hop ID list) and an <code>Active Count</code> so subscribers can batch the initial set instead of reporting each ANNOUNCE_BROADCAST as it trickles in.<a href="#section-8.1-1.10.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.11">
-            <p id="section-8.1-1.11.1">Encoded <code>Hop ID</code> (in ANNOUNCE_BROADCAST and ANNOUNCE_OK) and <code>Exclude Hop</code> (in ANNOUNCE_REQUEST) as fixed-width 64-bit integers instead of varints. Hop IDs are random, so a varint would almost never be shorter, and the fixed width restores the 2 bits a 62-bit varint would have cost.<a href="#section-8.1-1.11.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.11.1">Added a mandatory <code>Timescale</code> to TRACK_INFO: the units (ticks per second) for every frame timestamp on the Track. It <span class="bcp14">MUST</span> be non-zero — every Track has a media timeline, so the timestamp fields are never conditional on the wire.<a href="#section-8.1-1.11.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.12">
-            <p id="section-8.1-1.12.1">Added a mandatory <code>Timescale</code> to TRACK_INFO: the units (ticks per second) for every frame timestamp on the Track. It <span class="bcp14">MUST</span> be non-zero — every Track has a media timeline, so the timestamp fields are never conditional on the wire.<a href="#section-8.1-1.12.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.12.1">Added <code>Timestamp Delta</code> to FRAME, a zigzag-encoded signed varint delta from the previous frame's timestamp (the first frame's delta is its absolute timestamp).<a href="#section-8.1-1.12.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.13">
-            <p id="section-8.1-1.13.1">Added <code>Timestamp Delta</code> to FRAME, a zigzag-encoded signed varint delta from the previous frame's timestamp (the first frame's delta is its absolute timestamp).<a href="#section-8.1-1.13.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.13.1">Added <code>Timestamp</code> to the QUIC datagram body: the absolute timestamp of the group's single frame.<a href="#section-8.1-1.13.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.14">
-            <p id="section-8.1-1.14.1">Added <code>Timestamp</code> to the QUIC datagram body: the absolute timestamp of the group's single frame.<a href="#section-8.1-1.14.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.14.1">Removed <code>Publisher Max Latency</code>. The publisher's retention guarantee is no longer part of the wire format; retention for FETCH and future subscriptions is best-effort and left to the publisher.<a href="#section-8.1-1.14.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.15">
-            <p id="section-8.1-1.15.1">Removed <code>Publisher Max Latency</code>. The publisher's retention guarantee is no longer part of the wire format; retention for FETCH and future subscriptions is best-effort and left to the publisher.<a href="#section-8.1-1.15.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.15.1">Timestamp-based expiration replaces wall-clock arrival time; only empty groups (which carry no timestamp) fall back to wall-clock.<a href="#section-8.1-1.15.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.16">
-            <p id="section-8.1-1.16.1">Timestamp-based expiration replaces wall-clock arrival time; only empty groups (which carry no timestamp) fall back to wall-clock.<a href="#section-8.1-1.16.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.16.1">Added QUIC datagram delivery for groups, sharing Subscribe IDs with existing subscriptions (no separate control stream).<a href="#section-8.1-1.16.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.17">
-            <p id="section-8.1-1.17.1">Added QUIC datagram delivery for groups, sharing Subscribe IDs with existing subscriptions (no separate control stream).<a href="#section-8.1-1.17.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.17.1">Added <code>Compression</code> to TRACK_INFO for per-frame payload compression (<code>none</code> or <code>deflate</code>).<a href="#section-8.1-1.17.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.18">
-            <p id="section-8.1-1.18.1">Added <code>Compression</code> to TRACK_INFO for per-frame payload compression (<code>none</code> or <code>deflate</code>).<a href="#section-8.1-1.18.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.18.1">Dropped the <code>Publisher</code>/<code>Subscriber</code> prefix from fields that exist on only one side: <code>Publisher Compression</code> → <code>Compression</code> and <code>Subscriber Max Latency</code> → <code>Max Latency</code>. <code>Priority</code> and <code>Ordered</code> keep the prefix since both a publisher and a subscriber variant exist and the prose distinguishes them. Wire format unchanged.<a href="#section-8.1-1.18.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.19">
-            <p id="section-8.1-1.19.1">Dropped the <code>Publisher</code>/<code>Subscriber</code> prefix from fields that exist on only one side: <code>Publisher Compression</code> → <code>Compression</code> and <code>Subscriber Max Latency</code> → <code>Max Latency</code>. <code>Priority</code> and <code>Ordered</code> keep the prefix since both a publisher and a subscriber variant exist and the prose distinguishes them. Wire format unchanged.<a href="#section-8.1-1.19.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-8.1-1.20">
-            <p id="section-8.1-1.20.1">Added Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span> transport bindings for TCP/TLS and WebSocket, for environments where UDP is unavailable. The WebSocket binding uses the WebSocket message framing in place of the Qmux Record <code>Size</code> field.<a href="#section-8.1-1.20.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.19.1">Added Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span> transport bindings for TCP/TLS and WebSocket, for environments where UDP is unavailable. The WebSocket binding uses the WebSocket message framing in place of the Qmux Record <code>Size</code> field.<a href="#section-8.1-1.19.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
