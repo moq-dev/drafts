@@ -3,9 +3,9 @@
 
 
 moq                                                            L. Curley
-Internet-Draft                                              25 June 2026
+Internet-Draft                                              26 June 2026
 Intended status: Informational                                          
-Expires: 27 December 2026
+Expires: 28 December 2026
 
 
                          Media over QUIC - Lite
@@ -46,7 +46,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 27 December 2026.
+   This Internet-Draft will expire on 28 December 2026.
 
 Copyright Notice
 
@@ -563,11 +563,11 @@ Table of Contents
    not by a timeout.  The Subscribe Stream does not carry the track's
    publisher properties — those are immutable and fetched once via a
    Track Stream (Section 5.1.4) (see TRACK_INFO (Section 7.10)).  The
-   subscriber MUST have the track's TRACK_INFO before it can parse the
-   FRAME messages that arrive on Group Streams, since compression
-   determines the frame wire format and the timescale is needed to
-   interpret each timestamp; it MAY open the Track and Subscribe streams
-   concurrently and buffer frames until TRACK_INFO arrives.
+   subscriber MUST have the track's TRACK_INFO before it can fully
+   interpret the FRAME messages that arrive on Group Streams, since the
+   timescale is needed to interpret each timestamp; it MAY open the
+   Track and Subscribe streams concurrently and buffer frames until
+   TRACK_INFO arrives.
 
    The publisher sends SUBSCRIBE_OK once the absolute start group is
    resolved, and SUBSCRIBE_END once no further groups will be produced
@@ -616,17 +616,17 @@ Table of Contents
    if the broadcast is re-announced (a new active ANNOUNCE_BROADCAST
    that atomically replaces the prior one), the subscriber MUST discard
    the cached TRACK_INFO and MUST re-request it before parsing any
-   further FRAME messages, since the timescale or compression may have
-   changed.  If FRAME messages cannot be decoded against the cached
-   TRACK_INFO (for example a malformed delta or payload after a missed
-   re-announcement), the subscriber MUST reset the affected stream with
-   a protocol violation and re-request TRACK_INFO.  A subscriber that
-   reached the track without an advertisement (e.g. a path known out of
-   band) has no such invalidation signal; it MAY re-request TRACK_INFO
-   whenever it needs to confirm freshness (for example on a new
-   session).  A stale cache only risks misparsing frames from a changed
-   track, so the subscriber that cannot observe re-announcements SHOULD
-   NOT cache TRACK_INFO beyond a single connection.
+   further FRAME messages, since the timescale may have changed.  If
+   FRAME messages cannot be decoded against the cached TRACK_INFO (for
+   example a malformed delta or payload after a missed re-announcement),
+   the subscriber MUST reset the affected stream with a protocol
+   violation and re-request TRACK_INFO.  A subscriber that reached the
+   track without an advertisement (e.g. a path known out of band) has no
+   such invalidation signal; it MAY re-request TRACK_INFO whenever it
+   needs to confirm freshness (for example on a new session).  A stale
+   cache only risks misparsing frames from a changed track, so the
+   subscriber that cannot observe re-announcements SHOULD NOT cache
+   TRACK_INFO beyond a single connection.
 
    Because a subscriber MAY open the Track stream concurrently with a
    SUBSCRIBE or FETCH (see Section 5.1.2 and Section 5.1.3) and cannot
@@ -882,14 +882,11 @@ Table of Contents
    (including 0) is a valid absolute timestamp.
 
    *Payload*: The frame payload, extending to the end of the datagram.
-   If the Track's Compression is non-zero, the payload is compressed
-   using the negotiated algorithm (see TRACK_INFO (Section 7.10)).  The
-   total datagram body (including all header fields above and the
-   compressed payload if applicable) MUST NOT exceed 1200 bytes.  This
-   limit ensures the datagram fits within the minimum QUIC path MTU
-   without IP-layer fragmentation.  Payloads that would not fit MUST be
-   sent as a Group Stream instead.  A receiver MUST silently drop any
-   datagram that exceeds this limit.
+   The total datagram body (including all header fields above and the
+   payload) MUST NOT exceed 1200 bytes.  This limit ensures the datagram
+   fits within the minimum QUIC path MTU without IP-layer fragmentation.
+   Payloads that would not fit MUST be sent as a Group Stream instead.
+   A receiver MUST silently drop any datagram that exceeds this limit.
 
 7.  Encoding
 
@@ -1290,7 +1287,6 @@ Table of Contents
      Publisher Priority (8)
      Publisher Ordered (8)
      Timescale (i)
-     Compression (i)
    }
 
    Every field is *fixed for the lifetime of the Track* and MUST NOT
@@ -1322,39 +1318,6 @@ Table of Contents
    or Fetch stream with a protocol violation.  Common values include
    1000 (milliseconds), 1000000 (microseconds), 48000 (audio sample
    rate), and 90000 (RTP video clock).
-
-   *Compression*: The compression algorithm applied to every Frame
-   Payload on this Track.
-
-   *  none (0): payloads are transmitted verbatim (default).
-
-   *  deflate (1): payloads are compressed with raw DEFLATE as defined
-      in [RFC1951], with no zlib or gzip framing.
-
-   Compression is applied per-frame: each Frame Payload is an
-   independent compressed stream with no shared dictionary or state
-   between frames.  This keeps frames independently decodable and avoids
-   head-of-line decoding within a group.  The Frame Message Length
-   describes the compressed (on-wire) size.  An empty payload (size 0)
-   MUST NOT be compressed and remains empty on the wire.
-
-   The publisher SHOULD only enable compression for payload types that
-   benefit from it (e.g. JSON, text, uncompressed binary structures).
-   Already-compressed media (e.g. H.264, Opus, AV1) gains nothing and
-   SHOULD use none.  A subscriber that does not recognize the value MUST
-   NOT open a Subscribe or Fetch stream for the track; if it already
-   opened one before receiving TRACK_INFO, it MUST reset that stream
-   with a protocol violation.  The Track Stream itself needs no reset —
-   the publisher FINs it after TRACK_INFO.
-
-   A relay MAY transcode payloads between compression algorithms
-   (including bridging different protocol versions, e.g. a moq-lite-05
-   publisher to a moq-lite-04 subscriber) provided the decompressed
-   bytes are identical to what the publisher produced.  A relay SHOULD
-   NOT compress an originally-uncompressed payload unless there is a
-   strong content signal that compression is beneficial (e.g. the track
-   name ends in .json), because the relay cannot otherwise predict
-   whether compression will help or hurt.
 
 7.11.  SUBSCRIBE_OK
 
@@ -1547,13 +1510,8 @@ Table of Contents
    first frame of a group is delta-encoded from 0, so its Timestamp
    Delta is the zigzag encoding of the absolute timestamp.
 
-   *Payload*: An application-specific payload.  If the Track's
-   Compression is non-zero, the payload is compressed using the
-   negotiated algorithm (see TRACK_INFO (Section 7.10)) and the Message
-   Length describes the compressed size.  A generic library or relay
-   MUST NOT inspect or modify the decompressed contents unless otherwise
-   negotiated; recompression that preserves the decompressed bytes
-   exactly is allowed (see TRACK_INFO (Section 7.10)).
+   *Payload*: An application-specific payload.  The Message Length
+   describes the payload size on the wire.
 
 8.  Appendix A: Changelog
 
@@ -1594,10 +1552,9 @@ Table of Contents
    *  Added a Track Stream (0x6): a TRACK request that the publisher
       answers with a single TRACK_INFO message and then FINs.
       TRACK_INFO carries the Track's immutable publisher properties
-      (Publisher Priority, Publisher Ordered, Timescale, Compression).
-      It is fetched once and cached, so the properties are no longer
-      echoed on every response — notably, group-by-group FETCHes reuse
-      one lookup.
+      (Publisher Priority, Publisher Ordered, Timescale).  It is fetched
+      once and cached, so the properties are no longer echoed on every
+      response — notably, group-by-group FETCHes reuse one lookup.
 
    *  Removed FETCH_OK and trimmed SUBSCRIBE_OK down to a single
       resolved start group.  Publisher properties moved to TRACK_INFO; a
@@ -1656,14 +1613,10 @@ Table of Contents
    *  Added QUIC datagram delivery for groups, sharing Subscribe IDs
       with existing subscriptions (no separate control stream).
 
-   *  Added Compression to TRACK_INFO for per-frame payload compression
-      (none or deflate).
-
-   *  Dropped the Publisher/Subscriber prefix from fields that exist on
-      only one side: Publisher Compression → Compression and Subscriber
-      Max Latency → Max Latency.  Priority and Ordered keep the prefix
-      since both a publisher and a subscriber variant exist and the
-      prose distinguishes them.  Wire format unchanged.
+   *  Dropped the Subscriber prefix from fields that exist on only one
+      side: Subscriber Max Latency → Max Latency.  Priority and Ordered
+      keep the prefix since both a publisher and a subscriber variant
+      exist and the prose distinguishes them.  Wire format unchanged.
 
    *  Added Qmux [qmux] transport bindings for TCP/TLS and WebSocket,
       for environments where UDP is unavailable.  The WebSocket binding
