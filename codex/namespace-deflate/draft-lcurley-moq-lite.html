@@ -1270,10 +1270,7 @@ While primarily designed for media, the transport is payload agnostic and can be
                     <p id="section-toc.1-1.7.2.3.2.1.1"><a href="#section-7.3.1" class="auto internal xref">7.3.1</a>.  <a href="#name-probe-parameter" class="internal xref">Probe Parameter</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3.2.2">
-                    <p id="section-toc.1-1.7.2.3.2.2.1"><a href="#section-7.3.2" class="auto internal xref">7.3.2</a>.  <a href="#name-announce-deflate-parameter" class="internal xref">Announce Deflate Parameter</a></p>
-</li>
-                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3.2.3">
-                    <p id="section-toc.1-1.7.2.3.2.3.1"><a href="#section-7.3.3" class="auto internal xref">7.3.3</a>.  <a href="#name-path-parameter" class="internal xref">Path Parameter</a></p>
+                    <p id="section-toc.1-1.7.2.3.2.2.1"><a href="#section-7.3.2" class="auto internal xref">7.3.2</a>.  <a href="#name-path-parameter" class="internal xref">Path Parameter</a></p>
 </li>
                 </ul>
 </li>
@@ -1453,8 +1450,8 @@ There is currently no P2P support within QUIC so it's out of scope for moq-lite.
 <p id="section-3.1-2">The moq-lite version identifier is <code>moq-lite-xx</code> where <code>xx</code> is the two-digit draft version.
 For bare QUIC, this is negotiated as an ALPN token during the QUIC handshake.
 For WebTransport over HTTP/3, the QUIC ALPN remains <code>h3</code> and the moq-lite version is advertised via the <code>WT-Available-Protocols</code> and <code>WT-Protocol</code> CONNECT headers.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
-<p id="section-3.1-3">The bindings negotiated solely via ALPN (bare QUIC and Qmux over TCP/TLS) have no request URI, so a client conveys the request path it wishes to reach via the <span><a href="#path-parameter" class="internal xref">Path Parameter</a> (<a href="#path-parameter" class="auto internal xref">Section 7.3.3</a>)</span> in SETUP.
-The remaining bindings carry the path in their own handshake and do not use this parameter; see <span><a href="#path-parameter" class="internal xref">Path Parameter</a> (<a href="#path-parameter" class="auto internal xref">Section 7.3.3</a>)</span>.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
+<p id="section-3.1-3">The bindings negotiated solely via ALPN (bare QUIC and Qmux over TCP/TLS) have no request URI, so a client conveys the request path it wishes to reach via the <span><a href="#path-parameter" class="internal xref">Path Parameter</a> (<a href="#path-parameter" class="auto internal xref">Section 7.3.2</a>)</span> in SETUP.
+The remaining bindings carry the path in their own handshake and do not use this parameter; see <span><a href="#path-parameter" class="internal xref">Path Parameter</a> (<a href="#path-parameter" class="auto internal xref">Section 7.3.2</a>)</span>.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
 <p id="section-3.1-4">When UDP is unavailable, moq-lite-05 <span class="bcp14">MAY</span> also run over reliable byte-stream transports via Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span>.
 Qmux provides a length-delimited polyfill for QUIC streams on top of TCP/TLS or WebSocket; see <a href="#transports" class="auto internal xref">Section 4.2</a> for the specific bindings and ALPN negotiation.<a href="#section-3.1-4" class="pilcrow">¶</a></p>
 <p id="section-3.1-5">The session is active immediately after the QUIC/WebTransport connection is established.
@@ -1752,9 +1749,6 @@ The publisher replies with a single ANNOUNCE_OK message followed by ANNOUNCE_BRO
             <li class="normal" id="section-5.1.1-4.2">
               <p id="section-5.1.1-4.2.1">The number of <code>active</code> ANNOUNCE_BROADCAST messages (<code>Active Count</code>) the publisher will send immediately as the initial set. The subscriber <span class="bcp14">MAY</span> buffer until all <code>Active Count</code> initial announcements arrive before reporting them to the application, avoiding a trickle. Any ANNOUNCE_BROADCAST messages beyond <code>Active Count</code> are live updates and <span class="bcp14">SHOULD</span> be reported to the application as they arrive.<a href="#section-5.1.1-4.2.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-5.1.1-4.3">
-              <p id="section-5.1.1-4.3.1">The <code>Announce Encoding</code> used for the broadcast path suffixes on this stream.<a href="#section-5.1.1-4.3.1" class="pilcrow">¶</a></p>
-</li>
           </ul>
 <p id="section-5.1.1-5">Each ANNOUNCE_BROADCAST message contains one of the following statuses:<a href="#section-5.1.1-5" class="pilcrow">¶</a></p>
 <ul class="normal">
@@ -1775,7 +1769,7 @@ A subscriber that sees the same broadcast advertised across multiple streams <sp
 When the stream is closed, the subscriber <span class="bcp14">MUST</span> assume that all broadcasts are now <code>ended</code>.<a href="#section-5.1.1-9" class="pilcrow">¶</a></p>
 <p id="section-5.1.1-10">Path prefix matching and equality is done on a byte-by-byte basis.
 There <span class="bcp14">MAY</span> be multiple Announce Streams, potentially containing overlapping prefixes, that get their own ANNOUNCE_OK + ANNOUNCE_BROADCAST messages.
-When <code>Announce Encoding</code> is <code>deflate</code>, the compression context is retained across ANNOUNCE_BROADCAST messages on the same Announce Stream, so separate messages still benefit from repeated path components.
+The compression context for ANNOUNCE_BROADCAST path suffixes is retained across messages on the same Announce Stream, so separate messages still benefit from repeated path components.
 The publisher flushes the compressor after each ANNOUNCE_BROADCAST, allowing the subscriber to decode each announcement as soon as its message bytes arrive.
 For this reason, batching multiple path changes into one ANNOUNCE_BROADCAST is not needed for compression; <code>Active Count</code> provides application-level batching for the initial set while preserving one state change per ANNOUNCE_BROADCAST message.<a href="#section-5.1.1-10" class="pilcrow">¶</a></p>
 </section>
@@ -2140,11 +2134,6 @@ The following Setup Parameters are defined:<a href="#section-7.3-7" class="pilcr
               <td class="text-left" rowspan="1" colspan="1">Path</td>
               <td class="text-left" rowspan="1" colspan="1">Path (s)</td>
             </tr>
-            <tr>
-              <td class="text-right" rowspan="1" colspan="1">0x3</td>
-              <td class="text-left" rowspan="1" colspan="1">Announce Deflate</td>
-              <td class="text-left" rowspan="1" colspan="1">Empty</td>
-            </tr>
           </tbody>
         </table>
 <div id="probe-parameter">
@@ -2180,44 +2169,32 @@ The Parameter Value is a variable-length integer level, where each level include
           </ul>
 </section>
 </div>
-<div id="announce-deflate-parameter">
-<section id="section-7.3.2">
-          <h4 id="name-announce-deflate-parameter">
-<a href="#section-7.3.2" class="section-number selfRef">7.3.2. </a><a href="#name-announce-deflate-parameter" class="section-name selfRef">Announce Deflate Parameter</a>
-          </h4>
-<p id="section-7.3.2-1">The Announce Deflate Parameter advertises that the endpoint can receive ANNOUNCE_BROADCAST messages whose broadcast path suffixes use the <code>deflate</code> Announce Encoding.
-The Parameter Value <span class="bcp14">MUST</span> be empty.
-A receiver <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION if the parameter has a non-zero length.<a href="#section-7.3.2-1" class="pilcrow">¶</a></p>
-<p id="section-7.3.2-2">This capability is directional.
-A publisher <span class="bcp14">MUST NOT</span> select the <code>deflate</code> Announce Encoding unless the subscriber advertised the Announce Deflate Parameter in its SETUP.<a href="#section-7.3.2-2" class="pilcrow">¶</a></p>
-</section>
-</div>
 <div id="path-parameter">
-<section id="section-7.3.3">
+<section id="section-7.3.2">
           <h4 id="name-path-parameter">
-<a href="#section-7.3.3" class="section-number selfRef">7.3.3. </a><a href="#name-path-parameter" class="section-name selfRef">Path Parameter</a>
+<a href="#section-7.3.2" class="section-number selfRef">7.3.2. </a><a href="#name-path-parameter" class="section-name selfRef">Path Parameter</a>
           </h4>
-<p id="section-7.3.3-1">The Path Parameter carries the request path the client wishes to reach, equivalent to the path component of a moq-lite URI.
+<p id="section-7.3.2-1">The Path Parameter carries the request path the client wishes to reach, equivalent to the path component of a moq-lite URI.
 A server uses it to route the session to the correct origin, relay, or virtual host before any broadcasts are exchanged; its interpretation is otherwise application-defined and opaque to moq-lite.
-Unlike the capability-style Setup Parameters, it is per-hop setup metadata that rides along in SETUP because that is the first client-to-server message of the session.<a href="#section-7.3.3-1" class="pilcrow">¶</a></p>
-<p id="section-7.3.3-2">The Parameter Value is a non-empty UTF-8 string that begins with <code>/</code> and uses the path syntax of a URI <span>[<a href="#RFC3986" class="cite xref">RFC3986</a>]</span>.<a href="#section-7.3.3-2" class="pilcrow">¶</a></p>
-<p id="section-7.3.3-3">This parameter exists for bindings that have no request URI of their own: the native QUIC binding (binding 1 in <a href="#transports" class="auto internal xref">Section 4.2</a>) and the Qmux-over-TCP/TLS binding (binding 3), both of which negotiate only an ALPN token.
-The remaining bindings convey the path in their own handshake.<a href="#section-7.3.3-3" class="pilcrow">¶</a></p>
+Unlike the capability-style Setup Parameters, it is per-hop setup metadata that rides along in SETUP because that is the first client-to-server message of the session.<a href="#section-7.3.2-1" class="pilcrow">¶</a></p>
+<p id="section-7.3.2-2">The Parameter Value is a non-empty UTF-8 string that begins with <code>/</code> and uses the path syntax of a URI <span>[<a href="#RFC3986" class="cite xref">RFC3986</a>]</span>.<a href="#section-7.3.2-2" class="pilcrow">¶</a></p>
+<p id="section-7.3.2-3">This parameter exists for bindings that have no request URI of their own: the native QUIC binding (binding 1 in <a href="#transports" class="auto internal xref">Section 4.2</a>) and the Qmux-over-TCP/TLS binding (binding 3), both of which negotiate only an ALPN token.
+The remaining bindings convey the path in their own handshake.<a href="#section-7.3.2-3" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-7.3.3-4.1">
-              <p id="section-7.3.3-4.1.1">A client using a binding without a request URI (binding 1 or 3) <span class="bcp14">MUST</span> send exactly one Path Parameter in its SETUP.<a href="#section-7.3.3-4.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-7.3.2-4.1">
+              <p id="section-7.3.2-4.1.1">A client using a binding without a request URI (binding 1 or 3) <span class="bcp14">MUST</span> send exactly one Path Parameter in its SETUP.<a href="#section-7.3.2-4.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-7.3.3-4.2">
-              <p id="section-7.3.3-4.2.1">The Path Parameter <span class="bcp14">MUST NOT</span> be sent on a binding that carries a request URI. The WebTransport (binding 2) and Qmux-over-WebSocket (binding 4) bindings convey the path in their handshake URI (the CONNECT request path and the WebSocket request URI, respectively). A server that receives a Path Parameter on either of these bindings <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION.<a href="#section-7.3.3-4.2.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-7.3.2-4.2">
+              <p id="section-7.3.2-4.2.1">The Path Parameter <span class="bcp14">MUST NOT</span> be sent on a binding that carries a request URI. The WebTransport (binding 2) and Qmux-over-WebSocket (binding 4) bindings convey the path in their handshake URI (the CONNECT request path and the WebSocket request URI, respectively). A server that receives a Path Parameter on either of these bindings <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION.<a href="#section-7.3.2-4.2.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-7.3.3-4.3">
-              <p id="section-7.3.3-4.3.1">A server <span class="bcp14">MUST NOT</span> send a Path Parameter. SETUP is bidirectional, but the path is meaningful only from client to server; a client that receives a Path Parameter <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION.<a href="#section-7.3.3-4.3.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-7.3.2-4.3">
+              <p id="section-7.3.2-4.3.1">A server <span class="bcp14">MUST NOT</span> send a Path Parameter. SETUP is bidirectional, but the path is meaningful only from client to server; a client that receives a Path Parameter <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION.<a href="#section-7.3.2-4.3.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-7.3.3-4.4">
-              <p id="section-7.3.3-4.4.1">A server that receives a Path that is empty or is not a valid URI path <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION. A server that does not recognize or support the requested path <span class="bcp14">MUST</span> close the session.<a href="#section-7.3.3-4.4.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-7.3.2-4.4">
+              <p id="section-7.3.2-4.4.1">A server that receives a Path that is empty or is not a valid URI path <span class="bcp14">MUST</span> close the session with a PROTOCOL_VIOLATION. A server that does not recognize or support the requested path <span class="bcp14">MUST</span> close the session.<a href="#section-7.3.2-4.4.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-7.3.3-5">A relay <span class="bcp14">MUST NOT</span> forward the Path Parameter; like other per-hop setup metadata it applies only to this hop (see <a href="#session" class="auto internal xref">Section 3.1</a>).<a href="#section-7.3.3-5" class="pilcrow">¶</a></p>
+<p id="section-7.3.2-5">A relay <span class="bcp14">MUST NOT</span> forward the Path Parameter; like other per-hop setup metadata it applies only to this hop (see <a href="#session" class="auto internal xref">Section 3.1</a>).<a href="#section-7.3.2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2259,7 +2236,6 @@ ANNOUNCE_OK Message {
   Message Length (i)
   Hop ID (i)
   Active Count (i)
-  Announce Encoding (i)
 }
 </pre><a href="#section-7.5-2" class="pilcrow">¶</a>
 </div>
@@ -2274,18 +2250,6 @@ The number of <code>active</code> ANNOUNCE_BROADCAST messages that the publisher
 The subscriber <span class="bcp14">MAY</span> block reporting any announcement to the application until all <code>Active Count</code> initial ANNOUNCEs have arrived, then deliver the initial set as a batch.
 Any ANNOUNCE_BROADCAST messages beyond <code>Active Count</code> are live updates and <span class="bcp14">SHOULD</span> be reported as they arrive.
 A value of <code>0</code> is valid and means the publisher is offering no initial active broadcasts; all subsequent ANNOUNCEs (if any) are live updates.<a href="#section-7.5-4" class="pilcrow">¶</a></p>
-<p id="section-7.5-5"><strong>Announce Encoding</strong>:
-The encoding used for every <code>Broadcast Path Suffix</code> field on this Announce Stream.<a href="#section-7.5-5" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-7.5-6.1">
-            <p id="section-7.5-6.1.1"><code>identity</code> (0): Broadcast path suffixes are encoded as strings.<a href="#section-7.5-6.1.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-7.5-6.2">
-            <p id="section-7.5-6.2.1"><code>deflate</code> (1): Broadcast path suffixes are encoded as compressed bytes, as described in <span><a href="#compressed-broadcast-path-suffixes" class="internal xref">Compressed Broadcast Path Suffixes</a> (<a href="#compressed-broadcast-path-suffixes" class="auto internal xref">Section 7.6.1</a>)</span>.<a href="#section-7.5-6.2.1" class="pilcrow">¶</a></p>
-</li>
-        </ul>
-<p id="section-7.5-7">A publisher <span class="bcp14">MUST NOT</span> send any value other than <code>identity</code> unless the subscriber advertised support for that encoding in SETUP.
-A subscriber <span class="bcp14">MUST</span> reset the Announce Stream with a PROTOCOL_VIOLATION if it receives an unknown Announce Encoding, or if the publisher selects an encoding the subscriber did not advertise.<a href="#section-7.5-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="announce-broadcast">
@@ -2304,7 +2268,7 @@ An ANNOUNCE_BROADCAST before ANNOUNCE_OK is a protocol violation.<a href="#secti
 ANNOUNCE_BROADCAST Message {
   Message Length (i)
   Announce Status (i),
-  Broadcast Path Suffix (s or b),
+  Broadcast Path Suffix (b),
   Hop Count (i),
   Hop ID (i) ...,
 }
@@ -2322,9 +2286,7 @@ A flag indicating the announce status.<a href="#section-7.6-4" class="pilcrow">�
         </ul>
 <p id="section-7.6-6"><strong>Broadcast Path Suffix</strong>:
 This is combined with the broadcast path prefix to form the full broadcast path.
-The field encoding depends on the Announce Stream's <code>Announce Encoding</code>.
-With <code>identity</code>, it is encoded as a string.
-With <code>deflate</code>, it is encoded as a byte string containing the compressed form of the suffix.<a href="#section-7.6-6" class="pilcrow">¶</a></p>
+It is encoded as a byte string containing the compressed form of the suffix, as described in <span><a href="#compressed-broadcast-path-suffixes" class="internal xref">Compressed Broadcast Path Suffixes</a> (<a href="#compressed-broadcast-path-suffixes" class="auto internal xref">Section 7.6.1</a>)</span>.<a href="#section-7.6-6" class="pilcrow">¶</a></p>
 <p id="section-7.6-7"><strong>Hop Count</strong>:
 The number of Hop ID entries that follow, NOT including the publisher's own <code>Hop ID</code> from ANNOUNCE_OK.
 A value of 0 means no Hop ID entries are present, indicating either that the announcement originated locally on the publisher (the publisher itself is the origin) or that the upstream peer does not support hop tracking.
@@ -2340,7 +2302,7 @@ A Hop ID value of 0 means the hop is unknown: either it was never assigned (e.g.
           <h4 id="name-compressed-broadcast-path-s">
 <a href="#section-7.6.1" class="section-number selfRef">7.6.1. </a><a href="#name-compressed-broadcast-path-s" class="section-name selfRef">Compressed Broadcast Path Suffixes</a>
           </h4>
-<p id="section-7.6.1-1">The <code>deflate</code> Announce Encoding compresses only the bytes of each <code>Broadcast Path Suffix</code>; the message length, status, hop count, and hop IDs remain uncompressed.
+<p id="section-7.6.1-1">ANNOUNCE_BROADCAST compresses only the bytes of each <code>Broadcast Path Suffix</code>; the message length, status, hop count, and hop IDs remain uncompressed.
 The uncompressed input is exactly the UTF-8 byte sequence that would have been carried by the suffix string, excluding the string length prefix.<a href="#section-7.6.1-1" class="pilcrow">¶</a></p>
 <p id="section-7.6.1-2">Compression uses the DEFLATE format <span>[<a href="#RFC1951" class="cite xref">RFC1951</a>]</span> with a single compression context per Announce Stream.
 The context is initialized immediately after ANNOUNCE_OK and is retained until the Announce Stream closes.
@@ -2769,7 +2731,7 @@ The <code>Message Length</code> describes the payload size on the wire.<a href="
             <p id="section-8.1-1.18.1">Added Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span> transport bindings for TCP/TLS and WebSocket.<a href="#section-8.1-1.18.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.19">
-            <p id="section-8.1-1.19.1">Added optional DEFLATE compression for ANNOUNCE_BROADCAST path suffixes.<a href="#section-8.1-1.19.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.19.1">Added mandatory DEFLATE compression for ANNOUNCE_BROADCAST path suffixes.<a href="#section-8.1-1.19.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
