@@ -105,7 +105,7 @@ Table of Contents
      7.4.  ANNOUNCE_REQUEST
      7.5.  ANNOUNCE_OK
      7.6.  ANNOUNCE_BROADCAST
-       7.6.1.  Compressed Broadcast Path Suffixes
+       7.6.1.  Compressed ANNOUNCE_BROADCAST Payloads
      7.7.  SUBSCRIBE
      7.8.  SUBSCRIBE_UPDATE
      7.9.  TRACK
@@ -532,15 +532,15 @@ Table of Contents
    There MAY be multiple Announce Streams, potentially containing
    overlapping prefixes, that get their own ANNOUNCE_OK +
    ANNOUNCE_BROADCAST messages.  The compression context for
-   ANNOUNCE_BROADCAST path suffixes is retained across messages on the
-   same Announce Stream, so separate messages still benefit from
-   repeated path components.  The publisher flushes the compressor after
-   each ANNOUNCE_BROADCAST, allowing the subscriber to decode each
-   announcement as soon as its message bytes arrive.  For this reason,
-   batching multiple path changes into one ANNOUNCE_BROADCAST is not
-   needed for compression; Active Count provides application-level
-   batching for the initial set while preserving one state change per
-   ANNOUNCE_BROADCAST message.
+   ANNOUNCE_BROADCAST payloads is retained across messages on the same
+   Announce Stream, so separate messages still benefit from repeated
+   path components and Hop ID lists.  The publisher flushes the
+   compressor after each ANNOUNCE_BROADCAST, allowing the subscriber to
+   decode each announcement as soon as its message bytes arrive.  For
+   this reason, batching multiple path changes into one
+   ANNOUNCE_BROADCAST is not needed for compression; Active Count
+   provides application-level batching for the initial set while
+   preserving one state change per ANNOUNCE_BROADCAST message.
 
 5.1.2.  Subscribe
 
@@ -1120,11 +1120,21 @@ Table of Contents
 
    ANNOUNCE_BROADCAST Message {
      Message Length (i)
+     Compressed Payload (..)
+   }
+
+   ANNOUNCE_BROADCAST Payload {
      Announce Status (i),
-     Broadcast Path Suffix (b),
+     Broadcast Path Suffix (s),
      Hop Count (i),
      Hop ID (i) ...,
    }
+
+   *Message Length*: The number of bytes in Compressed Payload.
+
+   *Compressed Payload*: The compressed form of ANNOUNCE_BROADCAST
+   Payload, as described in Compressed ANNOUNCE_BROADCAST Payloads
+   (Section 7.6.1).
 
    *Announce Status*: A flag indicating the announce status.
 
@@ -1136,9 +1146,7 @@ Table of Contents
       restart).
 
    *Broadcast Path Suffix*: This is combined with the broadcast path
-   prefix to form the full broadcast path.  It is encoded as a byte
-   string containing the compressed form of the suffix, as described in
-   Compressed Broadcast Path Suffixes (Section 7.6.1).
+   prefix to form the full broadcast path.
 
    *Hop Count*: The number of Hop ID entries that follow, NOT including
    the publisher's own Hop ID from ANNOUNCE_OK.  A value of 0 means no
@@ -1163,32 +1171,30 @@ Table of Contents
    underlying routing; the Hop Count still reflects the total number of
    entries including unknown hops.
 
-7.6.1.  Compressed Broadcast Path Suffixes
+7.6.1.  Compressed ANNOUNCE_BROADCAST Payloads
 
-   ANNOUNCE_BROADCAST compresses only the bytes of each Broadcast Path
-   Suffix; the message length, status, hop count, and hop IDs remain
-   uncompressed.  The uncompressed input is exactly the UTF-8 byte
-   sequence that would have been carried by the suffix string, excluding
-   the string length prefix.
+   ANNOUNCE_BROADCAST compresses the entire message payload, excluding
+   only the Message Length field.  The uncompressed input is exactly the
+   ANNOUNCE_BROADCAST Payload encoding defined above.
 
    Compression uses the DEFLATE format [RFC1951] with a single
    compression context per Announce Stream.  The context is initialized
    immediately after ANNOUNCE_OK and is retained until the Announce
    Stream closes.  For each ANNOUNCE_BROADCAST, the publisher feeds the
-   uncompressed suffix bytes into that context and then performs the
+   uncompressed payload bytes into that context and then performs the
    equivalent of Z_SYNC_FLUSH.  A sync flush produces output ending with
    the fixed four-byte marker 00 00 ff ff; the publisher MUST remove
-   this marker before writing the compressed bytes into the Broadcast
-   Path Suffix field, matching WebSocket compression [RFC7692].
+   this marker before writing the compressed bytes into Compressed
+   Payload, matching WebSocket compression [RFC7692].
 
    The subscriber uses a single decompression context per Announce
-   Stream.  Before inflating each compressed Broadcast Path Suffix, the
-   subscriber appends the four bytes 00 00 ff ff to reconstruct the
-   sync-flushed DEFLATE stream.  After reading each compressed Broadcast
-   Path Suffix, the subscriber inflates it using the retained context
-   and treats the resulting bytes as the suffix string.  The
-   decompressed suffix MUST be valid UTF-8; otherwise, the subscriber
-   MUST reset the Announce Stream with a PROTOCOL_VIOLATION.  If
+   Stream.  Before inflating each Compressed Payload, the subscriber
+   appends the four bytes 00 00 ff ff to reconstruct the sync-flushed
+   DEFLATE stream.  After reading Compressed Payload, the subscriber
+   inflates it using the retained context and parses the resulting bytes
+   as ANNOUNCE_BROADCAST Payload.  The decompressed payload MUST be a
+   valid ANNOUNCE_BROADCAST Payload; otherwise, the subscriber MUST
+   reset the Announce Stream with a PROTOCOL_VIOLATION.  If
    decompression fails, the subscriber MUST reset the Announce Stream
    with a PROTOCOL_VIOLATION.
 
@@ -1559,8 +1565,8 @@ Table of Contents
 
    *  Added Qmux [qmux] transport bindings for TCP/TLS and WebSocket.
 
-   *  Added mandatory DEFLATE compression for ANNOUNCE_BROADCAST path
-      suffixes.
+   *  Added mandatory DEFLATE compression for ANNOUNCE_BROADCAST
+      payloads.
 
 8.2.  moq-lite-04
 

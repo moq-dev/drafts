@@ -1284,7 +1284,7 @@ While primarily designed for media, the transport is payload agnostic and can be
                 <p id="section-toc.1-1.7.2.6.1"><a href="#section-7.6" class="auto internal xref">7.6</a>.  <a href="#name-announce_broadcast" class="internal xref">ANNOUNCE_BROADCAST</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.6.2.1">
-                    <p id="section-toc.1-1.7.2.6.2.1.1"><a href="#section-7.6.1" class="auto internal xref">7.6.1</a>.  <a href="#name-compressed-broadcast-path-s" class="internal xref">Compressed Broadcast Path Suffixes</a></p>
+                    <p id="section-toc.1-1.7.2.6.2.1.1"><a href="#section-7.6.1" class="auto internal xref">7.6.1</a>.  <a href="#name-compressed-announce_broadca" class="internal xref">Compressed ANNOUNCE_BROADCAST Payloads</a></p>
 </li>
                 </ul>
 </li>
@@ -1769,7 +1769,7 @@ A subscriber that sees the same broadcast advertised across multiple streams <sp
 When the stream is closed, the subscriber <span class="bcp14">MUST</span> assume that all broadcasts are now <code>ended</code>.<a href="#section-5.1.1-9" class="pilcrow">¶</a></p>
 <p id="section-5.1.1-10">Path prefix matching and equality is done on a byte-by-byte basis.
 There <span class="bcp14">MAY</span> be multiple Announce Streams, potentially containing overlapping prefixes, that get their own ANNOUNCE_OK + ANNOUNCE_BROADCAST messages.
-The compression context for ANNOUNCE_BROADCAST path suffixes is retained across messages on the same Announce Stream, so separate messages still benefit from repeated path components.
+The compression context for ANNOUNCE_BROADCAST payloads is retained across messages on the same Announce Stream, so separate messages still benefit from repeated path components and Hop ID lists.
 The publisher flushes the compressor after each ANNOUNCE_BROADCAST, allowing the subscriber to decode each announcement as soon as its message bytes arrive.
 For this reason, batching multiple path changes into one ANNOUNCE_BROADCAST is not needed for compression; <code>Active Count</code> provides application-level batching for the initial set while preserving one state change per ANNOUNCE_BROADCAST message.<a href="#section-5.1.1-10" class="pilcrow">¶</a></p>
 </section>
@@ -2267,51 +2267,58 @@ An ANNOUNCE_BROADCAST before ANNOUNCE_OK is a protocol violation.<a href="#secti
 <pre>
 ANNOUNCE_BROADCAST Message {
   Message Length (i)
+  Compressed Payload (..)
+}
+
+ANNOUNCE_BROADCAST Payload {
   Announce Status (i),
-  Broadcast Path Suffix (b),
+  Broadcast Path Suffix (s),
   Hop Count (i),
   Hop ID (i) ...,
 }
 </pre><a href="#section-7.6-3" class="pilcrow">¶</a>
 </div>
-<p id="section-7.6-4"><strong>Announce Status</strong>:
-A flag indicating the announce status.<a href="#section-7.6-4" class="pilcrow">¶</a></p>
+<p id="section-7.6-4"><strong>Message Length</strong>:
+The number of bytes in <code>Compressed Payload</code>.<a href="#section-7.6-4" class="pilcrow">¶</a></p>
+<p id="section-7.6-5"><strong>Compressed Payload</strong>:
+The compressed form of <code>ANNOUNCE_BROADCAST Payload</code>, as described in <span><a href="#compressed-announce-broadcast-payloads" class="internal xref">Compressed ANNOUNCE_BROADCAST Payloads</a> (<a href="#compressed-announce-broadcast-payloads" class="auto internal xref">Section 7.6.1</a>)</span>.<a href="#section-7.6-5" class="pilcrow">¶</a></p>
+<p id="section-7.6-6"><strong>Announce Status</strong>:
+A flag indicating the announce status.<a href="#section-7.6-6" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-7.6-5.1">
-            <p id="section-7.6-5.1.1"><code>ended</code> (0): A path is no longer available.<a href="#section-7.6-5.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-7.6-7.1">
+            <p id="section-7.6-7.1.1"><code>ended</code> (0): A path is no longer available.<a href="#section-7.6-7.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-7.6-5.2">
-            <p id="section-7.6-5.2.1"><code>active</code> (1): A path is now available. If the path is already <code>active</code>, this announcement atomically replaces the prior one — the Hop ID list <span class="bcp14">MAY</span> differ (e.g. after a relay failover or upstream restart).<a href="#section-7.6-5.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-7.6-7.2">
+            <p id="section-7.6-7.2.1"><code>active</code> (1): A path is now available. If the path is already <code>active</code>, this announcement atomically replaces the prior one — the Hop ID list <span class="bcp14">MAY</span> differ (e.g. after a relay failover or upstream restart).<a href="#section-7.6-7.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-7.6-6"><strong>Broadcast Path Suffix</strong>:
-This is combined with the broadcast path prefix to form the full broadcast path.
-It is encoded as a byte string containing the compressed form of the suffix, as described in <span><a href="#compressed-broadcast-path-suffixes" class="internal xref">Compressed Broadcast Path Suffixes</a> (<a href="#compressed-broadcast-path-suffixes" class="auto internal xref">Section 7.6.1</a>)</span>.<a href="#section-7.6-6" class="pilcrow">¶</a></p>
-<p id="section-7.6-7"><strong>Hop Count</strong>:
+<p id="section-7.6-8"><strong>Broadcast Path Suffix</strong>:
+This is combined with the broadcast path prefix to form the full broadcast path.<a href="#section-7.6-8" class="pilcrow">¶</a></p>
+<p id="section-7.6-9"><strong>Hop Count</strong>:
 The number of Hop ID entries that follow, NOT including the publisher's own <code>Hop ID</code> from ANNOUNCE_OK.
 A value of 0 means no Hop ID entries are present, indicating either that the announcement originated locally on the publisher (the publisher itself is the origin) or that the upstream peer does not support hop tracking.
-A receiver <span class="bcp14">MUST</span> close the stream with a PROTOCOL_VIOLATION if the Hop Count does not match the number of subsequent Hop ID entries.<a href="#section-7.6-7" class="pilcrow">¶</a></p>
-<p id="section-7.6-8"><strong>Hop ID</strong>:
+A receiver <span class="bcp14">MUST</span> close the stream with a PROTOCOL_VIOLATION if the Hop Count does not match the number of subsequent Hop ID entries.<a href="#section-7.6-9" class="pilcrow">¶</a></p>
+<p id="section-7.6-10"><strong>Hop ID</strong>:
 A unique identifier for each relay in the path from the origin publisher, ordered from origin to the upstream of the responding publisher.
 The responding publisher's own Hop ID is NOT included in this list; it is carried once in ANNOUNCE_OK as <code>Hop ID</code>.
 When forwarding an announcement received from an upstream peer, a relay <span class="bcp14">MUST</span> append the upstream peer's ANNOUNCE_OK <code>Hop ID</code> to this list (since that ID is no longer implicit downstream) and then send its own <code>Hop ID</code> in the ANNOUNCE_OK it sends to the downstream subscriber.
 The total path length is <code>Hop Count + 1</code> (including the implicit ANNOUNCE_OK <code>Hop ID</code>).
-A Hop ID value of 0 means the hop is unknown: either it was never assigned (e.g. when bridging from an older protocol version) or a relay deliberately withholds it to obscure the underlying routing; the Hop Count still reflects the total number of entries including unknown hops.<a href="#section-7.6-8" class="pilcrow">¶</a></p>
-<div id="compressed-broadcast-path-suffixes">
+A Hop ID value of 0 means the hop is unknown: either it was never assigned (e.g. when bridging from an older protocol version) or a relay deliberately withholds it to obscure the underlying routing; the Hop Count still reflects the total number of entries including unknown hops.<a href="#section-7.6-10" class="pilcrow">¶</a></p>
+<div id="compressed-announce-broadcast-payloads">
 <section id="section-7.6.1">
-          <h4 id="name-compressed-broadcast-path-s">
-<a href="#section-7.6.1" class="section-number selfRef">7.6.1. </a><a href="#name-compressed-broadcast-path-s" class="section-name selfRef">Compressed Broadcast Path Suffixes</a>
+          <h4 id="name-compressed-announce_broadca">
+<a href="#section-7.6.1" class="section-number selfRef">7.6.1. </a><a href="#name-compressed-announce_broadca" class="section-name selfRef">Compressed ANNOUNCE_BROADCAST Payloads</a>
           </h4>
-<p id="section-7.6.1-1">ANNOUNCE_BROADCAST compresses only the bytes of each <code>Broadcast Path Suffix</code>; the message length, status, hop count, and hop IDs remain uncompressed.
-The uncompressed input is exactly the UTF-8 byte sequence that would have been carried by the suffix string, excluding the string length prefix.<a href="#section-7.6.1-1" class="pilcrow">¶</a></p>
+<p id="section-7.6.1-1">ANNOUNCE_BROADCAST compresses the entire message payload, excluding only the <code>Message Length</code> field.
+The uncompressed input is exactly the <code>ANNOUNCE_BROADCAST Payload</code> encoding defined above.<a href="#section-7.6.1-1" class="pilcrow">¶</a></p>
 <p id="section-7.6.1-2">Compression uses the DEFLATE format <span>[<a href="#RFC1951" class="cite xref">RFC1951</a>]</span> with a single compression context per Announce Stream.
 The context is initialized immediately after ANNOUNCE_OK and is retained until the Announce Stream closes.
-For each ANNOUNCE_BROADCAST, the publisher feeds the uncompressed suffix bytes into that context and then performs the equivalent of <code>Z_SYNC_FLUSH</code>.
-A sync flush produces output ending with the fixed four-byte marker <code>00 00 ff ff</code>; the publisher <span class="bcp14">MUST</span> remove this marker before writing the compressed bytes into the <code>Broadcast Path Suffix</code> field, matching WebSocket compression <span>[<a href="#RFC7692" class="cite xref">RFC7692</a>]</span>.<a href="#section-7.6.1-2" class="pilcrow">¶</a></p>
+For each ANNOUNCE_BROADCAST, the publisher feeds the uncompressed payload bytes into that context and then performs the equivalent of <code>Z_SYNC_FLUSH</code>.
+A sync flush produces output ending with the fixed four-byte marker <code>00 00 ff ff</code>; the publisher <span class="bcp14">MUST</span> remove this marker before writing the compressed bytes into <code>Compressed Payload</code>, matching WebSocket compression <span>[<a href="#RFC7692" class="cite xref">RFC7692</a>]</span>.<a href="#section-7.6.1-2" class="pilcrow">¶</a></p>
 <p id="section-7.6.1-3">The subscriber uses a single decompression context per Announce Stream.
-Before inflating each compressed <code>Broadcast Path Suffix</code>, the subscriber appends the four bytes <code>00 00 ff ff</code> to reconstruct the sync-flushed DEFLATE stream.
-After reading each compressed <code>Broadcast Path Suffix</code>, the subscriber inflates it using the retained context and treats the resulting bytes as the suffix string.
-The decompressed suffix <span class="bcp14">MUST</span> be valid UTF-8; otherwise, the subscriber <span class="bcp14">MUST</span> reset the Announce Stream with a PROTOCOL_VIOLATION.
+Before inflating each <code>Compressed Payload</code>, the subscriber appends the four bytes <code>00 00 ff ff</code> to reconstruct the sync-flushed DEFLATE stream.
+After reading <code>Compressed Payload</code>, the subscriber inflates it using the retained context and parses the resulting bytes as <code>ANNOUNCE_BROADCAST Payload</code>.
+The decompressed payload <span class="bcp14">MUST</span> be a valid <code>ANNOUNCE_BROADCAST Payload</code>; otherwise, the subscriber <span class="bcp14">MUST</span> reset the Announce Stream with a PROTOCOL_VIOLATION.
 If decompression fails, the subscriber <span class="bcp14">MUST</span> reset the Announce Stream with a PROTOCOL_VIOLATION.<a href="#section-7.6.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -2731,7 +2738,7 @@ The <code>Message Length</code> describes the payload size on the wire.<a href="
             <p id="section-8.1-1.18.1">Added Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span> transport bindings for TCP/TLS and WebSocket.<a href="#section-8.1-1.18.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.19">
-            <p id="section-8.1-1.19.1">Added mandatory DEFLATE compression for ANNOUNCE_BROADCAST path suffixes.<a href="#section-8.1-1.19.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.19.1">Added mandatory DEFLATE compression for ANNOUNCE_BROADCAST payloads.<a href="#section-8.1-1.19.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
