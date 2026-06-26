@@ -8,17 +8,19 @@ Intended status: Informational
 Expires: 28 December 2026
 
 
-                    MoQ Namespace Deflate Extension
-               draft-lcurley-moq-namespace-deflate-latest
+                  MoQ Namespace Compression Extension
+             draft-lcurley-moq-namespace-compression-latest
 
 Abstract
 
    This document defines an extension for MoQ Transport [moqt] that
    compresses namespace advertisements sent in response to
-   SUBSCRIBE_NAMESPACE.  The extension applies DEFLATE to the Track
-   Namespace Suffix carried by NAMESPACE and NAMESPACE_DONE messages,
-   retaining compression context across messages on the same namespace
-   subscription response stream and flushing after each message.
+   SUBSCRIBE_NAMESPACE.  The extension defines a namespace suffix
+   compression negotiation and a DEFLATE compression algorithm for the
+   Track Namespace Suffix carried by NAMESPACE and NAMESPACE_DONE
+   messages, retaining compression context across messages on the same
+   namespace subscription response stream and flushing after each
+   message.
 
 Discussion Venues
 
@@ -67,14 +69,13 @@ Table of Contents
    1.  Conventions and Definitions
    2.  Introduction
    3.  Setup Negotiation
-   4.  Requesting Compressed Namespace Suffixes
-   5.  Compressed Namespace Suffixes
-   6.  Compressed Suffix Encoding
-   7.  Security Considerations
-   8.  IANA Considerations
-     8.1.  MOQT Setup Options
-     8.2.  MOQT Message Parameters
-   9.  Normative References
+   4.  Compressed Namespace Suffixes
+   5.  Compressed Suffix Encoding
+   6.  Security Considerations
+   7.  IANA Considerations
+     7.1.  MOQT Setup Options
+     7.2.  MOQT Namespace Compression Algorithms
+   8.  Normative References
    Acknowledgments
    Author's Address
 
@@ -109,63 +110,52 @@ Table of Contents
 
 3.  Setup Negotiation
 
-   The Namespace Deflate extension is negotiated during the SETUP
+   The Namespace Compression extension is negotiated during the SETUP
    exchange as defined in [moqt] Section 10.3.  An endpoint indicates
    support by including the following Setup Option:
 
-   NAMESPACE_DEFLATE Setup Option {
+   NAMESPACE_COMPRESSION Setup Option {
      Option Key (vi64) = 0x40B59
-     Option Value Length (vi64) = 0
+     Option Value Length (vi64)
+     Namespace Compression Algorithm (vi64)
    }
 
-   The option is directional: it advertises that the endpoint can
-   receive compressed namespace suffixes.  A publisher MUST NOT send
-   compressed namespace suffixes unless the subscriber advertised this
-   Setup Option.  The Option Value MUST be empty; an endpoint that
-   receives a non-empty value MUST close the session with
-   PROTOCOL_VIOLATION.
+   *Namespace Compression Algorithm*: The namespace suffix compression
+   algorithm supported by the endpoint.
+
+   *  deflate (0): DEFLATE compression as defined in Compressed Suffix
+      Encoding (Section 5).
+
+   The Option Value MUST contain exactly one Namespace Compression
+   Algorithm.  An endpoint that receives an unknown Namespace
+   Compression Algorithm MUST close the session with PROTOCOL_VIOLATION.
+
+   If both endpoints include NAMESPACE_COMPRESSION with the same
+   Namespace Compression Algorithm, then namespace suffix compression is
+   negotiated for the session.  When namespace suffix compression is
+   negotiated, every NAMESPACE and NAMESPACE_DONE message sent in
+   response to SUBSCRIBE_NAMESPACE on the session MUST encode its Track
+   Namespace Suffix using the negotiated algorithm.  If either endpoint
+   omits NAMESPACE_COMPRESSION, namespace suffix compression is not
+   negotiated and NAMESPACE and NAMESPACE_DONE use the encoding defined
+   by [moqt].
 
    The extension applies to a single hop and is negotiated independently
    for each session.  A relay MUST NOT assume support on one session
    implies support on another.
 
-4.  Requesting Compressed Namespace Suffixes
-
-   A subscriber requests compressed namespace suffixes for a namespace
-   subscription by including the NAMESPACE_DEFLATE parameter in
-   SUBSCRIBE_NAMESPACE.  The parameter is a message parameter as defined
-   in [moqt] Section 10.2.
-
-   Because the parameter carries no value, it uses an even Type:
-
-   NAMESPACE_DEFLATE Parameter {
-     Type (vi64) = 0x40B5A
-   }
-
-   A subscriber MUST NOT send the NAMESPACE_DEFLATE parameter unless the
-   publisher advertised the NAMESPACE_DEFLATE Setup Option.  A publisher
-   that receives this parameter without having advertised the Setup
-   Option MUST close the session with PROTOCOL_VIOLATION.
-
-   If the publisher accepts a SUBSCRIBE_NAMESPACE carrying
-   NAMESPACE_DEFLATE, then every NAMESPACE and NAMESPACE_DONE message
-   sent on that request's response stream MUST encode its Track
-   Namespace Suffix using Compressed Suffix Encoding (Section 6).  If
-   the parameter is absent, NAMESPACE and NAMESPACE_DONE use the
-   encoding defined by [moqt].
-
-5.  Compressed Namespace Suffixes
+4.  Compressed Namespace Suffixes
 
    This extension does not define new message types and does not
    otherwise replace the NAMESPACE or NAMESPACE_DONE message definitions
-   in [moqt].  Instead, on the response stream of a SUBSCRIBE_NAMESPACE
-   that carried NAMESPACE_DEFLATE, only the Track Namespace Suffix field
-   in each NAMESPACE and NAMESPACE_DONE message is compressed.  All
-   other fields and any future fields in those messages retain the
-   encoding defined by [moqt] or by the extension that defines them.
+   in [moqt].  Instead, when namespace suffix compression is negotiated,
+   only the Track Namespace Suffix field in each NAMESPACE and
+   NAMESPACE_DONE message is compressed.  All other fields and any
+   future fields in those messages retain the encoding defined by [moqt]
+   or by the extension that defines them.
 
-   *Track Namespace Suffix*: When NAMESPACE_DEFLATE is active for the
-   response stream, this field carries the compressed form of the Track
+   *Track Namespace Suffix*: When namespace suffix compression is
+   negotiated, this field carries the compressed form of the Track
    Namespace Suffix value.  The uncompressed bytes are exactly the Track
    Namespace Suffix encoding defined by [moqt], excluding the field's
    own length prefix if the base encoding supplies one.
@@ -175,12 +165,13 @@ Table of Contents
    decompressed bytes are not a valid Track Namespace Suffix, the
    receiver MUST close the session with PROTOCOL_VIOLATION.
 
-6.  Compressed Suffix Encoding
+5.  Compressed Suffix Encoding
 
-   Compression uses the DEFLATE format [RFC1951] with one compression
-   context per SUBSCRIBE_NAMESPACE response stream.  The context is
-   initialized when the publisher accepts the SUBSCRIBE_NAMESPACE
-   request and is retained until the response stream is closed.
+   The deflate Namespace Compression Algorithm uses the DEFLATE format
+   [RFC1951] with one compression context per SUBSCRIBE_NAMESPACE
+   response stream.  The context is initialized when the publisher
+   accepts the SUBSCRIBE_NAMESPACE request and is retained until the
+   response stream is closed.
 
    For each NAMESPACE or NAMESPACE_DONE message, the publisher feeds the
    uncompressed Track Namespace Suffix bytes into that stream's
@@ -199,7 +190,7 @@ Table of Contents
    repeated namespace components in later messages can reference bytes
    from earlier messages on the same response stream.
 
-7.  Security Considerations
+6.  Security Considerations
 
    This extension adds stateful decompression to namespace discovery.
    Implementations SHOULD bound the amount of memory and CPU used for
@@ -218,7 +209,7 @@ Table of Contents
    decompression failures can be used as a denial-of-service signal and
    MAY be rate limited or logged by implementations.
 
-8.  IANA Considerations
+7.  IANA Considerations
 
    This document requests the following registrations.  High,
    distinctive values are requested to avoid the low ranges reserved by
@@ -226,36 +217,34 @@ Table of Contents
    other extensions; they also avoid the greasing pattern (0x7f * N +
    0x9D).
 
-8.1.  MOQT Setup Options
+7.1.  MOQT Setup Options
 
    This document requests a registration in the "MOQT Setup Options"
    registry ([moqt] Section 15.4), whose policy is Specification
    Required.
 
-              +=========+===================+===============+
-              | Value   | Name              | Reference     |
-              +=========+===================+===============+
-              | 0x40B59 | NAMESPACE_DEFLATE | This Document |
-              +---------+-------------------+---------------+
+            +=========+=======================+===============+
+            | Value   | Name                  | Reference     |
+            +=========+=======================+===============+
+            | 0x40B59 | NAMESPACE_COMPRESSION | This Document |
+            +---------+-----------------------+---------------+
 
                                   Table 1
 
-8.2.  MOQT Message Parameters
+7.2.  MOQT Namespace Compression Algorithms
 
-   This document requests a registration in the "MOQT Message
-   Parameters" registry ([moqt] Section 15.7).  NAMESPACE_DEFLATE is
-   carried in SUBSCRIBE_NAMESPACE.
+   This document requests a new "MOQT Namespace Compression Algorithms"
+   registry, whose policy is Specification Required.
 
-   +=========+===================+=====================+===============+
-   | Value   | Name              | Carried In          | Reference     |
-   +=========+===================+=====================+===============+
-   | 0x40B5A | NAMESPACE_DEFLATE | SUBSCRIBE_NAMESPACE | This          |
-   |         |                   |                     | Document      |
-   +---------+-------------------+---------------------+---------------+
+                    +=======+=========+===============+
+                    | Value | Name    | Reference     |
+                    +=======+=========+===============+
+                    | 0     | DEFLATE | This Document |
+                    +-------+---------+---------------+
 
                                   Table 2
 
-9.  Normative References
+8.  Normative References
 
    [moqt]     Nandakumar, S., Vasiliev, V., Swett, I., and A. Frindell,
               "Media over QUIC Transport", Work in Progress, Internet-
