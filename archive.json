@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-06-28T02:41:21.934908+00:00",
+  "timestamp": "2026-06-30T02:36:15.176321+00:00",
   "repo": "moq-dev/drafts",
   "labels": [
     {
@@ -3762,6 +3762,56 @@
         }
       ],
       "reviews": []
+    },
+    {
+      "number": 45,
+      "id": "PR_kwDOLz_x-M7sA8or",
+      "title": "moq-lite-05: restore Publisher Max Latency, min-of-two expiration, drop compression",
+      "url": "https://github.com/moq-dev/drafts/pull/45",
+      "state": "MERGED",
+      "author": "kixelated",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "## Summary\n\nThree changes to `draft-lcurley-moq-lite.md`, all under the in-progress moq-lite-05 changelog:\n\n### Restore `Publisher Max Latency`\nAdded back to **TRACK_INFO** (immutable per-track property) with **maximum cache-retention** semantics \u2014 an upper bound on how long the publisher caches a non-latest group, the *inverse* of an HTTP `Cache-Control: max-age` guarantee. Subscribers MUST NOT assume an older group is still available even within the bound. Since `Max Latency` is two-sided again, the `Subscriber` prefix is restored on the subscriber field (SUBSCRIBE / SUBSCRIBE_UPDATE).\n\n> Note: the previous `Publisher Cache` field (before removal in #34) was a *minimum* guarantee \u2014 this is deliberately the opposite, matching the name and mirroring `Subscriber Max Latency` as an upper bound on staleness.\n\n### Minimum-of-two expiration\nA group's age is now measured two ways and it expires once **either** exceeds `Max Latency` (its effective lifetime is the *minimum* of the two):\n- **Timestamp age** \u2014 media-time delta (relay-stable, jitter-immune).\n- **Wall-clock age** \u2014 arrival/queue-time delta.\n\nThe two backstop each other: a publisher can't keep stale groups alive with fresh-looking timestamps (wall-clock evicts anyway), and a delivery burst (e.g. catching up at subscription start) doesn't reset age (timestamp age evicts the media-old ones). Empty groups still fall back to wall-clock only.\n\n### Drop compression\nReverted the ANNOUNCE_BROADCAST DEFLATE compression added in #44 \u2014 it now lives in the standalone `draft-lcurley-moq-namespace-compression.md` extension. Removed the `Compressed Payload` wrapper, the compression section, the Announce-Stream compression-context prose, and the now-unused `RFC1951` / `RFC7692` references. No `compress`/`deflate` text remains in the draft.\n\n## Validation\n`make draft-lcurley-moq-lite.txt` passes (kramdown-rfc + xml2rfc OK).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+      "createdAt": "2026-06-30T00:52:40Z",
+      "updatedAt": "2026-06-30T01:12:57Z",
+      "baseRepository": "moq-dev/drafts",
+      "baseRefName": "main",
+      "baseRefOid": "23b75c4f3bd9f99ecf842c26bf78070569a5ddc6",
+      "headRepository": "moq-dev/drafts",
+      "headRefName": "claude/inspiring-herschel-08c804",
+      "headRefOid": "2fe3f0317b4038d907bc61c7d5a5f82a1b4bd80b",
+      "closedAt": "2026-06-30T01:12:57Z",
+      "mergedAt": "2026-06-30T01:12:57Z",
+      "mergedBy": "kixelated",
+      "mergeCommit": {
+        "oid": "cdb701cddf3147341405c7dcaa248e339a5a85be"
+      },
+      "comments": [
+        {
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "body": "<!-- This is an auto-generated comment: summarize by coderabbit.ai -->\n<!-- review_stack_entry_start -->\n\n[![Review Change Stack](https://storage.googleapis.com/coderabbit_public_assets/review-stack-in-coderabbit-ui.svg)](https://app.coderabbit.ai/change-stack/moq-dev/drafts/pull/45?utm_source=github_walkthrough&utm_medium=github&utm_campaign=change_stack)\n\n<!-- review_stack_entry_end -->\nNo actionable comments were generated in the recent review. \ud83c\udf89\n\n<details>\n<summary>\u2139\ufe0f Recent review info</summary>\n\n<details>\n<summary>\u2699\ufe0f Run configuration</summary>\n\n**Configuration used**: Organization UI\n\n**Review profile**: CHILL\n\n**Plan**: Pro\n\n**Run ID**: `a2925473-b080-4b2b-8d0c-26f6f2e80143`\n\n</details>\n\n<details>\n<summary>\ud83d\udce5 Commits</summary>\n\nReviewing files that changed from the base of the PR and between 23b75c4f3bd9f99ecf842c26bf78070569a5ddc6 and 2fe3f0317b4038d907bc61c7d5a5f82a1b4bd80b.\n\n</details>\n\n<details>\n<summary>\ud83d\udcd2 Files selected for processing (1)</summary>\n\n* `draft-lcurley-moq-lite.md`\n\n</details>\n\n</details>\n\n---\n<!-- walkthrough_start -->\n\n<!--\n\n-->\n\n## Walkthrough\n\nThe draft splits the single `Max Latency` track preference into two distinct fields: `Subscriber Max Latency` (delivery-time staleness bound for non-latest groups, carried in `SUBSCRIBE` and `SUBSCRIBE_UPDATE`) and `Publisher Max Latency` (cache retention bound, carried in `TRACK_INFO`). The `Expiration` section is rewritten so that expiration triggers when either timestamp-based age or wall-clock-based age exceeds the applicable bound, with added handling for zero-frame groups. The `Frame` timestamp description is updated to name both inputs to expiration. The `ANNOUNCE_BROADCAST` encoding is reorganized and the entire `Compressed ANNOUNCE_BROADCAST Payloads` subsection (DEFLATE context, sync-flush, and decompression failure rules) is removed, along with the `RFC1951` and `RFC7692` normative references. The changelog for `moq-lite-05` is updated accordingly.\n\n<!-- walkthrough_end -->\n<!-- pre_merge_checks_walkthrough_start -->\n\n<details>\n<summary>\ud83d\udea5 Pre-merge checks | \u2705 5</summary>\n\n<details>\n<summary>\u2705 Passed checks (5 passed)</summary>\n\n|         Check name         | Status   | Explanation                                                                                                            |\n| :------------------------: | :------- | :--------------------------------------------------------------------------------------------------------------------- |\n|         Title check        | \u2705 Passed | The title clearly summarizes the three main changes: latency fields, expiration semantics, and compression removal.    |\n|      Description check     | \u2705 Passed | The description is directly aligned with the changeset and explains the same three draft updates in sufficient detail. |\n|     Docstring Coverage     | \u2705 Passed | No functions found in the changed files to evaluate docstring coverage. Skipping docstring coverage check.             |\n|     Linked Issues check    | \u2705 Passed | Check skipped because no linked issues were found for this pull request.                                               |\n| Out of Scope Changes check | \u2705 Passed | Check skipped because no linked issues were found for this pull request.                                               |\n\n</details>\n\n</details>\n\n<!-- pre_merge_checks_walkthrough_end -->\n<!-- finishing_touch_checkbox_start -->\n\n<details>\n<summary>\u2728 Finishing Touches</summary>\n\n<details>\n<summary>\u2728 Simplify code</summary>\n\n- [ ] <!-- {\"checkboxId\": \"f120d606-b0e2-4b7d-8316-181794555b43\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Create PR with simplified code\n- [ ] <!-- {\"checkboxId\": \"9a4e3077-58f6-4eba-b7ee-62e936ea00ea\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Commit simplified code in branch `claude/inspiring-herschel-08c804`\n\n</details>\n\n</details>\n\n<!-- finishing_touch_checkbox_end -->\n<!-- tips_start -->\n\n---\n\nThanks for using [CodeRabbit](https://coderabbit.ai?utm_source=oss&utm_medium=github&utm_campaign=moq-dev/drafts&utm_content=45)! It's free for OSS, and your support helps us grow. If you like it, consider giving us a shout-out.\n\n<details>\n<summary>\u2764\ufe0f Share</summary>\n\n- [X](https://twitter.com/intent/tweet?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A&url=https%3A//coderabbit.ai)\n- [Mastodon](https://mastodon.social/share?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A%20https%3A%2F%2Fcoderabbit.ai)\n- [Reddit](https://www.reddit.com/submit?title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&text=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code.%20Check%20it%20out%3A%20https%3A//coderabbit.ai)\n- [LinkedIn](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcoderabbit.ai&mini=true&title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&summary=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code)\n\n</details>\n\n\n<sub>Comment `@coderabbitai help` to get the list of available commands.</sub>\n\n<!-- tips_end -->",
+          "createdAt": "2026-06-30T00:55:22Z",
+          "updatedAt": "2026-06-30T00:55:22Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABEfgHKw",
+          "commit": {
+            "abbreviatedOid": "2fe3f03"
+          },
+          "author": "sourcery-ai",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "Sorry @kixelated, you have reached your weekly rate limit of 500000 diff characters.\n\nPlease try again later or [upgrade](https://app.sourcery.ai/login?connection=github&git_namespace_id=248218914&utm_source=github&utm_medium=bot&utm_campaign=rate_limited) to continue using Sourcery",
+          "createdAt": "2026-06-30T00:52:47Z",
+          "updatedAt": "2026-06-30T00:52:47Z",
+          "comments": []
+        }
+      ]
     }
   ]
 }
