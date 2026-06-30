@@ -1049,7 +1049,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Curley</td>
-<td class="center">Expires 28 December 2026</td>
+<td class="center">Expires 1 January 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1062,12 +1062,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-lcurley-moq-lite-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-06-26" class="published">26 June 2026</time>
+<time datetime="2026-06-30" class="published">30 June 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-12-28">28 December 2026</time></dd>
+<dd class="expires"><time datetime="2027-01-01">1 January 2027</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1113,7 +1113,7 @@ While primarily designed for media, the transport is payload agnostic and can be
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 28 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 1 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1282,11 +1282,6 @@ While primarily designed for media, the transport is payload agnostic and can be
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.6">
                 <p id="section-toc.1-1.7.2.6.1"><a href="#section-7.6" class="auto internal xref">7.6</a>.  <a href="#name-announce_broadcast" class="internal xref">ANNOUNCE_BROADCAST</a></p>
-<ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.6.2.1">
-                    <p id="section-toc.1-1.7.2.6.2.1.1"><a href="#section-7.6.1" class="auto internal xref">7.6.1</a>.  <a href="#name-compressed-announce_broadca" class="internal xref">Compressed ANNOUNCE_BROADCAST Payloads</a></p>
-</li>
-                </ul>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.7">
                 <p id="section-toc.1-1.7.2.7.1"><a href="#section-7.7" class="auto internal xref">7.7</a>.  <a href="#name-subscribe-2" class="internal xref">SUBSCRIBE</a></p>
@@ -1497,7 +1492,7 @@ A subscription starts at a configurable Group (defaulting to the latest) and con
 <p id="section-3.3-4">The subscriber and publisher both indicate their delivery preference:
 - <code>Priority</code> indicates if Track A should be transmitted instead of Track B.
 - <code>Ordered</code> indicates if the Groups within a Track should be transmitted in order.
-- <code>Max Latency</code> (subscriber) indicates the maximum age before a non-latest Group is dropped from live delivery.<a href="#section-3.3-4" class="pilcrow">¶</a></p>
+- <code>Subscriber Max Latency</code> indicates the maximum age before a non-latest Group is dropped from live delivery; <code>Publisher Max Latency</code> indicates the maximum age before a non-latest Group is dropped from the publisher's cache.<a href="#section-3.3-4" class="pilcrow">¶</a></p>
 <p id="section-3.3-5">The combination of these preferences enables the most important content to arrive during network degradation while still respecting encoding dependencies.<a href="#section-3.3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1527,7 +1522,7 @@ The same subscription <span class="bcp14">MAY</span> receive groups via both str
 The contents are opaque to the moq-lite layer.<a href="#section-3.5-2" class="pilcrow">¶</a></p>
 <p id="section-3.5-3">Each frame carries a presentation timestamp expressed in the parent Track's <code>Timescale</code> (units per second, part of the <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>).
 Every Track has a media timeline — the <code>Timescale</code> is always non-zero and every frame is timestamped.
-The timestamp is the source-of-truth for media time and is used by the moq-lite layer for <a href="#expiration" class="auto internal xref">Section 6.2</a> decisions instead of wall-clock arrival time.<a href="#section-3.5-3" class="pilcrow">¶</a></p>
+The timestamp is the source-of-truth for media time and is one of the two inputs to the moq-lite layer's <a href="#expiration" class="auto internal xref">Section 6.2</a> decisions, alongside wall-clock arrival time.<a href="#section-3.5-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1768,10 +1763,7 @@ A subscriber that sees the same broadcast advertised across multiple streams <sp
 <p id="section-5.1.1-9">The subscriber <span class="bcp14">MUST</span> reset the stream if it receives an <code>ended</code> for a broadcast that is not currently <code>active</code>, or any ANNOUNCE_BROADCAST before ANNOUNCE_OK.
 When the stream is closed, the subscriber <span class="bcp14">MUST</span> assume that all broadcasts are now <code>ended</code>.<a href="#section-5.1.1-9" class="pilcrow">¶</a></p>
 <p id="section-5.1.1-10">Path prefix matching and equality is done on a byte-by-byte basis.
-There <span class="bcp14">MAY</span> be multiple Announce Streams, potentially containing overlapping prefixes, that get their own ANNOUNCE_OK + ANNOUNCE_BROADCAST messages.
-The compression context for ANNOUNCE_BROADCAST payloads is retained across messages on the same Announce Stream, so separate messages still benefit from repeated path components and Hop ID lists.
-The publisher flushes the compressor after each ANNOUNCE_BROADCAST, allowing the subscriber to decode each announcement as soon as its message bytes arrive.
-For this reason, batching multiple path changes into one ANNOUNCE_BROADCAST is not needed for compression; <code>Active Count</code> provides application-level batching for the initial set while preserving one state change per ANNOUNCE_BROADCAST message.<a href="#section-5.1.1-10" class="pilcrow">¶</a></p>
+There <span class="bcp14">MAY</span> be multiple Announce Streams, potentially containing overlapping prefixes, that get their own ANNOUNCE_OK + ANNOUNCE_BROADCAST messages.<a href="#section-5.1.1-10" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="subscribe">
@@ -1917,7 +1909,7 @@ The <code>Publisher Ordered</code> field <span class="bcp14">MAY</span> likewise
 <p id="section-6.1.2-2">An application <span class="bcp14">SHOULD</span> use <code>ordered</code> when it wants to provide a VOD-like experience, preferring to buffer old groups rather than skip them.
 An application <span class="bcp14">SHOULD NOT</span> use <code>ordered</code> when it wants to provide a live experience, preferring to skip old groups rather than buffer them.<a href="#section-6.1.2-2" class="pilcrow">¶</a></p>
 <p id="section-6.1.2-3">Note that <a href="#expiration" class="auto internal xref">Section 6.2</a> is not affected by <code>ordered</code>.
-An old group may still be cancelled/skipped if it exceeds the <code>Max Latency</code>.
+An old group may still be cancelled/skipped if it exceeds the <code>Subscriber Max Latency</code>.
 An application <span class="bcp14">MUST</span> support gaps and out-of-order delivery even when <code>ordered</code> is true.<a href="#section-6.1.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1929,22 +1921,37 @@ An application <span class="bcp14">MUST</span> support gaps and out-of-order del
 <a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-expiration" class="section-name selfRef">Expiration</a>
         </h3>
 <p id="section-6.2-1">Expiration governs when an older group is dropped from a live subscription's Group Stream(s).
-It is a delivery-time concern only; whether older groups remain available for FETCH or future subscriptions is left to the publisher and is best-effort.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+It is primarily a delivery-time concern, governed by <code>Subscriber Max Latency</code>.
+Whether older groups remain available for FETCH or future subscriptions is governed by <code>Publisher Max Latency</code>, an upper bound on how long the publisher caches a non-latest group; beyond that the publisher <span class="bcp14">MAY</span> drop it.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
 <p id="section-6.2-2">It is not crucial to aggressively expire groups thanks to <a href="#prioritization" class="auto internal xref">Section 6.1</a>.
 However, a lower priority group will still consume RAM, bandwidth, and potentially flow control.
 It is <span class="bcp14">RECOMMENDED</span> that an application set conservative limits and only resort to expiration when data is absolutely no longer needed.<a href="#section-6.2-2" class="pilcrow">¶</a></p>
-<p id="section-6.2-3">The publisher <span class="bcp14">SHOULD</span> reset Group Streams for non-latest groups whose age relative to the latest group exceeds the <code>Max Latency</code> value in SUBSCRIBE/SUBSCRIBE_UPDATE.
+<p id="section-6.2-3">The publisher <span class="bcp14">SHOULD</span> reset Group Streams for non-latest groups whose age relative to the latest group exceeds the <code>Subscriber Max Latency</code> value in SUBSCRIBE/SUBSCRIBE_UPDATE.
 The subscriber <span class="bcp14">MAY</span> also locally drop such groups for its own resource accounting.
-Expiration only removes the group from the live subscription's stream; the publisher <span class="bcp14">MAY</span> still retain it for FETCH or new subscriptions.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
+Expiration only removes the group from the live subscription's stream; the publisher <span class="bcp14">MAY</span> still retain it for FETCH or new subscriptions until its age exceeds <code>Publisher Max Latency</code> (see <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>).<a href="#section-6.2-3" class="pilcrow">¶</a></p>
 <p id="section-6.2-4">Group age is computed relative to the latest group by sequence number.
 A group is never expired until at least the next group (by sequence number) has been received or queued.
-Once a newer group exists, a group is considered expired if the time between its first frame and the latest group's first frame exceeds <code>Max Latency</code>.<a href="#section-6.2-4" class="pilcrow">¶</a></p>
-<p id="section-6.2-5">The time delta is computed from per-frame timestamps (see <a href="#frame" class="auto internal xref">Section 3.5</a>).
-Timestamp-based expiration remains consistent across relays and is unaffected by buffering or jitter, unlike wall-clock arrival time.<a href="#section-6.2-5" class="pilcrow">¶</a></p>
-<p id="section-6.2-6">A group that contains zero frames has no timestamp.
-For expiration purposes its effective time is the wall-clock arrival/queue time of the group itself: the first byte of the group received (subscriber) or queued (publisher).
-This avoids stalling expiration on tracks that intentionally emit empty groups as keep-alives or gap markers.<a href="#section-6.2-6" class="pilcrow">¶</a></p>
-<p id="section-6.2-7">An expired group <span class="bcp14">SHOULD</span> be reset at the QUIC level to avoid consuming flow control.<a href="#section-6.2-7" class="pilcrow">¶</a></p>
+Once a newer group exists, the group's age is measured two ways, and it is expired once <strong>either</strong> measure exceeds the relevant <code>Max Latency</code> (<code>Subscriber Max Latency</code> for live delivery, <code>Publisher Max Latency</code> for the publisher's cache):<a href="#section-6.2-4" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6.2-5.1">
+            <p id="section-6.2-5.1.1"><strong>Timestamp age</strong>: the difference between this group's first frame timestamp and the latest group's first frame timestamp (see <a href="#frame" class="auto internal xref">Section 3.5</a>). This measure is consistent across relays and unaffected by buffering or jitter.<a href="#section-6.2-5.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-6.2-5.2">
+            <p id="section-6.2-5.2.1"><strong>Wall-clock age</strong>: the difference between when this group's first byte arrived (subscriber) or was queued (publisher) and the same instant for the latest group.<a href="#section-6.2-5.2.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-6.2-6">Equivalently, a group's effective lifetime is the <em>minimum</em> of the two — whichever clock declares it stale first wins. The two measures backstop each other:<a href="#section-6.2-6" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6.2-7.1">
+            <p id="section-6.2-7.1.1">A publisher cannot keep stale groups alive by reporting timestamps that look fresh; the wall-clock age expires them anyway.<a href="#section-6.2-7.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-6.2-7.2">
+            <p id="section-6.2-7.2.1">A burst of groups delivered close together (e.g. catching up at the start of a subscription) does not reset their age; the timestamp age still expires the media-old ones even though they all just arrived.<a href="#section-6.2-7.2.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-6.2-8">A group that contains zero frames has no timestamp, so only the wall-clock age applies.
+This avoids stalling expiration on tracks that intentionally emit empty groups as keep-alives or gap markers.<a href="#section-6.2-8" class="pilcrow">¶</a></p>
+<p id="section-6.2-9">An expired group <span class="bcp14">SHOULD</span> be reset at the QUIC level to avoid consuming flow control.<a href="#section-6.2-9" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="unidirectional-streams">
@@ -2267,10 +2274,6 @@ An ANNOUNCE_BROADCAST before ANNOUNCE_OK is a protocol violation.<a href="#secti
 <pre>
 ANNOUNCE_BROADCAST Message {
   Message Length (i)
-  Compressed Payload (..)
-}
-
-ANNOUNCE_BROADCAST Payload {
   Announce Status (i),
   Broadcast Path Suffix (s),
   Hop Count (i),
@@ -2278,50 +2281,28 @@ ANNOUNCE_BROADCAST Payload {
 }
 </pre><a href="#section-7.6-3" class="pilcrow">¶</a>
 </div>
-<p id="section-7.6-4"><strong>Message Length</strong>:
-The number of bytes in <code>Compressed Payload</code>.<a href="#section-7.6-4" class="pilcrow">¶</a></p>
-<p id="section-7.6-5"><strong>Compressed Payload</strong>:
-The compressed form of <code>ANNOUNCE_BROADCAST Payload</code>, as described in <span><a href="#compressed-announce-broadcast-payloads" class="internal xref">Compressed ANNOUNCE_BROADCAST Payloads</a> (<a href="#compressed-announce-broadcast-payloads" class="auto internal xref">Section 7.6.1</a>)</span>.<a href="#section-7.6-5" class="pilcrow">¶</a></p>
-<p id="section-7.6-6"><strong>Announce Status</strong>:
-A flag indicating the announce status.<a href="#section-7.6-6" class="pilcrow">¶</a></p>
+<p id="section-7.6-4"><strong>Announce Status</strong>:
+A flag indicating the announce status.<a href="#section-7.6-4" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-7.6-7.1">
-            <p id="section-7.6-7.1.1"><code>ended</code> (0): A path is no longer available.<a href="#section-7.6-7.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-7.6-5.1">
+            <p id="section-7.6-5.1.1"><code>ended</code> (0): A path is no longer available.<a href="#section-7.6-5.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-7.6-7.2">
-            <p id="section-7.6-7.2.1"><code>active</code> (1): A path is now available. If the path is already <code>active</code>, this announcement atomically replaces the prior one — the Hop ID list <span class="bcp14">MAY</span> differ (e.g. after a relay failover or upstream restart).<a href="#section-7.6-7.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-7.6-5.2">
+            <p id="section-7.6-5.2.1"><code>active</code> (1): A path is now available. If the path is already <code>active</code>, this announcement atomically replaces the prior one — the Hop ID list <span class="bcp14">MAY</span> differ (e.g. after a relay failover or upstream restart).<a href="#section-7.6-5.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-7.6-8"><strong>Broadcast Path Suffix</strong>:
-This is combined with the broadcast path prefix to form the full broadcast path.<a href="#section-7.6-8" class="pilcrow">¶</a></p>
-<p id="section-7.6-9"><strong>Hop Count</strong>:
+<p id="section-7.6-6"><strong>Broadcast Path Suffix</strong>:
+This is combined with the broadcast path prefix to form the full broadcast path.<a href="#section-7.6-6" class="pilcrow">¶</a></p>
+<p id="section-7.6-7"><strong>Hop Count</strong>:
 The number of Hop ID entries that follow, NOT including the publisher's own <code>Hop ID</code> from ANNOUNCE_OK.
 A value of 0 means no Hop ID entries are present, indicating either that the announcement originated locally on the publisher (the publisher itself is the origin) or that the upstream peer does not support hop tracking.
-A receiver <span class="bcp14">MUST</span> close the stream with a PROTOCOL_VIOLATION if the Hop Count does not match the number of subsequent Hop ID entries.<a href="#section-7.6-9" class="pilcrow">¶</a></p>
-<p id="section-7.6-10"><strong>Hop ID</strong>:
+A receiver <span class="bcp14">MUST</span> close the stream with a PROTOCOL_VIOLATION if the Hop Count does not match the number of subsequent Hop ID entries.<a href="#section-7.6-7" class="pilcrow">¶</a></p>
+<p id="section-7.6-8"><strong>Hop ID</strong>:
 A unique identifier for each relay in the path from the origin publisher, ordered from origin to the upstream of the responding publisher.
 The responding publisher's own Hop ID is NOT included in this list; it is carried once in ANNOUNCE_OK as <code>Hop ID</code>.
 When forwarding an announcement received from an upstream peer, a relay <span class="bcp14">MUST</span> append the upstream peer's ANNOUNCE_OK <code>Hop ID</code> to this list (since that ID is no longer implicit downstream) and then send its own <code>Hop ID</code> in the ANNOUNCE_OK it sends to the downstream subscriber.
 The total path length is <code>Hop Count + 1</code> (including the implicit ANNOUNCE_OK <code>Hop ID</code>).
-A Hop ID value of 0 means the hop is unknown: either it was never assigned (e.g. when bridging from an older protocol version) or a relay deliberately withholds it to obscure the underlying routing; the Hop Count still reflects the total number of entries including unknown hops.<a href="#section-7.6-10" class="pilcrow">¶</a></p>
-<div id="compressed-announce-broadcast-payloads">
-<section id="section-7.6.1">
-          <h4 id="name-compressed-announce_broadca">
-<a href="#section-7.6.1" class="section-number selfRef">7.6.1. </a><a href="#name-compressed-announce_broadca" class="section-name selfRef">Compressed ANNOUNCE_BROADCAST Payloads</a>
-          </h4>
-<p id="section-7.6.1-1">ANNOUNCE_BROADCAST compresses the entire message payload, excluding only the <code>Message Length</code> field.
-The uncompressed input is exactly the <code>ANNOUNCE_BROADCAST Payload</code> encoding defined above.<a href="#section-7.6.1-1" class="pilcrow">¶</a></p>
-<p id="section-7.6.1-2">Compression uses the DEFLATE format <span>[<a href="#RFC1951" class="cite xref">RFC1951</a>]</span> with a single compression context per Announce Stream.
-The context is initialized immediately after ANNOUNCE_OK and is retained until the Announce Stream closes.
-For each ANNOUNCE_BROADCAST, the publisher feeds the uncompressed payload bytes into that context and then performs the equivalent of <code>Z_SYNC_FLUSH</code>.
-A sync flush produces output ending with the fixed four-byte marker <code>00 00 ff ff</code>; the publisher <span class="bcp14">MUST</span> remove this marker before writing the compressed bytes into <code>Compressed Payload</code>, matching WebSocket compression <span>[<a href="#RFC7692" class="cite xref">RFC7692</a>]</span>.<a href="#section-7.6.1-2" class="pilcrow">¶</a></p>
-<p id="section-7.6.1-3">The subscriber uses a single decompression context per Announce Stream.
-Before inflating each <code>Compressed Payload</code>, the subscriber appends the four bytes <code>00 00 ff ff</code> to reconstruct the sync-flushed DEFLATE stream.
-After reading <code>Compressed Payload</code>, the subscriber inflates it using the retained context and parses the resulting bytes as <code>ANNOUNCE_BROADCAST Payload</code>.
-The decompressed payload <span class="bcp14">MUST</span> be a valid <code>ANNOUNCE_BROADCAST Payload</code>; otherwise, the subscriber <span class="bcp14">MUST</span> reset the Announce Stream with a PROTOCOL_VIOLATION.
-If decompression fails, the subscriber <span class="bcp14">MUST</span> reset the Announce Stream with a PROTOCOL_VIOLATION.<a href="#section-7.6.1-3" class="pilcrow">¶</a></p>
-</section>
-</div>
+A Hop ID value of 0 means the hop is unknown: either it was never assigned (e.g. when bridging from an older protocol version) or a relay deliberately withholds it to obscure the underlying routing; the Hop Count still reflects the total number of entries including unknown hops.<a href="#section-7.6-8" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="subscribe-1">
@@ -2339,7 +2320,7 @@ SUBSCRIBE Message {
   Track Name (s)
   Subscriber Priority (8)
   Subscriber Ordered (8)
-  Max Latency (i)
+  Subscriber Max Latency (i)
   Group Start (i)
   Group End (i)
 }
@@ -2356,12 +2337,12 @@ See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> sec
 A single byte representing whether groups are transmitted in ascending (0x1) or descending (0x0) order.
 The publisher <span class="bcp14">SHOULD</span> transmit <em>older</em> groups first during congestion if true.
 See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> section for more information.<a href="#section-7.7-5" class="pilcrow">¶</a></p>
-<p id="section-7.7-6"><strong>Max Latency</strong>:
+<p id="section-7.7-6"><strong>Subscriber Max Latency</strong>:
 The subscriber's preference, in milliseconds, for how long a non-latest group may remain in flight before being considered stale and dropped from live delivery.
 The publisher <span class="bcp14">SHOULD</span> reset (at the QUIC level) Group Streams for groups whose age relative to the latest group exceeds this duration.
 Applies only to non-latest groups; the latest group is never dropped on staleness grounds.
 A value of <code>0</code> means the subscriber wants only the latest group in live delivery (older groups are immediately stale once a newer group arrives).
-This is a delivery-time preference, not a retention rule: the publisher <span class="bcp14">MAY</span> still hold these groups for FETCH or future subscriptions.
+This is a delivery-time preference, not a retention rule: the publisher <span class="bcp14">MAY</span> still hold these groups for FETCH or future subscriptions (see <code>Publisher Max Latency</code> in <span><a href="#track-info" class="internal xref">TRACK_INFO</a> (<a href="#track-info" class="auto internal xref">Section 7.10</a>)</span>).
 See the <a href="#expiration" class="auto internal xref">Section 6.2</a> section for more information.<a href="#section-7.7-6" class="pilcrow">¶</a></p>
 <p id="section-7.7-7"><strong>Group Start</strong>:
 The first group to deliver.
@@ -2387,7 +2368,7 @@ SUBSCRIBE_UPDATE Message {
   Message Length (i)
   Subscriber Priority (8)
   Subscriber Ordered (8)
-  Max Latency (i)
+  Subscriber Max Latency (i)
   Group Start (i)
   Group End (i)
 }
@@ -2431,6 +2412,7 @@ TRACK_INFO Message {
   Message Length (i)
   Publisher Priority (8)
   Publisher Ordered (8)
+  Publisher Max Latency (i)
   Timescale (i)
 }
 </pre><a href="#section-7.10-2" class="pilcrow">¶</a>
@@ -2445,11 +2427,26 @@ See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> sec
 <p id="section-7.10-5"><strong>Publisher Ordered</strong>:
 The publisher's group ordering preference (ascending <code>0x1</code> or descending <code>0x0</code>), used only to resolve ties.
 See the <a href="#prioritization" class="auto internal xref">Section 6.1</a> section for more information.<a href="#section-7.10-5" class="pilcrow">¶</a></p>
-<p id="section-7.10-6"><strong>Timescale</strong>:
+<p id="section-7.10-6"><strong>Publisher Max Latency</strong>:
+The maximum age, in milliseconds, that the publisher caches a non-latest group past the arrival of a newer group.
+Applies only to non-latest groups; the latest group is always retained.
+It is an upper bound on retention, the inverse of an HTTP <code>Cache-Control: max-age</code> guarantee:<a href="#section-7.10-6" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-7.10-7.1">
+            <p id="section-7.10-7.1.1">A subscriber <span class="bcp14">MAY</span> issue a SUBSCRIBE or FETCH with an older <code>Group Start</code>, but the publisher <span class="bcp14">MAY</span> have already dropped any group whose age exceeds <code>Publisher Max Latency</code>.<a href="#section-7.10-7.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-7.10-7.2">
+            <p id="section-7.10-7.2.1">The publisher <span class="bcp14">MAY</span> drop groups sooner than <code>Publisher Max Latency</code> under resource pressure; subscribers <span class="bcp14">MUST NOT</span> assume older groups within the bound are still available.<a href="#section-7.10-7.2.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-7.10-8">A value of <code>0</code> means the publisher caches only the latest group (older groups <span class="bcp14">MAY</span> be dropped as soon as a newer group arrives).
+The unit is milliseconds, matching <code>Subscriber Max Latency</code>.
+See the <a href="#expiration" class="auto internal xref">Section 6.2</a> section for more information.<a href="#section-7.10-8" class="pilcrow">¶</a></p>
+<p id="section-7.10-9"><strong>Timescale</strong>:
 The number of timestamp units per second for frame timestamps on this Track.
 It <span class="bcp14">MUST</span> be non-zero: every Track has a media timeline, so every FRAME carries a <code>Timestamp Delta</code> and every datagram body carries a <code>Timestamp</code> (see <a href="#frame" class="auto internal xref">Section 3.5</a> and <a href="#datagrams" class="auto internal xref">Section 6.4</a>).
 A subscriber that receives a <code>Timescale</code> of 0 <span class="bcp14">MUST</span> reset the Subscribe or Fetch stream with a protocol violation.
-Common values include <code>1000</code> (milliseconds), <code>1000000</code> (microseconds), <code>48000</code> (audio sample rate), and <code>90000</code> (RTP video clock).<a href="#section-7.10-6" class="pilcrow">¶</a></p>
+Common values include <code>1000</code> (milliseconds), <code>1000000</code> (microseconds), <code>48000</code> (audio sample rate), and <code>90000</code> (RTP video clock).<a href="#section-7.10-9" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="subscribe-ok">
@@ -2723,22 +2720,16 @@ The <code>Message Length</code> describes the payload size on the wire.<a href="
             <p id="section-8.1-1.13.1">Added <code>Timestamp</code> to the QUIC datagram body.<a href="#section-8.1-1.13.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.14">
-            <p id="section-8.1-1.14.1">Removed <code>Publisher Max Latency</code>.<a href="#section-8.1-1.14.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.14.1">Moved <code>Publisher Max Latency</code> to TRACK_INFO and redefined it as a maximum retention bound: the longest the publisher caches a non-latest group (the inverse of an HTTP <code>Cache-Control: max-age</code> guarantee). <code>Subscriber Max Latency</code> keeps its name and remains the subscriber's delivery-time expiration preference.<a href="#section-8.1-1.14.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.15">
-            <p id="section-8.1-1.15.1">Replaced wall-clock arrival-time expiration with timestamp-based expiration.<a href="#section-8.1-1.15.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.15.1">Expire a group once <strong>either</strong> its timestamp age or its wall-clock arrival age exceeds Max Latency (the shorter lifetime wins), bounding both manipulated timestamps and delivery bursts.<a href="#section-8.1-1.15.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.16">
             <p id="section-8.1-1.16.1">Added QUIC datagram delivery for groups.<a href="#section-8.1-1.16.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.17">
-            <p id="section-8.1-1.17.1">Dropped the <code>Subscriber</code> prefix from fields that exist on only one side.<a href="#section-8.1-1.17.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-8.1-1.18">
-            <p id="section-8.1-1.18.1">Added Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span> transport bindings for TCP/TLS and WebSocket.<a href="#section-8.1-1.18.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-8.1-1.19">
-            <p id="section-8.1-1.19.1">Added mandatory DEFLATE compression for ANNOUNCE_BROADCAST payloads.<a href="#section-8.1-1.19.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.17.1">Added Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span> transport bindings for TCP/TLS and WebSocket.<a href="#section-8.1-1.17.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -3065,10 +3056,6 @@ The <code>Message Length</code> describes the payload size on the wire.<a href="
       <dd>
 <span class="refAuthor">Oku, K.</span>, <span class="refAuthor">Pardue, L.</span>, <span class="refAuthor">Iyengar, J.</span>, and <span class="refAuthor">E. Kinnear</span>, <span class="refTitle">"QMux"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-quic-qmux-01</span>, <time datetime="2026-04-01" class="refDate">1 April 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-quic-qmux-01">https://datatracker.ietf.org/doc/html/draft-ietf-quic-qmux-01</a>&gt;</span>. </dd>
 <dd class="break"></dd>
-<dt id="RFC1951">[RFC1951]</dt>
-      <dd>
-<span class="refAuthor">Deutsch, P.</span>, <span class="refTitle">"DEFLATE Compressed Data Format Specification version 1.3"</span>, <span class="seriesInfo">RFC 1951</span>, <span class="seriesInfo">DOI 10.17487/RFC1951</span>, <time datetime="1996-05" class="refDate">May 1996</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc1951">https://www.rfc-editor.org/rfc/rfc1951</a>&gt;</span>. </dd>
-<dd class="break"></dd>
 <dt id="RFC2119">[RFC2119]</dt>
       <dd>
 <span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
@@ -3080,10 +3067,6 @@ The <code>Message Length</code> describes the payload size on the wire.<a href="
 <dt id="RFC6455">[RFC6455]</dt>
       <dd>
 <span class="refAuthor">Fette, I.</span> and <span class="refAuthor">A. Melnikov</span>, <span class="refTitle">"The WebSocket Protocol"</span>, <span class="seriesInfo">RFC 6455</span>, <span class="seriesInfo">DOI 10.17487/RFC6455</span>, <time datetime="2011-12" class="refDate">December 2011</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc6455">https://www.rfc-editor.org/rfc/rfc6455</a>&gt;</span>. </dd>
-<dd class="break"></dd>
-<dt id="RFC7692">[RFC7692]</dt>
-      <dd>
-<span class="refAuthor">Yoshino, T.</span>, <span class="refTitle">"Compression Extensions for WebSocket"</span>, <span class="seriesInfo">RFC 7692</span>, <span class="seriesInfo">DOI 10.17487/RFC7692</span>, <time datetime="2015-12" class="refDate">December 2015</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7692">https://www.rfc-editor.org/rfc/rfc7692</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC8174">[RFC8174]</dt>
       <dd>
