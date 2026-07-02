@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-06-30T02:36:15.176321+00:00",
+  "timestamp": "2026-07-02T02:31:47.226644+00:00",
   "repo": "moq-dev/drafts",
   "labels": [
     {
@@ -3809,6 +3809,56 @@
           "body": "Sorry @kixelated, you have reached your weekly rate limit of 500000 diff characters.\n\nPlease try again later or [upgrade](https://app.sourcery.ai/login?connection=github&git_namespace_id=248218914&utm_source=github&utm_medium=bot&utm_campaign=rate_limited) to continue using Sourcery",
           "createdAt": "2026-06-30T00:52:47Z",
           "updatedAt": "2026-06-30T00:52:47Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 46,
+      "id": "PR_kwDOLz_x-M7sW_Px",
+      "title": "moq-lite-05: fill Security Considerations and fix reference/changelog nits",
+      "url": "https://github.com/moq-dev/drafts/pull/46",
+      "state": "MERGED",
+      "author": "kixelated",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Pre-publish review pass over `draft-lcurley-moq-lite.md` ahead of tagging `moq-lite-05`. No wire-format changes; this is documentation correctness, one clarified semantic edge case, and changelog/reference hygiene. Builds clean (`make draft-lcurley-moq-lite.txt`) with no kramdown-rfc warnings.\n\n## What changed\n\n- **Security Considerations** \u2014 replaced the `TODO` with sections covering bandwidth probing/amplification (the `Increase` Probe level is bounded by the congestion window), session redirection (GOAWAY URI validation), routing-metadata privacy (Hop ID `0`), resource exhaustion, datagram injection, and opaque payloads. Added explicit `{#announce-ok}` / `{#announce-request}` heading anchors so the new cross-references resolve.\n- **RFC9002 reference** \u2014 changed inline `{{!RFC9002}}` to `[RFC9002]` since it's already declared in the YAML `normative:` block; clears the double-declaration build warning.\n- **Changelog (`moq-lite-05`)** \u2014 added the missing `Path` SETUP parameter bullet.\n- **Changelog (`moq-lite-04`)** \u2014 corrected the rename bullet to `ANNOUNCE_PLEASE -> ANNOUNCE_SUBSCRIBE` (the rename to `ANNOUNCE_REQUEST` actually happened in `-05`).\n- **Group sequence encoding** \u2014 noted that `SUBSCRIBE_OK` / `SUBSCRIBE_END` / `SUBSCRIBE_DROP` carry plain absolute group sequences, **not** the `absolute + 1` form used by `Group Start`/`Group End` in `SUBSCRIBE`, and tightened the `SUBSCRIBE_OK` comparison prose to decode-before-comparing.\n- **Expiration edge case** \u2014 timestamp age is now measured against the first frame timestamp of *the latest group that has at least one frame*, so an empty latest group no longer makes the measure uncomputable for the whole track.\n\n## Reviewer notes\n\n- The only behavioral clarification is the expiration edge case; everything else is editorial or changelog/reference accuracy.\n- Worth a sanity check on the Security Considerations wording, since it's new prose rather than a port of existing text.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+      "createdAt": "2026-06-30T18:27:04Z",
+      "updatedAt": "2026-06-30T18:31:00Z",
+      "baseRepository": "moq-dev/drafts",
+      "baseRefName": "main",
+      "baseRefOid": "cdb701cddf3147341405c7dcaa248e339a5a85be",
+      "headRepository": "moq-dev/drafts",
+      "headRefName": "claude/nice-gauss-6f33a2",
+      "headRefOid": "6fc0d58646af51b49f4303297ae5daaf3016d1ca",
+      "closedAt": "2026-06-30T18:28:42Z",
+      "mergedAt": "2026-06-30T18:28:42Z",
+      "mergedBy": "kixelated",
+      "mergeCommit": {
+        "oid": "f9ad1d476577077bdf721e1a70672f1b4d9285df"
+      },
+      "comments": [
+        {
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "body": "<!-- This is an auto-generated comment: summarize by coderabbit.ai -->\n<!-- review_stack_entry_start -->\n\n[![Review Change Stack](https://storage.googleapis.com/coderabbit_public_assets/review-stack-in-coderabbit-ui.svg)](https://app.coderabbit.ai/change-stack/moq-dev/drafts/pull/46?utm_source=github_walkthrough&utm_medium=github&utm_campaign=change_stack)\n\n<!-- review_stack_entry_end -->\n<!-- This is an auto-generated comment: rate limited by coderabbit.ai -->\n\n> [!WARNING]\n> ## Review limit reached\n> \n> `@kixelated`, you've reached your PR review limit, so we couldn't start this review.\n> \n> **Next review available in:** **56 minutes**\n> \n> Enable **[usage-based reviews](https://app.coderabbit.ai/settings/billing?tab=usage&orgId=43a3cc7a-9a22-46cb-854d-dec79a791215)** in Billing to review now. Otherwise, wait until the next included review is available.\n> You're only billed for reviews past your plan's rate limits ($0.25/file).\n> \n> <details>\n> <summary>How can I continue?</summary>\n> \n> After more reviews become available, a review can be triggered using the `@coderabbitai review` command as a PR comment. Alternatively, push new commits to this PR.\n> \n> To avoid repeated limits, reduce automatic review volume by pausing incremental auto-reviews earlier, using label-based review opt-in, excluding WIP or generated PR titles, or requesting reviews manually when the PR is ready. If your team needs uninterrupted high-volume reviews, an organization admin can enable usage-based reviews.\n> \n> </details>\n> \n> \n> <details>\n> <summary>How do review limits work?</summary>\n> \n> CodeRabbit enforces per-developer PR review limits for each organization. Most developers receive the normal plan review availability.\n> \n> For paid Pro and Pro+ PR reviews, CodeRabbit uses adaptive limits for sustained high-volume activity. When a developer's recent PR review activity reaches the 95th percentile or higher among CodeRabbit users, additional reviews become available more gradually as earlier reviews age out of the rolling window.\n> \n> Please refer [docs](https://docs.coderabbit.ai/management/plans#rate-limits) for additional details.\n> \n> </details>\n> \n> <details>\n> <summary>Review details</summary>\n> \n> <details>\n> <summary>\u2699\ufe0f Run configuration</summary>\n> \n> **Configuration used**: Organization UI\n> \n> **Review profile**: CHILL\n> \n> **Plan**: Pro\n> \n> **Run ID**: `3f22d18a-eac4-4fba-8cfd-abd771a7a4bf`\n> \n> </details>\n> \n> <details>\n> <summary>\ud83d\udce5 Commits</summary>\n> \n> Reviewing files that changed from the base of the PR and between cdb701cddf3147341405c7dcaa248e339a5a85be and 6fc0d58646af51b49f4303297ae5daaf3016d1ca.\n> \n> </details>\n> \n> <details>\n> <summary>\ud83d\udcd2 Files selected for processing (1)</summary>\n> \n> * `draft-lcurley-moq-lite.md`\n> \n> </details>\n> \n> </details>\n\n<!-- end of auto-generated comment: rate limited by coderabbit.ai -->\n\n<!-- finishing_touch_checkbox_start -->\n\n<details>\n<summary>\u2728 Finishing Touches</summary>\n\n<details>\n<summary>\u2728 Simplify code</summary>\n\n- [ ] <!-- {\"checkboxId\": \"f120d606-b0e2-4b7d-8316-181794555b43\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Create PR with simplified code\n- [ ] <!-- {\"checkboxId\": \"9a4e3077-58f6-4eba-b7ee-62e936ea00ea\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Commit simplified code in branch `claude/nice-gauss-6f33a2`\n\n</details>\n\n</details>\n\n<!-- finishing_touch_checkbox_end -->\n<!-- tips_start -->\n\n---\n\nThanks for using [CodeRabbit](https://coderabbit.ai?utm_source=oss&utm_medium=github&utm_campaign=moq-dev/drafts&utm_content=46)! It's free for OSS, and your support helps us grow. If you like it, consider giving us a shout-out.\n\n<details>\n<summary>\u2764\ufe0f Share</summary>\n\n- [X](https://twitter.com/intent/tweet?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A&url=https%3A//coderabbit.ai)\n- [Mastodon](https://mastodon.social/share?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A%20https%3A%2F%2Fcoderabbit.ai)\n- [Reddit](https://www.reddit.com/submit?title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&text=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code.%20Check%20it%20out%3A%20https%3A//coderabbit.ai)\n- [LinkedIn](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcoderabbit.ai&mini=true&title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&summary=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code)\n\n</details>\n\n\n<sub>Comment `@coderabbitai help` to get the list of available commands.</sub>\n\n<!-- tips_end -->",
+          "createdAt": "2026-06-30T18:30:58Z",
+          "updatedAt": "2026-06-30T18:31:00Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABEl1POw",
+          "commit": {
+            "abbreviatedOid": "2eb7cef"
+          },
+          "author": "sourcery-ai",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "Sorry @kixelated, you have reached your weekly rate limit of 500000 diff characters.\n\nPlease try again later or [upgrade](https://app.sourcery.ai/login?connection=github&git_namespace_id=248218914&utm_source=github&utm_medium=bot&utm_campaign=rate_limited) to continue using Sourcery",
+          "createdAt": "2026-06-30T18:27:09Z",
+          "updatedAt": "2026-06-30T18:27:09Z",
           "comments": []
         }
       ]
