@@ -3,9 +3,9 @@
 
 
 moq                                                            L. Curley
-Internet-Draft                                              30 June 2026
+Internet-Draft                                               3 July 2026
 Intended status: Informational                                          
-Expires: 1 January 2027
+Expires: 4 January 2027
 
 
                          Media over QUIC - Hang
@@ -44,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 1 January 2027.
+   This Internet-Draft will expire on 4 January 2027.
 
 Copyright Notice
 
@@ -300,9 +300,9 @@ Table of Contents
 8.  Normative References
 
    [moql]     Curley, L., "Media over QUIC - Lite", Work in Progress,
-              Internet-Draft, draft-lcurley-moq-lite-04, 9 April 2026,
+              Internet-Draft, draft-lcurley-moq-lite-05, 30 June 2026,
               <https://datatracker.ietf.org/doc/html/draft-lcurley-moq-
-              lite-04>.
+              lite-05>.
 
    [moqt]     Nandakumar, S., Vasiliev, V., Swett, I., and A. Frindell,
               "Media over QUIC Transport", Work in Progress, Internet-

@@ -1045,11 +1045,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">moql</td>
-<td class="right">June 2026</td>
+<td class="right">July 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Curley</td>
-<td class="center">Expires 1 January 2027</td>
+<td class="center">Expires 4 January 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1062,12 +1062,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-lcurley-moq-lite-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-06-30" class="published">30 June 2026</time>
+<time datetime="2026-07-03" class="published">3 July 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-01-01">1 January 2027</time></dd>
+<dd class="expires"><time datetime="2027-01-04">4 January 2027</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1113,7 +1113,7 @@ While primarily designed for media, the transport is payload agnostic and can be
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 1 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 4 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1620,7 +1620,7 @@ All four carry the same control and data streams defined elsewhere in this docum
         </table>
 <p id="section-4.2-3">For bindings 1 and 2, moq-lite uses the underlying QUIC/WebTransport stream APIs directly.
 QUIC datagrams (see <a href="#datagrams" class="auto internal xref">Section 6.4</a>) are supported by bindings 1 and 2 only.
-Bindings 3 and 4 are reliable byte-stream transports and have no datagram channel; a publisher <span class="bcp14">MUST NOT</span> emit datagrams on those bindings and <span class="bcp14">MUST</span> fall back to Group Streams.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
+Bindings 3 and 4 are reliable byte-stream transports and have no datagram channel; a publisher <span class="bcp14">MUST NOT</span> emit datagrams on those bindings. Groups are still delivered normally via Group Streams; there is no conversion of a datagram into a stream.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
 <div id="qmux-over-tcptls">
 <section id="section-4.2.1">
           <h4 id="name-qmux-over-tcp-tls">
@@ -2066,8 +2066,8 @@ Any varint value (including 0) is a valid absolute timestamp.<a href="#section-6
 The frame payload, extending to the end of the datagram.
 The total datagram body (including all header fields above and the payload) <span class="bcp14">MUST NOT</span> exceed 1200 bytes.
 This limit ensures the datagram fits within the minimum QUIC path MTU without IP-layer fragmentation.
-Payloads that would not fit <span class="bcp14">MUST</span> be sent as a Group Stream instead.
-A receiver <span class="bcp14">MUST</span> silently drop any datagram that exceeds this limit.<a href="#section-6.4-9" class="pilcrow">¶</a></p>
+A publisher <span class="bcp14">MUST NOT</span> send a datagram whose body exceeds this limit, and a receiver <span class="bcp14">MUST</span> silently drop any datagram that does.
+A group whose frame does not fit is simply not eligible for datagram delivery; it is delivered as a Group Stream like any other group, which is not a conversion of the datagram.<a href="#section-6.4-9" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2753,7 +2753,7 @@ The <code>Message Length</code> describes the payload size on the wire.<a href="
             <p id="section-8.1-1.16.1">Expire a group once <strong>either</strong> its timestamp age or its wall-clock arrival age exceeds Max Latency (the shorter lifetime wins), bounding both manipulated timestamps and delivery bursts.<a href="#section-8.1-1.16.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.17">
-            <p id="section-8.1-1.17.1">Added QUIC datagram delivery for groups.<a href="#section-8.1-1.17.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-1.17.1">Added QUIC datagram delivery for groups. Datagrams and Group Streams are independent delivery modes with no conversion between them: an oversized (&gt;1200 byte) datagram <span class="bcp14">MUST NOT</span> be sent and is dropped on receipt, and bindings without a datagram channel do not fall back from datagrams to streams.<a href="#section-8.1-1.17.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-1.18">
             <p id="section-8.1-1.18.1">Added Qmux <span>[<a href="#qmux" class="cite xref">qmux</a>]</span> transport bindings for TCP/TLS and WebSocket.<a href="#section-8.1-1.18.1" class="pilcrow">¶</a></p>

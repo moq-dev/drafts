@@ -3,9 +3,9 @@
 
 
 moq                                                            L. Curley
-Internet-Draft                                              30 June 2026
+Internet-Draft                                               3 July 2026
 Intended status: Informational                                          
-Expires: 1 January 2027
+Expires: 4 January 2027
 
 
                      MoQ Object Timestamp Extension
@@ -48,7 +48,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 1 January 2027.
+   This Internet-Draft will expire on 4 January 2027.
 
 Copyright Notice
 
