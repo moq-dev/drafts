@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-07-02T02:31:47.226644+00:00",
+  "timestamp": "2026-07-05T02:13:42.472749+00:00",
   "repo": "moq-dev/drafts",
   "labels": [
     {
@@ -3859,6 +3859,56 @@
           "body": "Sorry @kixelated, you have reached your weekly rate limit of 500000 diff characters.\n\nPlease try again later or [upgrade](https://app.sourcery.ai/login?connection=github&git_namespace_id=248218914&utm_source=github&utm_medium=bot&utm_campaign=rate_limited) to continue using Sourcery",
           "createdAt": "2026-06-30T18:27:09Z",
           "updatedAt": "2026-06-30T18:27:09Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 47,
+      "id": "PR_kwDOLz_x-M7tXUs2",
+      "title": "moq-lite-05: keep datagrams and Group Streams separate, no conversion",
+      "url": "https://github.com/moq-dev/drafts/pull/47",
+      "state": "MERGED",
+      "author": "kixelated",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Makes datagrams a fully independent delivery mode in \u00a76.4, with no magic conversion between datagrams and Group Streams.\n\n## Changes\n\n- **Oversized datagrams are dropped, not converted.** A publisher MUST NOT send a datagram body >1200 bytes, and a receiver MUST silently drop one that exceeds it. Removed the old \"Payloads that would not fit MUST be sent as a Group Stream instead.\" A group whose frame doesn't fit is simply not eligible for datagram delivery and is delivered as a Group Stream like any other group \u2014 explicitly noted as *not* a conversion.\n- **No datagram\u2192stream fallback on stream-only bindings.** Bindings 3/4 (Qmux over TCP/TLS and WebSocket) still forbid emitting datagrams, but the \"MUST fall back to Group Streams\" wording is replaced: groups are delivered normally via Group Streams, with no conversion of a datagram into a stream.\n- **Changelog** updated under moq-lite-05.\n\nValidated with `make draft-lcurley-moq-lite.txt` (kramdown-rfc + xml2rfc OK).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+      "createdAt": "2026-07-03T00:46:54Z",
+      "updatedAt": "2026-07-03T00:49:07Z",
+      "baseRepository": "moq-dev/drafts",
+      "baseRefName": "main",
+      "baseRefOid": "f9ad1d476577077bdf721e1a70672f1b4d9285df",
+      "headRepository": "moq-dev/drafts",
+      "headRefName": "claude/blissful-wright-488e20",
+      "headRefOid": "b0a23271be05914229ab989f333cca84aac3f778",
+      "closedAt": "2026-07-03T00:49:07Z",
+      "mergedAt": "2026-07-03T00:49:07Z",
+      "mergedBy": "kixelated",
+      "mergeCommit": {
+        "oid": "746a57675c73a3ae326fe94eaaa87c84db235c58"
+      },
+      "comments": [
+        {
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "body": "<!-- This is an auto-generated comment: summarize by coderabbit.ai -->\n<!-- This is an auto-generated comment: rate limited by coderabbit.ai -->\n\n> [!WARNING]\n> ## Review limit reached\n> \n> `@kixelated`, you've reached your PR review limit, so we couldn't start this review.\n> \n> **Next review available in:** **29 minutes**\n> \n> Enable **[usage-based reviews](https://app.coderabbit.ai/settings/billing?tab=usage&orgId=43a3cc7a-9a22-46cb-854d-dec79a791215)** in Billing to review now. Otherwise, wait until the next included review is available.\n> You're only billed for reviews past your plan's rate limits ($0.25/file).\n> \n> <details>\n> <summary>How can I continue?</summary>\n> \n> After more reviews become available, a review can be triggered using the `@coderabbitai review` command as a PR comment. Alternatively, push new commits to this PR.\n> \n> To avoid repeated limits, reduce automatic review volume by pausing incremental auto-reviews earlier, using label-based review opt-in, excluding WIP or generated PR titles, or requesting reviews manually when the PR is ready. If your team needs uninterrupted high-volume reviews, an organization admin can enable usage-based reviews.\n> \n> </details>\n> \n> \n> <details>\n> <summary>How do review limits work?</summary>\n> \n> CodeRabbit enforces per-developer PR review limits for each organization. Most developers receive the normal plan review availability.\n> \n> For paid Pro and Pro+ PR reviews, CodeRabbit uses adaptive limits for sustained high-volume activity. When a developer's recent PR review activity reaches the 95th percentile or higher among CodeRabbit users, additional reviews become available more gradually as earlier reviews age out of the rolling window.\n> \n> Please refer [docs](https://docs.coderabbit.ai/management/plans#rate-limits) for additional details.\n> \n> </details>\n> \n> <details>\n> <summary>Review details</summary>\n> \n> <details>\n> <summary>\u2699\ufe0f Run configuration</summary>\n> \n> **Configuration used**: Organization UI\n> \n> **Review profile**: CHILL\n> \n> **Plan**: Pro\n> \n> **Run ID**: `92f63775-642f-4d2a-8211-74f2b904ab03`\n> \n> </details>\n> \n> <details>\n> <summary>\ud83d\udce5 Commits</summary>\n> \n> Reviewing files that changed from the base of the PR and between f9ad1d476577077bdf721e1a70672f1b4d9285df and b0a23271be05914229ab989f333cca84aac3f778.\n> \n> </details>\n> \n> <details>\n> <summary>\ud83d\udcd2 Files selected for processing (1)</summary>\n> \n> * `draft-lcurley-moq-lite.md`\n> \n> </details>\n> \n> </details>\n\n<!-- end of auto-generated comment: rate limited by coderabbit.ai -->\n\n<!-- finishing_touch_checkbox_start -->\n\n<details>\n<summary>\u2728 Finishing Touches</summary>\n\n<details>\n<summary>\u2728 Simplify code</summary>\n\n- [ ] <!-- {\"checkboxId\": \"f120d606-b0e2-4b7d-8316-181794555b43\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Create PR with simplified code\n- [ ] <!-- {\"checkboxId\": \"9a4e3077-58f6-4eba-b7ee-62e936ea00ea\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Commit simplified code in branch `claude/blissful-wright-488e20`\n\n</details>\n\n</details>\n\n<!-- finishing_touch_checkbox_end -->\n<!-- tips_start -->\n\n---\n\nThanks for using [CodeRabbit](https://coderabbit.ai?utm_source=oss&utm_medium=github&utm_campaign=moq-dev/drafts&utm_content=47)! It's free for OSS, and your support helps us grow. If you like it, consider giving us a shout-out.\n\n<details>\n<summary>\u2764\ufe0f Share</summary>\n\n- [X](https://twitter.com/intent/tweet?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A&url=https%3A//coderabbit.ai)\n- [Mastodon](https://mastodon.social/share?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A%20https%3A%2F%2Fcoderabbit.ai)\n- [Reddit](https://www.reddit.com/submit?title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&text=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code.%20Check%20it%20out%3A%20https%3A//coderabbit.ai)\n- [LinkedIn](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcoderabbit.ai&mini=true&title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&summary=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code)\n\n</details>\n\n\n<sub>Comment `@coderabbitai help` to get the list of available commands.</sub>\n\n<!-- tips_end -->",
+          "createdAt": "2026-07-03T00:47:03Z",
+          "updatedAt": "2026-07-03T00:47:03Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABE32AxA",
+          "commit": {
+            "abbreviatedOid": "b0a2327"
+          },
+          "author": "sourcery-ai",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "Sorry @kixelated, you have reached your weekly rate limit of 500000 diff characters.\n\nPlease try again later or [upgrade](https://app.sourcery.ai/login?connection=github&git_namespace_id=248218914&utm_source=github&utm_medium=bot&utm_campaign=rate_limited) to continue using Sourcery",
+          "createdAt": "2026-07-03T00:46:59Z",
+          "updatedAt": "2026-07-03T00:46:59Z",
           "comments": []
         }
       ]
