@@ -3,9 +3,9 @@
 
 
 moq                                                            L. Curley
-Internet-Draft                                               3 July 2026
+Internet-Draft                                               6 July 2026
 Intended status: Informational                                          
-Expires: 4 January 2027
+Expires: 7 January 2027
 
 
                           QMux over WebSocket
@@ -46,7 +46,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 4 January 2027.
+   This Internet-Draft will expire on 7 January 2027.
 
 Copyright Notice
 
@@ -359,9 +359,9 @@ Table of Contents
 14.1.  Normative References
 
    [qmux]     Oku, K., Pardue, L., Iyengar, J., and E. Kinnear, "QMux",
-              Work in Progress, Internet-Draft, draft-ietf-quic-qmux-01,
-              1 April 2026, <https://datatracker.ietf.org/doc/html/
-              draft-ietf-quic-qmux-01>.
+              Work in Progress, Internet-Draft, draft-ietf-quic-qmux-02,
+              6 July 2026, <https://datatracker.ietf.org/doc/html/draft-
+              ietf-quic-qmux-02>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -385,9 +385,9 @@ Table of Contents
 
    [moqt]     Nandakumar, S., Vasiliev, V., Swett, I., and A. Frindell,
               "Media over QUIC Transport", Work in Progress, Internet-
-              Draft, draft-ietf-moq-transport-18, 12 May 2026,
+              Draft, draft-ietf-moq-transport-19, 6 July 2026,
               <https://datatracker.ietf.org/doc/html/draft-ietf-moq-
-              transport-18>.
+              transport-19>.
 
    [RFC8446]  Rescorla, E., "The Transport Layer Security (TLS) Protocol
               Version 1.3", RFC 8446, DOI 10.17487/RFC8446, August 2018,
