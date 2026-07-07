@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-07-05T02:13:42.472749+00:00",
+  "timestamp": "2026-07-07T02:13:50.860932+00:00",
   "repo": "moq-dev/drafts",
   "labels": [
     {
@@ -3909,6 +3909,56 @@
           "body": "Sorry @kixelated, you have reached your weekly rate limit of 500000 diff characters.\n\nPlease try again later or [upgrade](https://app.sourcery.ai/login?connection=github&git_namespace_id=248218914&utm_source=github&utm_medium=bot&utm_campaign=rate_limited) to continue using Sourcery",
           "createdAt": "2026-07-03T00:46:59Z",
           "updatedAt": "2026-07-03T00:46:59Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 48,
+      "id": "PR_kwDOLz_x-M7ulbhI",
+      "title": "moq-relay-hops: carry HOP_PATH on NAMESPACE via an extended Parameters field",
+      "url": "https://github.com/moq-dev/drafts/pull/48",
+      "state": "MERGED",
+      "author": "kixelated",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "## Problem\n\nThe Relay Hops extension relies on namespace advertisements carrying a `HOP_PATH` parameter as they propagate through a relay mesh. But in the subscriber-driven flow, advertisements propagate downstream as **NAMESPACE** messages (moqt Section 10.16) \u2014 the response to `SUBSCRIBE_NAMESPACE` \u2014 and that message has **no** `Parameters` field (only `Type`, `Length`, `Track Namespace Suffix`). So `HOP_PATH` had nowhere to ride on the reactive path, which is exactly the relay-mesh scenario the extension targets.\n\n`PUBLISH_NAMESPACE` (0x6) and `SUBSCRIBE_NAMESPACE` (0x50) *do* carry a `Parameters` field, so `HOP_PATH` on the former and `EXCLUDE_HOP` on the latter were already fine.\n\n## Fix\n\nThis extension now defines an **extended NAMESPACE message** that appends `Number of Parameters` + `Parameters` after the (self-delimiting) `Track Namespace Suffix`, used only on a session that negotiated Relay Hops. `HOP_PATH` is carried there as well as on `PUBLISH_NAMESPACE`.\n\n- New section **\"Carrying Parameters on Namespace Advertisements\"** defining the extended NAMESPACE wire format (NAMESPACE_DONE is explicitly *not* extended \u2014 no state to carry).\n- **Introduction** describes both advertisement paths (proactive `PUBLISH_NAMESPACE` and reactive `NAMESPACE` responses).\n- **Setup Negotiation** ties the extended NAMESPACE format to the `RELAY_HOPS` negotiation; relays include `HOP_PATH` on every `PUBLISH_NAMESPACE` *and* `NAMESPACE`. Graceful-degradation wording updated since a non-negotiating session omits the whole `Parameters` field on NAMESPACE.\n- **HOP_PATH Parameter** now carried in `PUBLISH_NAMESPACE` *or* an extended `NAMESPACE`.\n- **IANA** `HOP_PATH` \"Carried In\" updated to `PUBLISH_NAMESPACE, NAMESPACE`.\n\n`EXCLUDE_HOP` needed no change.\n\nExtending a base-protocol message's wire format from an extension is safe here because it is gated on the per-session SETUP negotiation \u2014 both endpoints agree on whether NAMESPACE carries the trailing `Parameters` field before any NAMESPACE is sent.\n\nDraft builds cleanly (`kramdown-rfc ... OK`, `xml2rfc-txt ... OK`).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+      "createdAt": "2026-07-06T23:23:21Z",
+      "updatedAt": "2026-07-06T23:24:20Z",
+      "baseRepository": "moq-dev/drafts",
+      "baseRefName": "main",
+      "baseRefOid": "746a57675c73a3ae326fe94eaaa87c84db235c58",
+      "headRepository": "moq-dev/drafts",
+      "headRefName": "claude/distracted-gagarin-9f2d98",
+      "headRefOid": "6a30a1d31ff55c53f60d93a69ec928d29a58bf79",
+      "closedAt": "2026-07-06T23:23:45Z",
+      "mergedAt": "2026-07-06T23:23:45Z",
+      "mergedBy": "kixelated",
+      "mergeCommit": {
+        "oid": "718be4d1c4485a6c18609e52e5be860b02f4e3a1"
+      },
+      "comments": [
+        {
+          "author": "coderabbitai",
+          "authorAssociation": "NONE",
+          "body": "<!-- This is an auto-generated comment: summarize by coderabbit.ai -->\n<!-- review_stack_entry_start -->\n\n[![Review Change Stack](https://storage.googleapis.com/coderabbit_public_assets/review-stack-in-coderabbit-ui.svg)](https://app.coderabbit.ai/change-stack/moq-dev/drafts/pull/48?utm_source=github_walkthrough&utm_medium=github&utm_campaign=change_stack)\n\n<!-- review_stack_entry_end -->\n<!-- This is an auto-generated comment: failure by coderabbit.ai -->\n\n> [!CAUTION]\n> ## Review failed\n> \n> The pull request is closed.\n\n<!-- end of auto-generated comment: failure by coderabbit.ai -->\n\n<details>\n<summary>\u2139\ufe0f Recent review info</summary>\n\n<details>\n<summary>\u2699\ufe0f Run configuration</summary>\n\n**Configuration used**: Organization UI\n\n**Review profile**: CHILL\n\n**Plan**: Pro\n\n**Run ID**: `0b9161ae-4d39-44e5-8b98-6ca0398393a1`\n\n</details>\n\n<details>\n<summary>\ud83d\udce5 Commits</summary>\n\nReviewing files that changed from the base of the PR and between 746a57675c73a3ae326fe94eaaa87c84db235c58 and 6a30a1d31ff55c53f60d93a69ec928d29a58bf79.\n\n</details>\n\n<details>\n<summary>\ud83d\udcd2 Files selected for processing (1)</summary>\n\n* `draft-lcurley-moq-relay-hops.md`\n\n</details>\n\n</details>\n\n---\n<!-- walkthrough_start -->\n\n## Walkthrough\n\nThis change updates the draft-lcurley-moq-relay-hops.md specification. It clarifies that both PUBLISH_NAMESPACE and NAMESPACE messages are treated as namespace advertisements, expands Setup Negotiation rules so negotiated sessions must carry HOP_PATH on both message types and honor EXCLUDE_HOP, and introduces a new section defining an extended NAMESPACE message format with an appended Parameters field. The MOQT Message Parameters registration table is updated to reflect where HOP_PATH and EXCLUDE_HOP are carried.\n\n### Changes\n\n| Area | Description |\n|---|---|\n| Introduction | Explicitly lists PUBLISH_NAMESPACE and NAMESPACE as namespace advertisements |\n| Setup Negotiation | Requires HOP_PATH on negotiated sessions for both message types; requires honoring EXCLUDE_HOP; specifies behavior when not negotiated |\n| New section | Defines extended NAMESPACE message format with appended Parameters field and parsing rules bounded by Length |\n| Registration table | Updates carried-in locations for HOP_PATH and EXCLUDE_HOP parameters |\n\n**Related issues:** None specified.\n\n**Related PRs:** None specified.\n\n**Suggested labels:** documentation, spec-change\n\n**Suggested reviewers:** lcurley\n\n**Poem**\n\nA rabbit hops through session's gate,\nWith HOP_PATH tags to navigate,\nNAMESPACE grows a new extension,\nParameters carried with intention,\nEXCLUDE_HOP whispers, \"not this way,\"\nThe draft evolves another day. \ud83d\udc07\ud83d\udcdc\n\n<!-- walkthrough_end -->\n<!-- finishing_touch_checkbox_start -->\n\n<details>\n<summary>\u2728 Finishing Touches</summary>\n\n<details>\n<summary>\u2728 Simplify code</summary>\n\n- [ ] <!-- {\"checkboxId\": \"f120d606-b0e2-4b7d-8316-181794555b43\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Create PR with simplified code\n- [ ] <!-- {\"checkboxId\": \"9a4e3077-58f6-4eba-b7ee-62e936ea00ea\", \"radioGroupId\": \"simplify-output-choice-group-unknown_comment_id\"} -->   Commit simplified code in branch `claude/distracted-gagarin-9f2d98`\n\n</details>\n\n</details>\n\n<!-- finishing_touch_checkbox_end -->\n<!-- tips_start -->\n\n---\n\nThanks for using [CodeRabbit](https://coderabbit.ai?utm_source=oss&utm_medium=github&utm_campaign=moq-dev/drafts&utm_content=48)! It's free for OSS, and your support helps us grow. If you like it, consider giving us a shout-out.\n\n<details>\n<summary>\u2764\ufe0f Share</summary>\n\n- [X](https://twitter.com/intent/tweet?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A&url=https%3A//coderabbit.ai)\n- [Mastodon](https://mastodon.social/share?text=I%20just%20used%20%40coderabbitai%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20the%20proprietary%20code.%20Check%20it%20out%3A%20https%3A%2F%2Fcoderabbit.ai)\n- [Reddit](https://www.reddit.com/submit?title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&text=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code.%20Check%20it%20out%3A%20https%3A//coderabbit.ai)\n- [LinkedIn](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcoderabbit.ai&mini=true&title=Great%20tool%20for%20code%20review%20-%20CodeRabbit&summary=I%20just%20used%20CodeRabbit%20for%20my%20code%20review%2C%20and%20it%27s%20fantastic%21%20It%27s%20free%20for%20OSS%20and%20offers%20a%20free%20trial%20for%20proprietary%20code)\n\n</details>\n\n\n<sub>Comment `@coderabbitai help` to get the list of available commands.</sub>\n\n<!-- tips_end -->",
+          "createdAt": "2026-07-06T23:24:20Z",
+          "updatedAt": "2026-07-06T23:24:20Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOLz_x-M8AAAABFJd6zw",
+          "commit": {
+            "abbreviatedOid": "6a30a1d"
+          },
+          "author": "sourcery-ai",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "Sorry @kixelated, you have reached your weekly rate limit of 500000 diff characters.\n\nPlease try again later or [upgrade](https://app.sourcery.ai/login?connection=github&git_namespace_id=248218914&utm_source=github&utm_medium=bot&utm_campaign=rate_limited) to continue using Sourcery",
+          "createdAt": "2026-07-06T23:23:25Z",
+          "updatedAt": "2026-07-06T23:23:25Z",
           "comments": []
         }
       ]
