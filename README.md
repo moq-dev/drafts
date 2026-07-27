@@ -1,6 +1,11 @@
-<!-- regenerate: on (set to off if you edit this file) -->
+<!-- regenerate: off (set to off if you edit this file) -->
 
 # MOQ Drafts
+
+> [!WARNING]
+> **This repository is deprecated.**
+> Development of these drafts has moved to [moq-dev/moq](https://github.com/moq-dev/moq), in the [`drafts`](https://github.com/moq-dev/moq/tree/main/drafts) folder.
+> Please open issues and pull requests there instead.
 
 This is the working area for individual Internet-Drafts.
 
